@@ -18,18 +18,6 @@
 
 
 #include "score_addon_quarre.hpp"
-
-#include <AppInteraction/Process/AppInteractionProcessFactory.hpp>
-#include <AppInteraction/Process/Executor/AppInteractionProcessExecutor.hpp>
-#include <AppInteraction/Process/Inspector/AppInteractionProcessInspector.hpp>
-#include <AppInteraction/Process/LocalTree/AppInteractionProcessLocalTree.hpp>
-#include <AppInteraction/Process/Layer/AppInteractionProcessLayerFactory.hpp>
-#include <AppInteraction/ApplicationPlugin/AppInteractionApplicationPlugin.hpp>
-#include <AppInteraction/DocumentPlugin/AppInteractionDocumentPlugin.hpp>
-#include <AppInteraction/PolymorphicEntity/PolymorphicEntityFactory.hpp>
-#include <AppInteraction/PolymorphicEntity/Implementation/ConcretePolymorphicEntity.hpp>
-#include <AppInteraction/Panel/AppInteractionPanelDelegate.hpp>
-
 #include <score/plugins/customfactory/FactorySetup.hpp>
 
 score_addon_quarre::score_addon_quarre()
