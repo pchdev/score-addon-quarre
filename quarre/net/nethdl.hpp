@@ -35,7 +35,7 @@ public:
     nethdl();
     ~nethdl();
 
-    void            start(std::string host, uint16_t wsport, uint16_t oscport);
+    void            start(uint16_t wsport, uint16_t oscport);
     void            make_tree();
     void            stop();
 
