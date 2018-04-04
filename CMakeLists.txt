@@ -12,6 +12,16 @@ set(QUARRE_SCORE_ADDON_HEADERS
     quarre/device/quarre-protocol-factory.hpp
     quarre/device/quarre-protocol-settings-widget.hpp
     quarre/device/quarre-protocol-specific-settings.hpp
+    quarre/process/quarre-process-factory.hpp
+    quarre/process/quarre-process-metadata.hpp
+    quarre/process/quarre-process-model.hpp
+    quarre/process/inspector/quarre-process-inspector.hpp
+    quarre/simple-element/quarre-simple-element.hpp
+    quarre/simple-element/quarre-simple-entity.hpp
+    quarre/polymorphic-entity/quarre-polymorphic-entity.hpp
+    quarre/polymorphic-entity/quarre-polymorphic-entity-factory.hpp
+    quarre/panel/quarre-panel-delegate.hpp
+    quarre/panel/quarre-panel-delegate-factory.hpp
     )
 
 set(QUARRE_SCORE_ADDON_IMPLEMENTATIONS
@@ -20,6 +30,13 @@ set(QUARRE_SCORE_ADDON_IMPLEMENTATIONS
     quarre/device/quarre-protocol-factory.cpp
     quarre/device/quarre-protocol-settings-widget.cpp
     quarre/device/quarre-protocol-specific-settings.cpp
+    quarre/process/quarre-process-model.cpp
+    quarre/process/inspector/quarre-process-inspector.cpp
+    quarre/simple-element/quarre-simple-element.cpp
+    quarre/simple-element/quarre-simple-entity.cpp
+    quarre/polymorphic-entity/quarre-polymorphic-entity.cpp
+    quarre/polymorphic-entity/quarre-polymorphic-entity-factory.cpp
+    quarre/panel/quarre-panel-delegate.cpp
     )
 
 add_library(${PROJECT_NAME} ${QUARRE_SCORE_ADDON_HEADERS} ${QUARRE_SCORE_ADDON_IMPLEMENTATIONS})
