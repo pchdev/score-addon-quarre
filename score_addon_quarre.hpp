@@ -36,7 +36,7 @@
 class score_addon_quarre final :
 	public QObject,
 	public score::Plugin_QtInterface,
-	public score::Plugin_FactoryInterface_QtInterface,
+    public score::FactoryInterface_QtInterface,
 	public score::FactoryList_QtInterface,
 	public score::ApplicationPlugin_QtInterface,
 	public score::CommandFactory_QtInterface
@@ -64,8 +64,8 @@ class score_addon_quarre final :
 				score::Version obj_version,
 				score::Version current_version) override;
 
-		std::vector<std::unique_ptr<score::InterfaceListBase> factoryFamilies() override;
-		std::vector<std::unique_ptr<score::InterfaceBase> factories(
+        std::vector<std::unique_ptr<score::InterfaceListBase>> factoryFamilies() override;
+        std::vector<std::unique_ptr<score::InterfaceBase>> factories(
 				const score::ApplicationContext& ctx,
 				const score::InterfaceKey& key) const override;
 		
@@ -73,5 +73,5 @@ class score_addon_quarre final :
 				const score::GUIApplicationContext& app) override;
 		std::pair<const CommandGroupKey, CommandGeneratorMap> make_commands() override;
 
-}
+};
 

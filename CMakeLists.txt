@@ -8,11 +8,19 @@ score_common_setup()
 
 set(QUARRE_SCORE_ADDON_HEADERS
     score_addon_quarre.hpp
-    quarre/net/nethdl.hpp)
+    quarre/device/quarre-device.hpp
+    quarre/device/quarre-protocol-factory.hpp
+    quarre/device/quarre-protocol-settings-widget.hpp
+    quarre/device/quarre-protocol-specific-settings.hpp
+    )
 
 set(QUARRE_SCORE_ADDON_IMPLEMENTATIONS
     score_addon_quarre.cpp
-    quarre/net/nethdl.cpp)
+    quarre/device/quarre-device.cpp
+    quarre/device/quarre-protocol-factory.cpp
+    quarre/device/quarre-protocol-settings-widget.cpp
+    quarre/device/quarre-protocol-specific-settings.cpp
+    )
 
 add_library(${PROJECT_NAME} ${QUARRE_SCORE_ADDON_HEADERS} ${QUARRE_SCORE_ADDON_IMPLEMENTATIONS})
 score_generate_command_list_file(${PROJECT_NAME} "${QUARRE_SCORE_ADDON_HEADERS}")
