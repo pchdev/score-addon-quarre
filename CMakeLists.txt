@@ -18,6 +18,10 @@ set(QUARRE_SCORE_ADDON_HEADERS
     quarre/process/quarre-process-metadata.hpp
     quarre/process/quarre-process-model.hpp
     quarre/process/inspector/quarre-process-inspector.hpp
+    quarre/process/layer/quarre-process-layer-factory.hpp
+    quarre/process/layer/quarre-process-layer-presenter.hpp
+    quarre/process/layer/quarre-process-layer-view.hpp
+    quarre/process/local-tree/quarre-process-local-tree.hpp
     quarre/simple-element/quarre-simple-element.hpp
     quarre/simple-element/quarre-simple-entity.hpp
     quarre/polymorphic-entity/quarre-polymorphic-entity.hpp
@@ -35,6 +39,9 @@ set(QUARRE_SCORE_ADDON_IMPLEMENTATIONS
     quarre/device/quarre-protocol-specific-settings.cpp
     quarre/process/quarre-process-model.cpp
     quarre/process/inspector/quarre-process-inspector.cpp
+    quarre/process/layer/quarre-process-layer-presenter.cpp
+    quarre/process/layer/quarre-process-layer-view.cpp
+    quarre/process/local-tree/quarre-process-local-tree.cpp
     quarre/simple-element/quarre-simple-element.cpp
     quarre/simple-element/quarre-simple-entity.cpp
     quarre/polymorphic-entity/quarre-polymorphic-entity.cpp
