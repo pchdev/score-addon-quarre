@@ -1,24 +1,15 @@
-/*
- * =====================================================================================
- *
- *       Filename:  score_addon_quarre.cpp
- *
- *    Description:  main source
- *
- *        Version:  1.0
- *        Created:  05.12.2017 17:31:35
- *       Revision:  none
- *       Compiler:  gcc
- *
- *         Author:  pchd 
- *   Organization:  quarre
- *
- * =====================================================================================
- */
-
-
 #include "score_addon_quarre.hpp"
 #include <score/plugins/customfactory/FactorySetup.hpp>
+
+#include <quarre/application-plugin/quarre-application-plugin.hpp>
+#include <quarre/polymorphic-entity/quarre-polymorphic-entity-factory.hpp>
+#include <quarre/process/quarre-process-factory.hpp>
+#include <quarre/process/quarre-process-model.hpp>
+#include <quarre/process/inspector/quarre-process-inspector.hpp>
+#include <quarre/panel/quarre-panel-delegate-factory.hpp>
+#include <quarre/device/quarre-protocol-factory.hpp>
+
+using namespace score::addons;
 
 score_addon_quarre::score_addon_quarre()
 {
@@ -29,6 +20,7 @@ score_addon_quarre::~score_addon_quarre()
 {
 
 }
+
 auto score_addon_quarre::required() const
   -> std::vector<score::PluginKey>
 {
@@ -43,55 +35,34 @@ void score_addon_quarre::updateSaveFile(
 
 }
 
-std::vector<std::unique_ptr<score::InterfaceListBase> >
-score_addon_quarre::factoryFamilies()
+std::vector<std::unique_ptr<score::InterfaceListBase>> score_addon_quarre::factoryFamilies()
 {
     return make_ptr_vector<score::InterfaceListBase,
-            AppInteraction::PolymorphicElementFactoryList>();
+            quarre::PolymorphicElementFactoryList>();
 }
 
-std::vector<std::unique_ptr<score::InterfaceBase> >
-score_addon_quarre::factories(
+std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_quarre::factories(
         const score::ApplicationContext& ctx,
         const score::InterfaceKey& key) const
 {
-    return instantiate_factories<
-            score::ApplicationContext,
-        FW<
-           Process::ProcessModelFactory, // An abstract factory
-           AppInteraction::ProcessFactory // followed by all the matching concrete factories
-          >,
-        FW<
-           Process::LayerFactory, // Another abstract factory
-           AppInteraction::LayerFactory // etc...
-          >,
-        FW<Process::InspectorWidgetDelegateFactory,
-           AppInteraction::InspectorFactory>,
-        FW<Engine::Execution::ProcessComponentFactory,
-           AppInteraction::ProcessExecutorComponentFactory>,
-        FW<Engine::LocalTree::ProcessComponentFactory,
-           AppInteraction::LocalTreeProcessComponentFactory>,
-        FW<score::PanelDelegateFactory,
-           AppInteraction::PanelDelegateFactory>,
-        FW<
+    return instantiate_factories<score::ApplicationContext,
 
-           AppInteraction::PolymorphicElementFactory,
-           AppInteraction::ConcretePolymorphicElementFactory
-          >
+            FW<Process::ProcessModelFactory, quarre::ProcessFactory>,
+            FW<Process::InspectorWidgetDelegateFactory, quarre::InspectorFactory>,
+            FW<score::PanelDelegateFactory, quarre::PanelDelegateFactory>,
+            FW<Device::ProtocolFactory, quarre::ProtocolFactory>
+
     >(ctx, key);
 }
 
-score::GUIApplicationPlugin*
-score_addon_quarre::make_applicationPlugin(
+score::GUIApplicationPlugin* score_addon_quarre::make_applicationPlugin(
         const score::GUIApplicationContext& app)
 {
-    return new AppInteraction::ApplicationPlugin{app};
+    return new quarre::ApplicationPlugin ( app );
 }
 
-std::pair<const CommandGroupKey, CommandGeneratorMap>
-score_addon_quarre::make_commands()
+std::pair<const CommandGroupKey, CommandGeneratorMap> score_addon_quarre::make_commands()
 {
-    using namespace AppInteraction;
     std::pair<const CommandGroupKey, CommandGeneratorMap> cmds{
         CommandFactoryName(),
         CommandGeneratorMap{}};

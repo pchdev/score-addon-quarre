@@ -3,25 +3,25 @@
 #include "quarre-protocol-specific-settings.hpp"
 #include "quarre-device.hpp"
 
-using namespace score::addons::quarre;
+using namespace score::addons;
 
-QString QuarreProtocolFactory::prettyName() const
+QString quarre::ProtocolFactory::prettyName() const
 {
     return QObject::tr("quarrè-server");
 }
 
-int QuarreProtocolFactory::visualPriority() const
+int quarre::ProtocolFactory::visualPriority() const
 {
     return 1;
 }
 
-Device::DeviceInterface* QuarreProtocolFactory::makeDevice(
+Device::DeviceInterface* quarre::ProtocolFactory::makeDevice(
         const Device::DeviceSettings &settings, const DocumentContext &ctx)
 {
     return new QuarreDevice { settings };
 }
 
-const Device::DeviceSettings& QuarreProtocolFactory::defaultSettings()
+const Device::DeviceSettings& quarre::ProtocolFactory::defaultSettings()
 {
     static const Device::DeviceSettings settings = [&]() {
 
@@ -42,23 +42,23 @@ const Device::DeviceSettings& QuarreProtocolFactory::defaultSettings()
     return settings;
 }
 
-Device::ProtocolSettingsWidget* QuarreProtocolFactory::makeSettingsWidget()
+Device::ProtocolSettingsWidget* quarre::ProtocolFactory::makeSettingsWidget()
 {
     return new QuarreProtocolSettingsWidget;
 }
 
-QVariant QuarreProtocolFactory::makeProtocolSpecificSettings(const VisitorVariant &visitor) const
+QVariant quarre::ProtocolFactory::makeProtocolSpecificSettings(const VisitorVariant &visitor) const
 {
     return makeProtocolSpecificSettings_T<QuarreSpecificSettings>(visitor);
 }
 
-void QuarreProtocolFactory::serializeProtocolSpecificSettings(
+void quarre::ProtocolFactory::serializeProtocolSpecificSettings(
         const QVariant &data, const VisitorVariant &visitor) const
 {
     serializeProtocolSpecificSettings_T<QuarreSpecificSettings>(data, visitor);
 }
 
-bool QuarreProtocolFactory::checkCompatibility(
+bool quarre::ProtocolFactory::checkCompatibility(
         const Device::DeviceSettings &a, const Device::DeviceSettings &b) const
 {
     return a.name != b.name;

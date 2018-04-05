@@ -2,13 +2,13 @@
 
 #include <Device/Protocol/ProtocolFactoryInterface.hpp>
 
-namespace score {
-namespace addons {
-namespace quarre {
+namespace score     {
+namespace addons    {
+namespace quarre    {
 
-class QuarreProtocolFactory final : public Device::ProtocolFactory
+class ProtocolFactory final : public Device::ProtocolFactory
 {
-    //SCORE_CONCRETE()
+    SCORE_CONCRETE  ( "BBBF1836-E035-409F-8C2E-879CF480511D" )
 
     virtual QString prettyName() const override;
     virtual int visualPriority() const override;

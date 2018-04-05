@@ -5,37 +5,36 @@
 #include <QLabel>
 #include <QFormLayout>
 
-using namespace score::addons::quarre;
+using namespace score::addons;
 
-QuarreProtocolSettingsWidget::QuarreProtocolSettingsWidget(QWidget *parent)
+quarre::ProtocolSettingsWidget::ProtocolSettingsWidget(QWidget *parent)
 {
     // OSCQUERY-OSC-PORT --------------------------
     m_osc_port_sbox = new QSpinBox(this);
-    m_osc_port_sbox->setRange(0, 65535);
+    m_osc_port_sbox ->setRange(0, 65535);
 
     // OSCQUERY-WS-PORT --------------------------
     m_ws_port_sbox = new QSpinBox(this);
-    m_ws_port_sbox->setRange(0, 65535);
+    m_ws_port_sbox ->setRange(0, 65535);
 
     // N_CLIENTS_MAX ----------------------------
     m_max_users_sbox = new QSpinBox(this);
-    m_max_users_sbox->setRange(1, 50);
+    m_max_users_sbox ->setRange(1, 50);
 
     QFormLayout* layout = new QFormLayout;
 
-    layout->addRow(tr("Server OSC Port"), m_osc_port_sbox);
-    layout->addRow(tr("Server WS Port"), m_ws_port_sbox);
-    layout->addRow(tr("Max Clients"), m_max_users_sbox);
+    layout->addRow ( tr("Server OSC Port"), m_osc_port_sbox );
+    layout->addRow ( tr("Server WS Port"), m_ws_port_sbox );
+    layout->addRow ( tr("Max Clients"), m_max_users_sbox );
 
     setLayout(layout);
     setDefaults();
-
 }
 
-Device::DeviceSettings QuarreProtocolSettingsWidget::getSettings() const
+Device::DeviceSettings quarre::ProtocolSettingsWidget::getSettings() const
 {
     Device::DeviceSettings settings;
-    settings.name = "quarre-server";
+    settings.name = "quarrè-server";
 
     QuarreSpecificSettings qsettings;
 
@@ -48,7 +47,7 @@ Device::DeviceSettings QuarreProtocolSettingsWidget::getSettings() const
     return settings;
 }
 
-void QuarreProtocolSettingsWidget::setSettings(const Device::DeviceSettings &settings)
+void quarre::ProtocolSettingsWidget::setSettings(const Device::DeviceSettings &settings)
 {
     QuarreSpecificSettings qsettings;
 
@@ -57,14 +56,13 @@ void QuarreProtocolSettingsWidget::setSettings(const Device::DeviceSettings &set
     {
         qsettings = settings.deviceSpecificSettings;
 
-        m_osc_port_sbox->setValue   ( qsettings.osc_port );
-        m_ws_port_sbox->setValue    ( qsettings.ws_port );
-        m_max_users_sbox->setValue  ( qsettings.max_users );
+        m_osc_port_sbox     -> setValue   ( qsettings.osc_port );
+        m_ws_port_sbox      -> setValue   ( qsettings.ws_port );
+        m_max_users_sbox    -> setValue   ( qsettings.max_users );
     }
-
 }
 
-void QuarreProtocolSettingsWidget::setDefaults()
+void quarre::ProtocolSettingsWidget::setDefaults()
 {
     SCORE_ASSERT    ( m_osc_port_sbox );
     SCORE_ASSERT    ( m_ws_port_sbox );
@@ -73,5 +71,4 @@ void QuarreProtocolSettingsWidget::setDefaults()
     m_osc_port_sbox     -> setValue ( 1234 );
     m_ws_port_sbox      -> setValue ( 5678 );
     m_max_users_sbox    -> setValue ( 4 );
-
 }

@@ -4,17 +4,17 @@
 #include <ossia/ossia.hpp>
 #include <Engine/Protocols/OSSIADevice.hpp>
 
-namespace score {
-namespace addons {
-namespace quarre {
+namespace score     {
+namespace addons    {
+namespace quarre    {
 
-class QuarreDevice final : public Engine::Network::OwningOSSIADevice
+class Device final : public Engine::Network::OwningOSSIADevice
 {
     Q_OBJECT
 
     public: //------------------------------------------------
-    QuarreDevice  (const Device::DeviceSettings& settings );
-    ~QuarreDevice ( );
+    Device  (const Device::DeviceSettings& settings );
+    ~Device ( );
 
     virtual bool reconnect  ( ) override;
     virtual void recreate   ( const Device::Node& n ) override;

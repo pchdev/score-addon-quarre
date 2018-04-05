@@ -7,15 +7,15 @@ class QLineEdit;
 class QSpinBox;
 class QWidget;
 
-namespace score {
-namespace addons {
-namespace quarre {
+namespace score     {
+namespace addons    {
+namespace quarre    {
 
-class QuarreProtocolSettingsWidget final : public Device::ProtocolSettingsWidget
+class ProtocolSettingsWidget final : public Device::ProtocolSettingsWidget
 {
     public: //----------------------------------------------------
 
-    QuarreProtocolSettingsWidget(QWidget* parent = nullptr);
+    ProtocolSettingsWidget(QWidget* parent = nullptr);
 
     virtual Device::DeviceSettings getSettings() const override;
     virtual void setSettings(const Device::DeviceSettings &settings) override;

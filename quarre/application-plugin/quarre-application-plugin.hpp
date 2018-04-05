@@ -21,6 +21,7 @@ class ApplicationPlugin final : public score::GUIApplicationPlugin
     //      - the length of the interaction (-1 = inf)
     //      - a description of the interaction
     //      - a maximum countdown length, to notify the user of the interaction
+    //      - the condition to end the interaction (e.g. /user/0/gestures/whip/trigger)
 
     public: //----------------------------------------------------
     ApplicationPlugin(const score::GUIApplicationContext& appctx);

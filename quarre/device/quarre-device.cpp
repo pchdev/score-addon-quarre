@@ -1,12 +1,11 @@
-
 #include <stdlib.h>
 #include "quarre-device.hpp"
 
-using namespace score::addons::quarre;
+using namespace score::addons;
 using namespace ossia::net;
 using namespace ossia::oscquery;
 
-QuarreDevice::QuarreDevice(const Device::DeviceSettings &settings) :
+quarre::Device::Device(const Device::DeviceSettings &settings) :
     Engine::Network::OwningOSSIADevice(settings)
 {
     auto mpx = std::make_unique<multiplex_protocol>( );
@@ -18,7 +17,7 @@ QuarreDevice::QuarreDevice(const Device::DeviceSettings &settings) :
     make_tree();
 }
 
-QuarreDevice::~QuarreDevice() {}
+quarre::Device::~Device() {}
 
 inline void make_common_parameter(generic_device& root, ossia::string_view name, ossia::val_type ty)
 {
@@ -34,17 +33,17 @@ inline void make_user_parameter(generic_device& root, std::string pattern, ossia
         node->create_parameter(ty);
 }
 
-bool QuarreDevice::reconnect(const Device::Node& n)
+bool quarre::Device::reconnect(const Device::Node& n)
 {
 
 }
 
-void QuarreDevice::recreate(const Device::Node &n)
+void quarre::Device::recreate(const Device::Node &n)
 {
 
 }
 
-void QuarreDevice::make_tree()
+void quarre::Device::make_tree()
 {
     auto root   = *m_device;
     std::vector<node_base*> nodes;

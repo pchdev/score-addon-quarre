@@ -7,10 +7,10 @@
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
 
-using namespace score::addons::quarre;
+using namespace score::addons;
 
 template <> void DataStreamReader::read(
-        const QuarreSpecificSettings& n )
+        const quarre::SpecificSettings& n )
 {
     m_stream << n.osc_port;
     m_stream << n.ws_port;
@@ -20,7 +20,7 @@ template <> void DataStreamReader::read(
 }
 
 template <> void DataStreamWriter::write(
-        const QuarreSpecificSettings& n )
+        const quarre::SpecificSettings& n )
 {
     m_stream >> n.osc_port;
     m_stream >> n.ws_port;
@@ -30,7 +30,7 @@ template <> void DataStreamWriter::write(
 }
 
 template <> void JSONObjectReader::read(
-        const QuarreSpecificSettings& n )
+        const quarre::SpecificSettings& n )
 {
     obj [ "OSCPort" ]   = n.osc_port;
     obj [ "WSPort" ]    = n.ws_port;
@@ -38,7 +38,7 @@ template <> void JSONObjectReader::read(
 }
 
 template <> void JSONObjectWriter::write(
-        const QuarreSpecificSettings& n )
+        const quarre::SpecificSettings& n )
 {
     n.osc_port  = obj  [ "OSCPort"  ].toInt();
     n.ws_port   = obj  [ "WSPort"   ].toInt();

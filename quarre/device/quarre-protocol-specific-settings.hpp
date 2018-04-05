@@ -3,11 +3,11 @@
 #include <QMetaType>
 #include <QString>
 
-namespace score {
-namespace addons {
-namespace quarre {
+namespace score     {
+namespace addons    {
+namespace quarre    {
 
-struct QuarreSpecificSettings
+struct SpecificSettings
 {
     int osc_port    {};
     int ws_port     {};
@@ -18,4 +18,4 @@ struct QuarreSpecificSettings
 }
 }
 
-Q_DECLARE_METATYPE  ( score::addons::quarre::QuarreSpecificSettings )
+Q_DECLARE_METATYPE  ( score::addons::quarre::SpecificSettings )
