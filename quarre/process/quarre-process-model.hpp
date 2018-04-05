@@ -2,15 +2,12 @@
 
 #include <Process/Process.hpp>
 #include "quarre-process-metadata.hpp"
-
-#include <quarre/simple-element/simple-element.hpp>
-#include <quarre/polymorphic-entity/polymorphic-entity.hpp>
-
+#include <quarre/interaction/quarre-interaction.hpp>
 #include <score/model/EntityMap.hpp>
 
-namespace score {
-namespace addons {
-namespace quarre {
+namespace score     {
+namespace addons    {
+namespace quarre    {
 
 class ProcessModel final : public Process::ProcessModel
 {
@@ -33,28 +30,36 @@ class ProcessModel final : public Process::ProcessModel
         vis.writeTo(*this);
     }
 
-    score::EntityMap<SimpleElement> simple_elements;
-    score::EntityMap<PolymorphicEntity> polymorphic_entities;
+    quarre::Interaction interaction;
+
+    public slots:
+    void onInteractionTitleChanged          ( QString const& title );
+    void onInteractionDescriptionChanged    ( QString const& description );
+    void onInteractionModuleChanged         ( QString const& module_id );
+    void onInteractionLengthChanged         ( uint16_t length );
+    void onInteractionCountdownChanged      ( uint16_t countdown );
+    void onInteractionSensorsChanged        ( QStringList sensors );
+    void onInteractionGesturesChanged       ( QStringList gestures );
 
     private: //--------------------------------------------
 
-    virtual QString prettyName() const override;
+    virtual QString prettyName      ( ) const override;
 
-    virtual void startExecution() override;
-    virtual void stopExecution() override;
-    virtual void reset() override;
+    virtual void startExecution     ( ) override;
+    virtual void stopExecution      ( ) override;
+    virtual void reset              ( ) override;
 
-    virtual ProcessStateDataInterface* startStateData() const override;
-    virtual ProcessStateDataInterface* endStateData() const override;
+    virtual ProcessStateDataInterface* startStateData   ( ) const override;
+    virtual ProcessStateDataInterface* endStateData     ( ) const override;
 
-    virtual Selection selectableChildren() const override;
-    virtual Selection selectedChildren() const override;
+    virtual Selection selectableChildren    ( ) const override;
+    virtual Selection selectedChildren      ( ) const override;
 
-    virtual void setSelection(const Selection &s) const override;
+    virtual void setSelection ( const Selection &s ) const override;
 
-    virtual void setDurationAndScale(const TimeVal &newDuration) override;
-    virtual void setDurationAndGrow(const TimeVal &newDuration) override;
-    virtual void setDurationAndShrink(const TimeVal& newDuration) override;
+    virtual void setDurationAndScale    ( const TimeVal &newDuration ) override;
+    virtual void setDurationAndGrow     ( const TimeVal &newDuration ) override;
+    virtual void setDurationAndShrink   ( const TimeVal& newDuration ) override;
 };
 
 }

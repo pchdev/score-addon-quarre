@@ -22,10 +22,7 @@ set(QUARRE_SCORE_ADDON_HEADERS
     quarre/process/layer/quarre-process-layer-presenter.hpp
     quarre/process/layer/quarre-process-layer-view.hpp
     quarre/process/local-tree/quarre-process-local-tree.hpp
-    quarre/simple-element/quarre-simple-element.hpp
-    quarre/simple-element/quarre-simple-entity.hpp
-    quarre/polymorphic-entity/quarre-polymorphic-entity.hpp
-    quarre/polymorphic-entity/quarre-polymorphic-entity-factory.hpp
+    quarre/interaction/quarre-interaction.hpp
     quarre/panel/quarre-panel-delegate.hpp
     quarre/panel/quarre-panel-delegate-factory.hpp
     )
@@ -42,10 +39,7 @@ set(QUARRE_SCORE_ADDON_IMPLEMENTATIONS
     quarre/process/layer/quarre-process-layer-presenter.cpp
     quarre/process/layer/quarre-process-layer-view.cpp
     quarre/process/local-tree/quarre-process-local-tree.cpp
-    quarre/simple-element/quarre-simple-element.cpp
-    quarre/simple-element/quarre-simple-entity.cpp
-    quarre/polymorphic-entity/quarre-polymorphic-entity.cpp
-    quarre/polymorphic-entity/quarre-polymorphic-entity-factory.cpp
+    quarre/interaction/quarre-interaction.cpp
     quarre/panel/quarre-panel-delegate.cpp
     )
 

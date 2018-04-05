@@ -10,7 +10,6 @@ namespace addons    {
 namespace quarre    {
 
 class ProcessModel;
-class PolymorphicEntity;
 
 class InspectorWidget final :
         public Process::InspectorWidgetDelegate_T<quarre::ProcessModel>,
@@ -25,9 +24,6 @@ class InspectorWidget final :
 
     private: //---------------------------------------------------------
 
-    void on_entityAdded(const PolymorphicEntity&);
-    void on_entityRemoved(const PolymorphicEntity&);
-
     CommandDispatcher<> m_dispatcher;
 
 };
@@ -35,7 +31,7 @@ class InspectorWidget final :
 class InspectorFactory final :
         public Process::InspectorWidgetDelegateFactory_T<ProcessModel, InspectorWidget>
 {
-    SCORE_CONCRETE  ( " " )
+    SCORE_CONCRETE  ( "276587EB-0AC9-43A4-BAB8-4536A73BDE85" )
 
 };
 

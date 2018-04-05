@@ -23,6 +23,8 @@ void quarre::ProcessLayerView::setText(const QString & txt)
 
 void quarre::ProcessLayerView::paint_impl(QPainter* painter) const
 {
+    // display a summary of the interaction here
+
 
 }
 

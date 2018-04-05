@@ -1,8 +1,11 @@
 #include "quarre-process-layer-presenter.hpp"
+#include "quarre-process-layer-view.hpp"
 
 #include <score/command/Dispatchers/CommandDispatcher.hpp>
 
 using namespace score::addons;
+
+// controller: establishes connections between view and model
 
 quarre::ProcessLayerPresenter::ProcessLayerPresenter (
         const quarre::ProcessModel &layer,

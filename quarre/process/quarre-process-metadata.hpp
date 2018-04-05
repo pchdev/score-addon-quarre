@@ -2,9 +2,9 @@
 
 #include <Process/ProcessMetadata.hpp>
 
-namespace score {
-namespace addons {
-namespace quarre {
+namespace score     {
+namespace addons    {
+namespace quarre    {
 
 class ProcessModel;
 
@@ -15,7 +15,7 @@ class ProcessModel;
 PROCESS_METADATA(
         ,
         score::addons::quarre::ProcessModel,
-        "8437437-43989",
+        "471625BB-3B6B-4E7D-86EF-BF66F1387C06",
         "quarrè",
         "quarrè",
         "control",

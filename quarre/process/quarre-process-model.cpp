@@ -1,9 +1,9 @@
 #include "quarre-process-model.hpp"
 #include <QString>
 
-using namespace score::addons::quarre;
+using namespace score::addons;
 
-score::addons::quarre::ProcessModel::ProcessModel(
+quarre::ProcessModel::ProcessModel(
         const TimeVal& duration,
         const Id<Process::ProcessModel>& id,
         QObject* parent ) : ProcessModel(duration, id, "quarrè-process", parent)
@@ -11,62 +11,105 @@ score::addons::quarre::ProcessModel::ProcessModel(
     metadata().setInstanceName(*this);
 }
 
-QString score::addons::quarre::ProcessModel::prettyName() const
+QString quarre::ProcessModel::prettyName() const
 {
     return tr("quarrè-process");
 }
 
-void score::addons::quarre::ProcessModel::startExecution()
+void quarre::ProcessModel::onInteractionTitleChanged(const QString &title)
 {
+    interaction.title = title;
+}
+
+void quarre::ProcessModel::onInteractionDescriptionChanged(const QString &description)
+{
+    interaction.description = description;
+}
+
+quarre::ProcessModel::onInteractionModuleChanged(const QString &module_id)
+{
+    interaction.module = module_id;
+}
+
+quarre::ProcessModel::onInteractionLengthChanged(uint16_t length)
+{
+    interaction.length = length;
+}
+
+quarre::ProcessModel::onInteractionCountdownChanged(uint16_t countdown)
+{
+    interaction.countdown = countdown;
+}
+
+quarre::ProcessModel::onInteractionSensorsChanged(QStringList sensors)
+{
+    interaction.sensors = sensors;
+}
+
+quarre::ProcessModel::onInteractionGesturesChanged(QStringList gestures)
+{
+    interaction.gestures = gestures;
+}
+
+void quarre::ProcessModel::startExecution()
+{
+    // get quarre-server-device
+    // select client device
+    // send countdown
+
+    // when countdown is over
+    // start interaction
 
 }
 
-void score::addons::quarre::ProcessModel::stopExecution()
+void quarre::ProcessModel::stopExecution()
 {
+    // end interaction
 
 }
 
-void score::addons::quarre::ProcessModel::reset()
+void quarre::ProcessModel::reset()
 {
+    // ?
 
 }
 
-ProcessStateDataInterface* score::addons::quarre::ProcessModel::startStateData() const
+ProcessStateDataInterface* quarre::ProcessModel::startStateData() const
 {
     return nullptr;
 }
 
-ProcessStateDataInterface* score::addons::quarre::ProcessModel::endStateData() const
+ProcessStateDataInterface* quarre::ProcessModel::endStateData() const
 {
     return nullptr;
 }
 
-Selection score::addons::quarre::ProcessModel::selectableChildren() const
+Selection quarre::ProcessModel::selectableChildren() const
 {
     return {};
 }
 
-Selection score::addons::quarre::ProcessModel::selectedChildren() const
+Selection quarre::ProcessModel::selectedChildren() const
 {
     return {};
 }
 
-void score::addons::quarre::ProcessModel::setSelection(const Selection &s) const
+void quarre::ProcessModel::setSelection(const Selection &s) const
 {
 
 }
 
-void score::addons::quarre::ProcessModel::setDurationAndScale(const TimeVal &newDuration)
+void quarre::ProcessModel::setDurationAndScale(const TimeVal &newDuration)
 {
 
 }
 
-void score::addons::quarre::ProcessModel::setDurationAndGrow(const TimeVal &newDuration)
+void quarre::ProcessModel::setDurationAndGrow(const TimeVal &newDuration)
 {
 
 }
 
-void score::addons::quarre::ProcessModel::setDurationAndShrink(const TimeVal &newDuration)
+void quarre::ProcessModel::setDurationAndShrink(const TimeVal &newDuration)
 {
 
 }
@@ -74,68 +117,32 @@ void score::addons::quarre::ProcessModel::setDurationAndShrink(const TimeVal &ne
 // SERIALIZATION --------------------------------------------------------------------------
 
 template <> void DataStreamReader::read(
-        const score::addons::quarre::ProcessModel& process )
+        const quarre::ProcessModel& process )
 {
-    m_stream << (int32_t) process.simple_elements.size();
-    for ( const auto& e : process.simple_elements )
-        readFrom(e);
-
-    m_stream << (int32_t) process.polymorphic_entities.size();
-    for ( const auto& e : process.polymorphic_entities )
-        readFrom(e);
-
+    readFrom ( process.interaction );
     insertDelimiter();
 }
 
 template <> void DataStreamWriter::write(
-        score::addons::quarre::ProcessModel& process )
-{
-    int32_t     simple_count;
-    m_stream >> simple_count;
-
-    for ( ; simple_count-- > 0; )
-        process.simple_elements.add(
-                    new score::addons::quarre::SimpleElement(*this, &process) );
-
-    int32_t     poly_count;
-    m_stream >> poly_count;
-
-    auto& pl = components.interfaces<score::addons::quarre::PolyMorphicElementFactoryList>();
-
-    for ( ; poly_count-- > 0; )
-    {
-        auto e = deserialize_interface(pl, *this, &process);
-        if ( e ) process.polymorphic_entities.add ( e );
-        else throw std::runtime_error("Unable to load.");
-    }
-
+        quarre::ProcessModel& process )
+{   
+    writeTo ( process.interaction );
     checkDelimiter();
 }
 
 template <> void JSONObjectReader::read(
-        const score::addons::quarre::ProcessModel& process )
+        const quarre::ProcessModel& process )
 {
-    obj [ "SimpleElements" ] = toJsonArray(process.simple_elements);
-    obj [ "PolyElements"   ] = toJsonArray(process.polymorphic_entities);
+    obj [ "Interaction" ] = toJsonObject( process.interaction );
 }
 
 template <> void JSONObjectWriter::write(
-        score::addons::quarre::ProcessModel& process )
-{
-    for ( const auto& json_vref : obj [ "SimpleElements"].toArray())
-    {
-        JSONObject::Deserializer deserializer(json_vref.toObject());
-        process.simple_elements.add ( new score::addons::quarre::SimpleElement(deserializer, &process));
-    }
+        quarre::ProcessModel& process )
+{        
+    auto json_obj = obj [ "Interaction" ].toObject();
 
-    auto& pl = components.interfaces<score::addons::quarre::PolymorphicElementFactoryList>();
-    for ( const auto& json_vref : obj [ "PolyElements"].toArray())
-    {
-        JSONObject::Deserializer deserializer(json_vref.toObject());
-        auto e = deserialize_interface(pl, deserializer, &process);
-        if ( e ) process.polymorphic_entities.add ( e );
-        else throw std::runtime_error("Unable to load.");
-    }
+    JSONObject::Deserializer deserializer ( json_obj );
+    process.interaction = quarre::Interaction(deserializer, &process);
 }
 
 
