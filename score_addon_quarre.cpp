@@ -37,8 +37,7 @@ void score_addon_quarre::updateSaveFile(
 
 std::vector<std::unique_ptr<score::InterfaceListBase>> score_addon_quarre::factoryFamilies()
 {
-    return make_ptr_vector<score::InterfaceListBase,
-            quarre::PolymorphicElementFactoryList>();
+    return {};
 }
 
 std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_quarre::factories(

@@ -5,6 +5,14 @@
 #include <Process/Inspector/ProcessInspectorWidgetDelegateFactory.hpp>
 #include <score/command/Dispatchers/CommandDispatcher.hpp>
 
+#include <QFormLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QComboBox>
+#include <QListWidget>
+
 namespace score     {
 namespace addons    {
 namespace quarre    {
@@ -22,10 +30,19 @@ class InspectorWidget final :
             const score::DocumentContext& ctx,
             QWidget* parent );
 
+    signals: //------------------------------------------------------------
+    void sensorListChanged      ( QStringList );
+    void gestureListChanged     ( QStringList );
+
+    protected slots: //----------------------------------------------------
+    void onSensorsSelectionChanged      (QListWidgetItem*);
+    void onGesturesSelectionChanged     (QListWidgetItem*);
+
     private: //---------------------------------------------------------
-
+    QStringList  m_selected_sensors;
+    QStringList  m_selected_gestures;
+    QFormLayout* m_layout;
     CommandDispatcher<> m_dispatcher;
-
 };
 
 class InspectorFactory final :
