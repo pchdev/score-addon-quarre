@@ -1,5 +1,8 @@
 #include "quarre-process-model.hpp"
 #include <QString>
+#include <score/application/ApplicationContext.hpp>
+
+#include <quarre/device/quarre-device.hpp>
 
 using namespace score::addons;
 
@@ -13,7 +16,12 @@ quarre::ProcessModel::ProcessModel(
 
 QString quarre::ProcessModel::prettyName() const
 {
-    return tr("quarrè-process");
+    return tr ( "quarrè-process" );
+}
+
+QString quarre::ProcessModel::prettyShortName() const
+{
+    return tr ( "quarrè" );
 }
 
 void quarre::ProcessModel::onInteractionTitleChanged(const QString &title)
@@ -53,12 +61,16 @@ quarre::ProcessModel::onInteractionGesturesChanged(QStringList gestures)
 
 void quarre::ProcessModel::startExecution()
 {
-    // get quarre-server-device
-    // select client device
+    // get quarre-server-device singleton
+    // request potential user
+
     // send countdown
 
     // when countdown is over
     // start interaction
+
+    auto device = quarre::Device::instance();
+    ossia::net::node_base* device->get_client_candidate();
 
 }
 

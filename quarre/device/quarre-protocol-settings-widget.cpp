@@ -1,6 +1,7 @@
 #include "quarre-protocol-settings-widget.hpp"
 #include "quarre-protocol-specific-settings.hpp"
 
+
 #include <QSpinBox>
 #include <QLabel>
 #include <QFormLayout>
@@ -36,7 +37,7 @@ Device::DeviceSettings quarre::ProtocolSettingsWidget::getSettings() const
     Device::DeviceSettings settings;
     settings.name = "quarrè-server";
 
-    QuarreSpecificSettings qsettings;
+    quarre::SpecificSettings qsettings;
 
     qsettings.osc_port      = m_osc_port_sbox->value();
     qsettings.ws_port       = m_ws_port_sbox->value();
@@ -49,10 +50,10 @@ Device::DeviceSettings quarre::ProtocolSettingsWidget::getSettings() const
 
 void quarre::ProtocolSettingsWidget::setSettings(const Device::DeviceSettings &settings)
 {
-    QuarreSpecificSettings qsettings;
+    quarre::SpecificSettings qsettings;
 
     if ( settings.deviceSpecificSettings
-         .canConvert<QuarreSpecificSettings>() )
+         .canConvert<quarre::SpecificSettings>() )
     {
         qsettings = settings.deviceSpecificSettings;
 

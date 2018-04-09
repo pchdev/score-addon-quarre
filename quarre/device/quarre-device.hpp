@@ -13,7 +13,9 @@ class Device final : public Engine::Network::OwningOSSIADevice
     Q_OBJECT
 
     public: //------------------------------------------------
-    Device  (const Device::DeviceSettings& settings );
+    static score::addons::quarre::Device* instance();
+    static score::addons::quarre::Device* instance(const Device::DeviceSettings& settings);
+
     ~Device ( );
 
     virtual bool reconnect  ( ) override;
@@ -29,6 +31,8 @@ class Device final : public Engine::Network::OwningOSSIADevice
     void slot_command();
 
     private: //-----------------------------------------------
+    Device     (const Device::DeviceSettings& settings );
+    Device*    m_singleton;
     uint16_t   m_wsport;
     uint16_t   m_oscport;
 

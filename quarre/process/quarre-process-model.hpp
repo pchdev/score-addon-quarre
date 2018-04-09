@@ -44,6 +44,7 @@ class ProcessModel final : public Process::ProcessModel
     private: //--------------------------------------------
 
     virtual QString prettyName      ( ) const override;
+    virtual QString prettyShortName ( ) const override;
 
     virtual void startExecution     ( ) override;
     virtual void stopExecution      ( ) override;

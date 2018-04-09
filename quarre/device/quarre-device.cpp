@@ -1,17 +1,40 @@
 #include <stdlib.h>
 #include "quarre-device.hpp"
+#include <quarre/device/quarre-protocol-specific-settings.hpp>
+#include <quarre/device/quarre-protocol-settings-widget.hpp>
+#include <Device/Protocol/DeviceSettings.hpp>
 
 using namespace score::addons;
 using namespace ossia::net;
 using namespace ossia::oscquery;
 
-quarre::Device::Device(const Device::DeviceSettings &settings) :
-    Engine::Network::OwningOSSIADevice(settings)
+quarre::Device* quarre::Device::instance(const Device::DeviceSettings &settings)
 {
-    auto mpx = std::make_unique<multiplex_protocol>( );
-    m_dev = std::make_unique<device_base>( std::move(mpx), QUARRE_SERVER_NAME );
+    if ( m_singleton ) delete m_singleton;
+    m_singleton = new quarre::Device(settings);
 
-    auto server     = std::make_unique<oscquery_server_protocol>( osc_port, ws_port );
+    return m_singleton;
+}
+
+quarre::Device* quarre::Device::instance()
+{
+    return m_singleton;
+}
+
+quarre::Device::Device(const Device::DeviceSettings &settings) :
+    Device::DeviceInterface ( settings )
+{
+    quarre::SpecificSettings qsettings;
+
+    if ( m_settings.deviceSpecificSettings.canConvert<quarre::SpecificSettings>() )
+        qsettings = m_settings.deviceSpecificSettings;
+
+    auto mpx = std::make_unique<multiplex_protocol>( );
+    m_dev = std::make_unique<device_base>( std::move(mpx), m_settings.name );
+
+    auto server     = std::make_unique<oscquery_server_protocol>(
+                      qsettings.osc_port, qsettings.ws_port );
+
     mpx->expose_to  ( std::move(server) );
 
     make_tree();
@@ -33,7 +56,7 @@ inline void make_user_parameter(generic_device& root, std::string pattern, ossia
         node->create_parameter(ty);
 }
 
-bool quarre::Device::reconnect(const Device::Node& n)
+bool quarre::Device::recreate(const Device::Node& n)
 {
 
 }
@@ -45,7 +68,8 @@ void quarre::Device::recreate(const Device::Node &n)
 
 void quarre::Device::make_tree()
 {
-    auto root   = *m_device;
+    auto root   = *m_dev->get_root_node ( );
+
     std::vector<node_base*> nodes;
     node_base*  nd;
 

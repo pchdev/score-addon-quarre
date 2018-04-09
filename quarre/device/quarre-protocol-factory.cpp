@@ -2,12 +2,13 @@
 #include "quarre-protocol-settings-widget.hpp"
 #include "quarre-protocol-specific-settings.hpp"
 #include "quarre-device.hpp"
+#include <Device/Protocol/DeviceSettings.hpp>
 
 using namespace score::addons;
 
 QString quarre::ProtocolFactory::prettyName() const
 {
-    return QObject::tr("quarrè-server");
+    return QObject::tr ( "quarrè-server" );
 }
 
 int quarre::ProtocolFactory::visualPriority() const
@@ -18,7 +19,7 @@ int quarre::ProtocolFactory::visualPriority() const
 Device::DeviceInterface* quarre::ProtocolFactory::makeDevice(
         const Device::DeviceSettings &settings, const DocumentContext &ctx)
 {
-    return new QuarreDevice { settings };
+    return new quarre::Device::instance(settings);
 }
 
 const Device::DeviceSettings& quarre::ProtocolFactory::defaultSettings()
@@ -27,9 +28,9 @@ const Device::DeviceSettings& quarre::ProtocolFactory::defaultSettings()
 
         Device::DeviceSettings s;
         s.protocol = concreteKey();
-        s.name = "Quarrè";
+        s.name = "quarrè";
 
-        QuarreSpecificSettings qsettings;
+        quarre::SpecificSettings qsettings;
         qsettings.max_users     = 4;
         qsettings.osc_port      = 1234;
         qsettings.ws_port       = 5678;
@@ -44,18 +45,18 @@ const Device::DeviceSettings& quarre::ProtocolFactory::defaultSettings()
 
 Device::ProtocolSettingsWidget* quarre::ProtocolFactory::makeSettingsWidget()
 {
-    return new QuarreProtocolSettingsWidget;
+    return new quarre::ProtocolSettingsWidget;
 }
 
 QVariant quarre::ProtocolFactory::makeProtocolSpecificSettings(const VisitorVariant &visitor) const
 {
-    return makeProtocolSpecificSettings_T<QuarreSpecificSettings>(visitor);
+    return makeProtocolSpecificSettings_T<quarre::SpecificSettings>(visitor);
 }
 
 void quarre::ProtocolFactory::serializeProtocolSpecificSettings(
         const QVariant &data, const VisitorVariant &visitor) const
 {
-    serializeProtocolSpecificSettings_T<QuarreSpecificSettings>(data, visitor);
+    serializeProtocolSpecificSettings_T<quarre::SpecificSettings>(data, visitor);
 }
 
 bool quarre::ProtocolFactory::checkCompatibility(

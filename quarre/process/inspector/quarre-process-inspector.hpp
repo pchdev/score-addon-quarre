@@ -35,8 +35,8 @@ class InspectorWidget final :
     void gestureListChanged     ( QStringList );
 
     protected slots: //----------------------------------------------------
-    void onSensorsSelectionChanged      (QListWidgetItem*);
-    void onGesturesSelectionChanged     (QListWidgetItem*);
+    void onSensorsSelectionChanged      ( QListWidgetItem* );
+    void onGesturesSelectionChanged     ( QListWidgetItem* );
 
     private: //---------------------------------------------------------
     QStringList  m_selected_sensors;

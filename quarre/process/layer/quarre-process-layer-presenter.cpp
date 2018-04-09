@@ -20,7 +20,7 @@ quarre::ProcessLayerPresenter::ProcessLayerPresenter (
 
     const quarre::ProcessModel& p = layer;
 
-    //! TODO: connections
+    // no connections to be made, as all is basically done with the inspector for now
 
 }
 
@@ -66,5 +66,5 @@ const Id<Process::ProcessModel>& quarre::ProcessLayerPresenter::modelId() const
 
 void quarre::ProcessLayerPresenter::on_doubleClicked()
 {
-    //! TODO
+
 }
