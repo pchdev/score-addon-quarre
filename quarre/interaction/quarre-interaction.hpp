@@ -53,6 +53,10 @@ class Interaction final : public IdentifiedObject<Interaction>
     void lengthChanged      ();
     void countdownChanged   ();
 
+    public slots: //-----------------------------------------------
+    void onPlusMappingButtonPressed();
+    void onMinusMappingButtonPressed(quarre::Mapping* sender);
+
     private:  //---------------------------------------------------
     QLineEdit*         m_module;
     QLineEdit*         m_title;

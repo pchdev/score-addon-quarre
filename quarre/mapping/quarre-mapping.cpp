@@ -4,13 +4,28 @@
 
 using namespace score::addons;
 
+static const QStringList sensors_list =
+{
+    "Accelerometer_x", "Accelerometer_y", "Accelerometer_z",
+    "Rotation_x", "Rotation_y", "Rotation_z",
+    "Proximiy"
+};
+
+static const QStringList gestures_list =
+{
+    "Whip", "Cover", "Turnover", "Freefall", "Pickup",
+    "Shake", "Shake/Left", "Shake/Right", "Shake/Up", "Shake/Down",
+    "Twist", "Twist/Left", "Twist/Right"
+};
+
 quarre::Mapping::Mapping(
         const Id<quarre::Mapping> &id,
         QObject *parent) :
 
     IdentifiedObject    ( id, "quarrè-mapping", parent ),
     m_source            ( new QLineEdit ),
-    m_destination       ( new QLineEdit )
+    m_destination       ( new QLineEdit ),
+    m_minus_button      ( new QPushButton("-"))
 {
     m_expression = "( function(v, dest) { dest[\"value\"] = v; } )";
 }

@@ -92,6 +92,16 @@ void quarre::Interaction::set_countdown(const int countdown)
     m_countdown->setValue(countdown);
 }
 
+void quarre::Interaction::onPlusMappingButtonPressed()
+{
+
+}
+
+void quarre::Interaction::onMinusMappingButtonPressed(quarre::Mapping *sender)
+{
+
+}
+
 template <> void DataStreamReader::read(
         const quarre::Interaction& e )
 {

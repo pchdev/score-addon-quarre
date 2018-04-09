@@ -32,15 +32,7 @@ class InspectorWidget final :
             const score::DocumentContext& ctx,
             QWidget* parent );
 
-    signals: //------------------------------------------------------------
-    void mappingsChanged(QVector<quarre::Mapping>);
-
-    protected slots: //----------------------------------------------------
-    void onPlusMappingButtonPressed();
-    void onMinusMappingButtonPressed();
-
     private: //---------------------------------------------------------
-    QVBoxLayout* m_layout;
     CommandDispatcher<> m_dispatcher;
 };
 

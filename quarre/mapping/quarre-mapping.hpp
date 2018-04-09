@@ -42,11 +42,13 @@ class Mapping final : public IdentifiedObject<Mapping>
     void sourceChanged          ();
     void destinationChanged     ();
     void expressionChanged      ();
+    void minusButtonPressed     ();
 
     private: // ---------------------------------------------------
     QLineEdit* m_source;
     QLineEdit* m_destination;
     QTextEdit* m_expression;
+    QPushButton* m_minus_button;
 
 };
 
