@@ -19,9 +19,9 @@ class ProcessModel final : public Process::ProcessModel
     Q_OBJECT
 
     public: //--------------------------------------------
-        ProcessModel(const TimeVal& duration,
-                     const Id<Process::ProcessModel>& id,
-                     QObject* parent);
+    ProcessModel ( const TimeVal& duration,
+                   const Id<Process::ProcessModel>& id,
+                   QObject* parent);
 
     template<typename impl>
     ProcessModel(impl& vis, QObject* parent) :
@@ -30,18 +30,20 @@ class ProcessModel final : public Process::ProcessModel
         vis.writeTo(*this);
     }
 
-    quarre::Interaction interaction;
+    protected slots: //--------------------------------------------------------------
 
-    public slots:
+    void onPlusMappingButtonPressed         ( );
+    void onMinusMappingButtonPressed        ( );
     void onInteractionTitleChanged          ( QString const& title );
     void onInteractionDescriptionChanged    ( QString const& description );
     void onInteractionModuleChanged         ( QString const& module_id );
     void onInteractionLengthChanged         ( uint16_t length );
     void onInteractionCountdownChanged      ( uint16_t countdown );
-    void onInteractionSensorsChanged        ( QStringList sensors );
-    void onInteractionGesturesChanged       ( QStringList gestures );
+    void onInteractionMappingsChanged       ( QVector<QStringList> mappings );
 
-    private: //--------------------------------------------
+    private: //-------------------------------------------------------------------
+
+    quarre::Interaction* interaction;
 
     virtual QString prettyName      ( ) const override;
     virtual QString prettyShortName ( ) const override;

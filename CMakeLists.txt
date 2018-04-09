@@ -26,6 +26,7 @@ set(QUARRE_SCORE_ADDON_HEADERS
     quarre/interaction/quarre-interaction.hpp
     quarre/panel/quarre-panel-delegate.hpp
     quarre/panel/quarre-panel-delegate-factory.hpp
+    quarre/mapping/quarre-mapping.hpp
     )
 
 set(QUARRE_SCORE_ADDON_IMPLEMENTATIONS
@@ -43,6 +44,7 @@ set(QUARRE_SCORE_ADDON_IMPLEMENTATIONS
     quarre/process/executor/quarre-process-executor.cpp
     quarre/interaction/quarre-interaction.cpp
     quarre/panel/quarre-panel-delegate.cpp
+    quarre/mapping/quarre-mapping.cpp
     )
 
 add_library(${PROJECT_NAME} ${QUARRE_SCORE_ADDON_HEADERS} ${QUARRE_SCORE_ADDON_IMPLEMENTATIONS})

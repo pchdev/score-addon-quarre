@@ -2,6 +2,7 @@
 
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
+#include <QFormLayout>
 
 using namespace score::addons;
 
@@ -9,33 +10,100 @@ quarre::Interaction::Interaction(
         const Id<quarre::Interaction> &id,
         QObject *parent) :
 
-    IdentifiedObject    ( id, "Interaction", parent ),
-    module              ( "None" ),
-    title               ( "Untitled" ),
-    description         ( "No description" ),
-    length              ( 0 ),
-    countdown           ( 0 )
+    IdentifiedObject    ( id, "quarrè-interaction", parent ),
+    m_layout            ( new QVBoxLayout ),
+    m_module            ( new QLineEdit ("Unknown")),
+    m_title             ( new QLineEdit ("Untitled")),
+    m_description       ( new QLineEdit ("No description")),
+    m_length            ( new QSpinBox ),
+    m_countdown         ( new QSpinBox )
+
 {
+    auto form = new QFormLayout;
+    form->addRow ( tr ("Title"), m_title );
+    form->addRow ( tr ("Description"), m_description );
+    form->addRow ( tr ("Module"), m_module );
+    form->addRow ( tr ("Length"), m_length );
+    form->addRow ( tr ("Countdown"), m_countdown);
+
+    auto plusb = new QPushButton("+");
+
+    m_layout->addLayout(form);
+    m_layout->addWidget(plusb);
 }
 
-quarre::Interaction::~Interaction() {}
+QVBoxLayout* quarre::Interaction::layout()
+{
+    return m_layout;
+}
+
+QVector<quarre::Mapping> quarre::Interaction::mappings()
+{
+    return m_mappings;
+}
+
+const QString& quarre::Interaction::module()
+{
+    return m_module->text();
+}
+
+const QString& quarre::Interaction::title()
+{
+    return m_title->text();
+}
+
+const QString& quarre::Interaction::description()
+{
+    return m_description->text();
+}
+
+const int quarre::Interaction::length()
+{
+    return m_length->value();
+}
+
+const int quarre::Interaction::countdown()
+{
+    return m_countdown->value();
+}
+
+void quarre::Interaction::set_module(const QString &module)
+{
+    m_module->setText(module);
+}
+
+void quarre::Interaction::set_title(const QString &title)
+{
+    m_title->setText(title);
+}
+
+void quarre::Interaction::set_description(const QString &description)
+{
+    m_description->setText(description);
+}
+
+void quarre::Interaction::set_length(const int length)
+{
+    m_length->setValue(length);
+}
+
+void quarre::Interaction::set_countdown(const int countdown)
+{
+    m_countdown->setValue(countdown);
+}
 
 template <> void DataStreamReader::read(
         const quarre::Interaction& e )
 {
-    m_stream << e.module;
-    m_stream << e.title;
-    m_stream << e.description;
-    m_stream << e.length;
-    m_stream << e.countdown;
+    m_stream << e.module();
+    m_stream << e.title();
+    m_stream << e.description();
+    m_stream << e.length();
+    m_stream << e.countdown();
 
-    m_stream << e.sensors.size();
-    for ( const auto& sensor : e.sensors )
-        m_stream << sensor;
-
-    m_stream << e.gestures.size();
-    for ( const auto& gesture: e.gestures )
-        m_stream << gesture;
+    m_stream << e.mappings().size();
+    for ( const auto& mapping : e.mappings() )
+        readFrom( mapping );
 
     insertDelimiter();
 }
@@ -43,50 +111,51 @@ template <> void DataStreamReader::read(
 template <> void DataStreamWriter::write(
         quarre::Interaction& e )
 {
-    uint8_t sensors_count, gestures_count;
+    QString module, title, description;
+    int length, countdown, msz;
 
-    m_stream >> e.module;
-    m_stream >> e.title;
-    m_stream >> e.description;
-    m_stream >> e.length;
-    m_stream >> e.countdown;
+    m_stream >> module >> title >> description >> length >> countdown;
+    m_stream >> msz;
 
-    m_stream >> sensors_count;
-
-    for (; sensors_count-- > 0; )
-        m_stream >> e.sensors;
-
-    m_stream >> gestures_count;
-
-    for (; gestures_count-- > 0; )
-        m_stream >> e.gestures;
+    for (; msz-- >0;)
+    {
+        auto mp = new quarre::Mapping(*this, &e);
+        e.m_mappings.add(mp);
+        e.layout()->addLayout(mp->layout());
+    }
 
     checkDelimiter();
 }
 
-
 template <> void JSONObjectReader::read(
         const quarre::Interaction& e )
 {
-    obj [ "Module" ]        = e.module;
-    obj [ "Title"  ]        = e.title;
-    obj [ "Description" ]   = e.description;
-    obj [ "Length" ]        = e.length;
-    obj [ "Countdown" ]     = e.countdown;
-    obj [ "Sensors" ]       = e.sensors;
-    obj [ "Gestures" ]      = e.gestures;
+    obj [ "Module" ]        = e.module();
+    obj [ "Title"  ]        = e.title();
+    obj [ "Description" ]   = e.description();
+    obj [ "Length" ]        = e.length();
+    obj [ "Countdown" ]     = e.countdown();
+    obj [ "Mappings" ]      = toJsonArray(e.m_mappings);
 
 }
 
 template <> void JSONObjectWriter::write(
         quarre::Interaction& e )
 {
-    e.module        = obj [ "Module" ].toString();
-    e.title         = obj [ "Title" ].toString();
-    e.description   = obj [ "Description" ].toString();
-    e.length        = obj [ "Length" ].toInt();
-    e.countdown     = obj [ "Countdown" ].toInt();
-    e.sensors       = obj [ "Sensors" ].toArray();
-    e.gestures      = obj [ "Gestures" ].toArray();
+    e.set_module        ( obj [ "Module" ].toString() );
+    e.set_title         ( obj [ "Title" ].toString() );
+    e.set_description   ( obj [ "Description"].tostring());
+    e.set_length        ( obj [ "Length"].toInt());
+
+    for ( const auto& json_vref : obj ["Mappings"].toArray())
+    {
+        JSONObject::Deserializer dsrz (json_vref.toObject);
+        auto mp = new quarre::Mapping(dsrz, &e);
+
+        e.m_mappings.add(mp);
+        e.layout()->addLayout(mp->layout());
+    }
+
+
 }
 

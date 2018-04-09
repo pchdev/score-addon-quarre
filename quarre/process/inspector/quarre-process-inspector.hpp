@@ -6,6 +6,8 @@
 #include <score/command/Dispatchers/CommandDispatcher.hpp>
 
 #include <QFormLayout>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QLineEdit>
@@ -31,17 +33,14 @@ class InspectorWidget final :
             QWidget* parent );
 
     signals: //------------------------------------------------------------
-    void sensorListChanged      ( QStringList );
-    void gestureListChanged     ( QStringList );
+    void mappingsChanged(QVector<quarre::Mapping>);
 
     protected slots: //----------------------------------------------------
-    void onSensorsSelectionChanged      ( QListWidgetItem* );
-    void onGesturesSelectionChanged     ( QListWidgetItem* );
+    void onPlusMappingButtonPressed();
+    void onMinusMappingButtonPressed();
 
     private: //---------------------------------------------------------
-    QStringList  m_selected_sensors;
-    QStringList  m_selected_gestures;
-    QFormLayout* m_layout;
+    QVBoxLayout* m_layout;
     CommandDispatcher<> m_dispatcher;
 };
 

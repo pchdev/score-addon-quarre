@@ -1,5 +1,6 @@
 #include "quarre-process-model.hpp"
 #include <QString>
+#include <QJSEngine>
 #include <score/application/ApplicationContext.hpp>
 
 #include <quarre/device/quarre-device.hpp>
@@ -49,14 +50,9 @@ quarre::ProcessModel::onInteractionCountdownChanged(uint16_t countdown)
     interaction.countdown = countdown;
 }
 
-quarre::ProcessModel::onInteractionSensorsChanged(QStringList sensors)
+quarre::ProcessModel::onInteractionMappingsChanged(QVector<QStringList> mappings)
 {
-    interaction.sensors = sensors;
-}
 
-quarre::ProcessModel::onInteractionGesturesChanged(QStringList gestures)
-{
-    interaction.gestures = gestures;
 }
 
 void quarre::ProcessModel::startExecution()
