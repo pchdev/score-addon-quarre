@@ -7,16 +7,19 @@
 
 using namespace ossia::net;
 
+using pdata_t   = std::pair<std::string,ossia::val_type>;
+using parptr_t  = std::shared_ptr<parameter_base>;
+
 namespace score     {
 namespace addons    {
 namespace quarre    {
 
-class User // ----------------------------------------------------------- USER
-{
-    friend class quarre::Device;
+using intact_t = std::shared_ptr<quarre::Interaction>;
 
+class user // ----------------------------------------------------------- USER
+{
     public:
-    enum class Status
+    enum class status
     {
         DISCONNECTED        = 0,
         IDLE                = 1,
@@ -25,19 +28,40 @@ class User // ----------------------------------------------------------- USER
         INCOMING_ACTIVE     = 4
     };
 
-    class Input // ----------------------------------------------------- USER_INPUT
+    class input // ----------------------------------------------------- USER_INPUT
     {
         public :
-        Input ( std::string id );
+        input ( std::string id, std::shared_ptr<quarre::user> parent);
+
+        void assign ( std::string const& id, std::function<void(ossia::value&)> function );
+        void clear_assignment ( std::string const& id );
 
         private:
-        node_base* m_available;
-        node_base* m_active;
+        std::string     m_id;
+        std::string     m_addr;
+        parptr_t        m_available;
+        parptr_t        m_active;
+        std::shared_ptr<quarre::user> m_parent;
+        std::vector<parptr_t> m_data;
     };
 
-    User ( uint8_t id );
+    class gesture : public input //--------------------------------------- gesture
+    {
+        public:
+        gesture ( std::string id, std::shared_ptr<device_base> parent,
+                  std::vector<std::string> subgestures );
+    };
 
-    bool supports_input         ( std::string input ) const;
+    class sensor : public input //--------------------------------------- sensor
+    {
+        public:
+        sensor ( std::string id, std::shared_ptr<device_base> parent,
+                 std::vector<pdata_t> data );
+    };
+
+    user ( uint8_t id, device_base* device );
+
+    bool supports_input         ( const std::string& input ) const;
     bool connected              ( ) const;
     uint8_t interaction_count   ( ) const;
 
@@ -48,29 +72,35 @@ class User // ----------------------------------------------------------- USER
 
     int active_countdown        () const;
 
-    quarre::Interaction* incoming_interaction   () const;
-    quarre::Interaction* active_interaction     () const;
+    intact_t incoming_interaction   () const;
+    intact_t active_interaction     () const;
 
-    void set_incoming_interaction   ( quarre::Interaction* interaction );
-    void set_active_interaction     ( quarre::Interaction* interaction );
+    void set_incoming_interaction   ( intact_t interaction );
+    void set_active_interaction     ( intact_t interaction );
+    void cancel_next_interaction    ( intact_t interaction );
+    void stop_current_interaction   ( intact_t interaction );
+    void end_current_interaction    ( intact_t interaction );
+    void pause_current_interaction  ( intact_t interaction );
+    void resume_current_interaction ( intact_t interaction );
 
-    Status status() const;
+    status status() const;
 
     protected: //---------------------------------------------
 
-    bool                    m_connected;
-    uint8_t                 m_id;
-    node_base*              m_root_node;
-    parameter_base*         m_active_countdown;
-    uint8_t                 m_interaction_count;
-    Status                  m_status;
-    quarre::Interaction*    m_incoming_interaction;
-    quarre::Interaction*    m_active_interaction;
+    bool                            m_connected;
+    uint8_t                         m_id;
+    parptr_t                        m_active_countdown;
+    uint8_t                         m_interaction_count;
+    status                          m_status;
+    intact_t                        m_incoming_interaction;
+    intact_t                        m_active_interaction;
+    std::shared_ptr<device_base>    m_device;
+    std::vector<input*>             m_inputs;
 };
 
-struct Candidate // --------------------------------------------- CANDIDATE
+struct candidate // --------------------------------------------- CANDIDATE
 {
-    User*       user;
+    user*       user;
     uint8_t     priority;
 };
 
@@ -78,9 +108,23 @@ class Device final : public Engine::Network::OwningOSSIADevice
 {
     Q_OBJECT
 
-    public: //------------------------------------------------
+    public: //--------------------------------------------------------------------------------
+
     static score::addons::quarre::Device* instance();
     static score::addons::quarre::Device* instance ( const Device::DeviceSettings& settings );
+
+    class user_dispatcher // -----------------------------------------------------------------
+    {
+        public:
+        void   dispatch_incoming_interaction    ( intact_t interaction );
+        void   dispatch_active_interaction      ( intact_t interaction );
+        void   dispatch_ending_interaction      ( intact_t interaction );
+        void   dispatch_paused_interaction      ( intact_t interaction );
+        void   dispatch_resumed_interaction     ( intact_t interaction );
+
+        private:
+        std::vector<quarre::user> m_users;
+    };
 
     ~Device ( );
 
@@ -88,9 +132,6 @@ class Device final : public Engine::Network::OwningOSSIADevice
     virtual void recreate   ( const Device::Node& n ) override;
 
     void   make_tree        ( );
-
-    void   dispatch_incoming_interaction    ( quarre::Interaction* interaction );
-    void   dispatch_active_interaction      ( quarre::Interaction* interaction );
 
     signals: // ----------------------------------------------
     void sig_command    ( );
@@ -102,12 +143,11 @@ class Device final : public Engine::Network::OwningOSSIADevice
     private: //-----------------------------------------------
     Device     (const Device::DeviceSettings& settings );
 
-    Device*    m_singleton;
-    uint16_t   m_wsport;
-    uint16_t   m_oscport;
-    uint8_t    m_n_max_users;
-
-    std::vector<quarre::User> m_users;
+    Device*             m_singleton;
+    uint16_t            m_wsport;
+    uint16_t            m_oscport;
+    uint8_t             m_n_max_users;
+    user_dispatcher     m_dispatcher;
 
 };
 }

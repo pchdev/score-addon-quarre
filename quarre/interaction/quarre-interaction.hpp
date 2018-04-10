@@ -1,6 +1,7 @@
 #pragma once
 
 #include <quarre/mapping/quarre-mapping.hpp>
+#include <quarre/device/quarre-device.hpp>
 #include <score/model/IdentifiedObject.hpp>
 #include <QVBoxLayout>
 #include <QLineEdit>
@@ -44,6 +45,9 @@ class Interaction final : public IdentifiedObject<Interaction>
     void set_length         ( const int length );
     void set_countdown      ( const int countdown );
 
+    void set_host ( std::shared_ptr<quarre::user> host );
+    std::shared_ptr<quarre::user> host() const;
+
     QVector<quarre::Mapping> mappings();
 
     signals: //----------------------------------------------------
@@ -65,6 +69,8 @@ class Interaction final : public IdentifiedObject<Interaction>
     QSpinBox*          m_countdown;
 
     QVBoxLayout*    m_layout;
+
+    std::shared_ptr<quarre::user> m_host;
 
     score::EntityMap<quarre::Mapping> m_mappings;
 

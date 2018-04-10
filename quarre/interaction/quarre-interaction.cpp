@@ -95,7 +95,16 @@ void quarre::Interaction::set_countdown(const int countdown)
 void quarre::Interaction::onPlusMappingButtonPressed()
 {
     m_mappings.add(new quarre::Mapping);
+}
 
+void quarre::Interaction::set_host(std::shared_ptr<quarre::user> host)
+{
+    m_host = host;
+}
+
+std::shared_ptr<quarre::user> quarre::Interaction::host() const
+{
+    return m_host;
 }
 
 void quarre::Interaction::onMinusMappingButtonPressed()
