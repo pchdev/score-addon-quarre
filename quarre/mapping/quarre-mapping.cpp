@@ -1,6 +1,7 @@
 #include <quarre/mapping/quarre-mapping.hpp>
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
+#include <QFormLayout>
 
 using namespace score::addons;
 
@@ -25,9 +26,24 @@ quarre::Mapping::Mapping(
     IdentifiedObject    ( id, "quarrè-mapping", parent ),
     m_source            ( new QLineEdit ),
     m_destination       ( new QLineEdit ),
-    m_minus_button      ( new QPushButton("-"))
+    m_minus_button      ( new QPushButton("-")),
+    m_layout            ( new QVBoxLayout ),
+    m_expression        ( new QTextEdit )
 {
-    m_expression = "( function(v, dest) { dest[\"value\"] = v; } )";
+    m_expression->setPlainText("( function(v, dest) { dest[\"value\"] = v; } )");
+
+    auto form = new QFormLayout;
+    form->addRow ( tr ( "delete" ), m_minus_button );
+    form->addRow ( tr ( "source" ), m_source );
+    form->addRow ( tr ( "destination" ), m_destination );
+
+    m_layout->addLayout(form);
+    m_layout->addWidget(m_expression);
+}
+
+QLayout* quarre::Mapping::layout() const
+{
+    return m_layout;
 }
 
 const QString& quarre::Mapping::source()

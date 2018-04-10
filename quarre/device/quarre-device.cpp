@@ -29,6 +29,8 @@ quarre::Device::Device(const Device::DeviceSettings &settings) :
     if ( m_settings.deviceSpecificSettings.canConvert<quarre::SpecificSettings>() )
         qsettings = m_settings.deviceSpecificSettings;
 
+    m_n_max_users = qsettings.max_users;
+
     auto mpx = std::make_unique<multiplex_protocol>( );
     m_dev = std::make_unique<device_base>( std::move(mpx), m_settings.name );
 
@@ -37,24 +39,13 @@ quarre::Device::Device(const Device::DeviceSettings &settings) :
 
     mpx->expose_to  ( std::move(server) );
 
+    for (int i = 0; i < m_n_max_users; ++i)
+        m_users.push_back(new User(i));
+
     make_tree();
 }
 
 quarre::Device::~Device() {}
-
-inline void make_common_parameter(generic_device& root, ossia::string_view name, ossia::val_type ty)
-{
-    auto node = ossia::net::find_or_create_node(root, name, true);
-    node->create_parameter(ty);
-}
-
-inline void make_user_parameter(generic_device& root, std::string pattern, ossia::val_type ty)
-{
-    std::string base_pattern = "/clients/[1-4]";
-    auto nodes  = create_nodes(root, base_pattern + pattern);
-    for ( auto& node : nodes )
-        node->create_parameter(ty);
-}
 
 bool quarre::Device::recreate(const Device::Node& n)
 {
@@ -66,23 +57,106 @@ void quarre::Device::recreate(const Device::Node &n)
 
 }
 
-void quarre::Device::make_tree()
+void quarre::Device::dispatch_incoming_interaction(quarre::Interaction* interaction)
 {
-    auto root   = *m_dev->get_root_node ( );
+    // candidate algorithm
+    // eliminate non-connected clients
+    // eliminate clients that cannot support the requested inputs
+    // eliminate clients that already have an interaction going on
+    // eliminate clients that already have an incoming interaction
 
-    std::vector<node_base*> nodes;
-    node_base*  nd;
+    std::vector<quarre::Candidate> candidates;
 
+    for ( const quarre::User* user : m_users )
+    {
+        quarre::Candidate candidate;
+
+        candidate.user      = user;
+        candidate.priority  = 0;
+
+        switch ( user->status() )
+        {
+        case User::Status::DISCONNECTED:        goto next;
+        case User::Status::INCOMING:            goto next;
+        case User::Status::INCOMING_ACTIVE:     goto next;
+
+        case User::Status::IDLE:
+            goto check_inputs; // priority stays at 0
+
+        case User::Status::ACTIVE:
+        {
+            if ( interaction->countdown() <
+                 candidate.user->active_countdown() + 5) goto next;
+
+            candidate.priority = 1;
+            goto check_inputs;
+        }
+        }
+
+        check_inputs:
+        for ( const auto& input : requested_inputs )
+            if ( !user->supports_input(input) ) goto ctn;
+
+        select:
+        candidate.priority += user->interaction_count();
+        candidates.push_back(candidate);
+
+        next:
+        continue;
+    }
+
+    // the candidate with the lowest priority will be selected
+    // if there is no candidate, interaction will not be dispatched
+    if ( candidates.size() == 0 ) return;
+
+    quarre::Candidate* winner;
+
+    for ( const auto& candidate : candidates )
+    {
+        if ( ! winner )
+        {
+            winner = &candidate;
+            return;
+        }
+
+        // if its a draw between two or more candidates, select randomly between them
+        if ( candidate.priority == winner->priority )
+        {
+            std::srand ( std::time(nullptr) );
+            int r = std::rand();
+            r %= 2;
+
+            if ( r ) winner = &candidate;
+        }
+
+        else if ( candidate.priority < winner->priority )
+            winner = &candidate;
+    }
+
+    if ( winner->user ) winner->user->set_active_interaction(interaction);
+}
+
+void quarre::Device::dispatch_active_interaction(quarre::Interaction *interaction)
+{
+    for ( const auto& user : m_users )
+    {
+        if ( user.incoming_interaction() == interaction )
+            user.set_active_interaction(interaction);
+    }
+}
+
+void quarre::Device::make_tree()
+{        
     // COMMON --------------------------------------------------------------------------------
 
-    make_common_parameter   ( root, "/scenario/start",  ossia::val_type::IMPULSE );
-    make_common_parameter   ( root, "/scenario/end",    ossia::val_type::IMPULSE );
-    make_common_parameter   ( root, "/scenario/pause",  ossia::val_type::IMPULSE );
-    make_common_parameter   ( root, "/scenario/stop",   ossia::val_type::IMPULSE );
-    make_common_parameter   ( root, "/scenario/reset",  ossia::val_type::IMPULSE );
+    make_common_parameter   ( root, "/common/scenario/start",  ossia::val_type::IMPULSE );
+    make_common_parameter   ( root, "/common/scenario/end",    ossia::val_type::IMPULSE );
+    make_common_parameter   ( root, "/common/scenario/pause",  ossia::val_type::IMPULSE );
+    make_common_parameter   ( root, "/common/scenario/stop",   ossia::val_type::IMPULSE );
+    make_common_parameter   ( root, "/common/scenario/reset",  ossia::val_type::IMPULSE );
 
-    make_common_parameter   ( root, "/scenario/name",        ossia::val_type::STRING );
-    make_common_parameter   ( root, "/scenario/scene/name",  ossia::val_type::STRING );
+    make_common_parameter   ( root, "/common/scenario/name",        ossia::val_type::STRING );
+    make_common_parameter   ( root, "/common/scenario/scene/name",  ossia::val_type::STRING );
 
     // ID --------------------------------------------------------------------------------
 

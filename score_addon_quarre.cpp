@@ -2,7 +2,8 @@
 #include <score/plugins/customfactory/FactorySetup.hpp>
 
 #include <quarre/application-plugin/quarre-application-plugin.hpp>
-#include <quarre/polymorphic-entity/quarre-polymorphic-entity-factory.hpp>
+
+#include <quarre/process/executor/quarre-process-executor.hpp>
 #include <quarre/process/quarre-process-factory.hpp>
 #include <quarre/process/quarre-process-model.hpp>
 #include <quarre/process/inspector/quarre-process-inspector.hpp>
@@ -48,6 +49,7 @@ std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_quarre::factories
 
             FW<Process::ProcessModelFactory, quarre::ProcessFactory>,
             FW<Process::InspectorWidgetDelegateFactory, quarre::InspectorFactory>,
+            FW<Engine::Execution::ProcessComponentFactory, quarre::ProcessExecutor>,
             FW<score::PanelDelegateFactory, quarre::PanelDelegateFactory>,
             FW<Device::ProtocolFactory, quarre::ProtocolFactory>
 

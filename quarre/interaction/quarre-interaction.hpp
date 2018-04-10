@@ -55,7 +55,7 @@ class Interaction final : public IdentifiedObject<Interaction>
 
     public slots: //-----------------------------------------------
     void onPlusMappingButtonPressed();
-    void onMinusMappingButtonPressed(quarre::Mapping* sender);
+    void onMinusMappingButtonPressed();
 
     private:  //---------------------------------------------------
     QLineEdit*         m_module;

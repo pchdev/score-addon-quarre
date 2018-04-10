@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(score_addon_quarre LANGUAGES CXX)
 
-add_definitions(-DQUARRE_SERVER_NAME="quarre-server")
-add_definitions(-DQUARRE_USERS_MAX=4)
-
 score_common_setup()
 
 set(QUARRE_SCORE_ADDON_HEADERS

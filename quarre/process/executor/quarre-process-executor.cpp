@@ -1,5 +1,6 @@
 #include <quarre/process/executor/quarre-process-executor.hpp>
 #include <quarre/process/quarre-process-model.hpp>
+#include <quarre/device/quarre-device.hpp>
 
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Engine/score2OSSIA.hpp>
@@ -14,6 +15,8 @@ quarre::ProcessExecutor::ProcessExecutor(const Device::DeviceList& list) : m_dev
 
 void quarre::ProcessExecutor::start(ossia::state &st)
 {
+    // parse the interaction
+
 
 }
 

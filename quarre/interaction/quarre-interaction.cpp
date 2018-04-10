@@ -94,12 +94,14 @@ void quarre::Interaction::set_countdown(const int countdown)
 
 void quarre::Interaction::onPlusMappingButtonPressed()
 {
+    m_mappings.add(new quarre::Mapping);
 
 }
 
-void quarre::Interaction::onMinusMappingButtonPressed(quarre::Mapping *sender)
+void quarre::Interaction::onMinusMappingButtonPressed()
 {
-
+    auto sender = qobject_cast<quarre::Mapping*>(QObject::sender());
+    m_mappings.erase(sender);
 }
 
 template <> void DataStreamReader::read(
@@ -146,7 +148,6 @@ template <> void JSONObjectReader::read(
     obj [ "Length" ]        = e.length();
     obj [ "Countdown" ]     = e.countdown();
     obj [ "Mappings" ]      = toJsonArray(e.m_mappings);
-
 }
 
 template <> void JSONObjectWriter::write(
@@ -164,6 +165,8 @@ template <> void JSONObjectWriter::write(
 
         e.m_mappings.add(mp);
         e.layout()->addLayout(mp->layout());
+
+        connect(mp, SIGNAL(minusButtonPressed()), &e, SLOT(onMinusMappingButtonPressed(quarre::Mapping*)));
     }
 
 

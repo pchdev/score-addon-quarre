@@ -4,6 +4,8 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QPushButton>
+#include <QVBoxLayout>
+#include <quarre/interaction/quarre-interaction.hpp>
 
 #include <score/model/IdentifiedObject.hpp>
 
@@ -21,7 +23,7 @@ class Mapping final : public IdentifiedObject<Mapping>
     Q_PROPERTY  ( QString expression READ expression WRITE set_expression NOTIFY expressionChanged )
 
     public: // ----------------------------------------------------
-
+    Mapping ();
     Mapping ( const Id<Mapping>& id, QObject* parent );
 
     template <typename impl> Mapping(impl& vis, QObject* parent) :
@@ -30,6 +32,7 @@ class Mapping final : public IdentifiedObject<Mapping>
         vis.writeTo(*this);
     }
 
+    QVBoxLayout* layout         () const;
     const QString& source       () const;
     const QString& destination  () const;
     const QString& expression   () const;
@@ -49,7 +52,7 @@ class Mapping final : public IdentifiedObject<Mapping>
     QLineEdit* m_destination;
     QTextEdit* m_expression;
     QPushButton* m_minus_button;
-
+    QVBoxLayout* m_layout;
 };
 
 }

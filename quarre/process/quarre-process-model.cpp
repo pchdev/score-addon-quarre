@@ -58,16 +58,19 @@ quarre::ProcessModel::onInteractionMappingsChanged(QVector<QStringList> mappings
 void quarre::ProcessModel::startExecution()
 {
     // get quarre-server-device singleton
-    // request potential user
+    // request potential user, who can use the requested sensors/gestures
 
     // send countdown
 
     // when countdown is over
     // start interaction
 
-    auto device = quarre::Device::instance();
-    ossia::net::node_base* device->get_client_candidate();
+    auto mappings   = interaction->mappings();
+    auto device     = quarre::Device::instance();
 
+    auto node = device->get_interaction_candidate(mappings);
+
+    if ( !node ) return;
 }
 
 void quarre::ProcessModel::stopExecution()
