@@ -1,8 +1,10 @@
 #include "quarre-panel-delegate-factory.hpp"
 #include "quarre-panel-delegate.hpp"
+#include <quarre/device/quarre-device.hpp>
 
 #include <QFormLayout>
 #include <QLabel>
+#include <QLineEdit>
 
 using namespace score::addons;
 
@@ -12,7 +14,35 @@ quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
     m_widget = new QWidget;
     auto lay = new QFormLayout ( m_widget );
 
-    lay->addWidget(new QLabel(tr("This is a panel.")));
+    auto dev = quarre::Device::instance();
+    auto max_u = dev->max_users();
+
+    for ( int i = 0; i < max_u; ++i )
+    {
+        QString tr = "user ";
+        tr += i;
+        tr += " :";
+
+        auto qle = new QLineEdit("disconnected");
+        lay->addRow(tr, qle);
+    }
+
+    auto server = quarre::Device::device();
+    auto proto = dynamic_cast<ossia::oscquery::oscquery_server_protocol*>(server->get_protocol());
+
+    // a qlineedit for each user with ip address
+    // or 'disconnected'
+    // to be completed with controls to test interactions quickly
+
+}
+
+void quarre::PanelDelegate::on_client_connected(const std::string &ip)
+{
+
+}
+
+void quarre::PanelDelegate::on_client_disconnected(const std::string &ip)
+{
 
 }
 

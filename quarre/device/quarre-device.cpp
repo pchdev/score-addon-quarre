@@ -256,6 +256,26 @@ void quarre::user::set_connected(bool connected)
     m_connected = connected;
 }
 
+void quarre::user::set_address(const std::string &address)
+{
+    m_address = address;
+}
+
+std::string const& quarre::user::address()
+{
+    return m_address;
+}
+
+quarre::user::status quarre::user::status() const
+{
+    return m_status;
+}
+
+void quarre::user::set_status(const status &st)
+{
+    m_status = st;
+}
+
 bool quarre::user::interaction_count()
 {
     return m_interaction_hdl.m_interaction_count;
@@ -332,11 +352,6 @@ void quarre::user::interaction_hdlr::resume_current_interaction(intact_t interac
 
 }
 
-quarre::user::status quarre::user::status() const
-{
-    return m_status;
-}
-
 // ------------------------------------------------------------------------------
 // USER_DISPATCHER
 // ------------------------------------------------------------------------------
@@ -402,7 +417,7 @@ void quarre::Device::dispatcher::dispatch_incoming_interaction(intact_t interact
         if ( ! winner )
         {
             winner = &candidate;
-            return;
+            continue;
         }
         // if its a draw between two or more candidates,
         // select randomly between them
@@ -510,6 +525,36 @@ bool quarre::Device::reconnect()
 void quarre::Device::recreate(const Device::Node &n)
 {
 
+}
+
+void quarre::Device::on_client_connected(const std::string &ip)
+{
+    for ( const auto& user : m_dispatcher.m_users )
+    {
+        if ( !user.connected() )
+        {
+            user.set_connected  ( true );
+            user.set_address    ( ip );
+            user.set_status     ( quarre::user::status::IDLE );
+            return;
+        }
+    }
+}
+
+void quarre::Device::on_client_disconnected(const std::string &ip)
+{
+    for ( const auto& user : m_dispatcher.m_users )
+        if ( user.address() == ip )
+        {
+            user.set_connected  ( false );
+            user.set_address    ( "" );
+            user.set_status     ( quarre::user::status::DISCONNECTED );
+        }
+}
+
+uint8_t quarre::Device::max_users()
+{
+    return m_n_max_users;
 }
 
 void quarre::Device::make_common_tree()

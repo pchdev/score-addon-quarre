@@ -13,6 +13,9 @@ class PanelDelegate final : public QObject, public score::PanelDelegate
 
     PanelDelegate( const score::GUIApplicationContext& ctx );
 
+    void on_client_connected(std::string const& ip);
+    void on_client_disconnected(std::string const& ip);
+
     private: //-----------------------------------------------
 
     virtual QWidget* widget() override;

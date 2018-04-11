@@ -66,15 +66,20 @@ class user // ----------------------------------------------------------- USER
     void deactivate_input       ( const std::string& input );
 
     bool connected              ( ) const;
-    void set_connected          ( );
+    void set_connected          ( bool connected);
 
-    status status() const;
+    const std::string& address  () const;
+    void set_address            ( std::string const& address );
+
+    void set_status             ( status const& st );
+    status status               ( ) const;
 
     protected: //---------------------------------------------
-    bool                            m_connected;
-    uint8_t                         m_id;
-    status                          m_status;
-    std::vector<input*>             m_inputs;
+    bool                     m_connected;
+    std::string              m_address;
+    uint8_t                  m_id;
+    status                   m_status;
+    std::vector<input*>      m_inputs;
 
     class interaction_hdlr
     {
@@ -117,7 +122,11 @@ class Device final : public Engine::Network::OwningOSSIADevice
     virtual bool reconnect  ( ) override;
     virtual void recreate   ( const Device::Node& n ) override;
 
-    void   make_common_tree ( );
+    void        make_common_tree ( );
+    uint8_t     max_users() const;
+
+    void        on_client_connected     ( std::string const& ip );
+    void        on_client_disconnected  ( std::string const& ip );
 
     signals: // ----------------------------------------------
     void sig_command    ( );
