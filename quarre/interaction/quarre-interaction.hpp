@@ -11,6 +11,8 @@ namespace score     {
 namespace addons    {
 namespace quarre    {
 
+class user;
+
 class Interaction final : public IdentifiedObject<Interaction>
 {
     Q_OBJECT
@@ -44,6 +46,8 @@ class Interaction final : public IdentifiedObject<Interaction>
     void set_description    ( QString const& description );
     void set_length         ( const int length );
     void set_countdown      ( const int countdown );
+
+    QStringList inputs()    const;
 
     void set_host ( std::shared_ptr<quarre::user> host );
     std::shared_ptr<quarre::user> host() const;

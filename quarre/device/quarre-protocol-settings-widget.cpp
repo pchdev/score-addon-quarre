@@ -55,7 +55,7 @@ void quarre::ProtocolSettingsWidget::setSettings(const Device::DeviceSettings &s
     if ( settings.deviceSpecificSettings
          .canConvert<quarre::SpecificSettings>() )
     {
-        qsettings = settings.deviceSpecificSettings;
+        qsettings = settings.deviceSpecificSettings.value<quarre::SpecificSettings>();
 
         m_osc_port_sbox     -> setValue   ( qsettings.osc_port );
         m_ws_port_sbox      -> setValue   ( qsettings.ws_port );

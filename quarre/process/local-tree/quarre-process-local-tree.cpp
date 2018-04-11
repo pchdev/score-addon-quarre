@@ -3,15 +3,14 @@
 
 using namespace score::addons;
 
-quarre::LocalTreeProcessComponent::LocalTreeProcessComponent(
-        const Id<score::Component> &id,
-        ossia::net::node_base &parent,
+quarre::LocalTreeProcessComponent::LocalTreeProcessComponent(const Id<score::Component> &id,
+        ossia::net::node_base &parent_node,
         quarre::ProcessModel &scenario,
         Engine::LocalTree::DocumentPlugin &doc,
         QObject *parent ) :
 
     Engine::LocalTree::ProcessComponent_T<quarre::ProcessModel>(
-        parent, scenario, doc, id, "quarrè-component", parent)
+        parent_node, scenario, doc, id, "quarrè-component", parent)
 {
 
 }

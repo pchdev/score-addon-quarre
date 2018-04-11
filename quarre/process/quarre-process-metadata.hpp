@@ -12,13 +12,7 @@ class ProcessModel;
 }
 }
 
-PROCESS_METADATA(
-        ,
-        score::addons::quarre::ProcessModel,
+PROCESS_METADATA (, score::addons::quarre::ProcessModel,
         "471625BB-3B6B-4E7D-86EF-BF66F1387C06",
         "quarrè",
-        "quarrè",
-        "control",
-        {},
-        Process::ProcessFlags::SupportsAll | Process::ProcessFlags::PutInNewSlot
-        )
+        "quarrè" )

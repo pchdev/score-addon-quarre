@@ -19,10 +19,10 @@ int quarre::ProtocolFactory::visualPriority() const
 Device::DeviceInterface* quarre::ProtocolFactory::makeDevice(
         const Device::DeviceSettings &settings, const DocumentContext &ctx)
 {
-    return new quarre::Device::instance(settings);
+    return quarre::quarre_device::instance(settings);
 }
 
-const Device::DeviceSettings& quarre::ProtocolFactory::defaultSettings()
+const Device::DeviceSettings& quarre::ProtocolFactory::defaultSettings() const
 {
     static const Device::DeviceSettings settings = [&]() {
 

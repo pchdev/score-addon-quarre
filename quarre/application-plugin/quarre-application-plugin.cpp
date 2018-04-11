@@ -51,7 +51,7 @@ score::GUIElements quarre::ApplicationPlugin::makeGUIElements()
 
 bool quarre::ApplicationPlugin::handleStartup()
 {
-
+    return false;
 }
 
 

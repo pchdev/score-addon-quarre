@@ -14,6 +14,7 @@ namespace score     {
 namespace addons    {
 namespace quarre    {
 
+class Interaction;
 using intact_t = std::shared_ptr<quarre::Interaction>;
 
 class user // ----------------------------------------------------------- USER
@@ -29,14 +30,18 @@ class user // ----------------------------------------------------------- USER
     };
 
     class input // ----------------------------------------------------- USER_INPUT
-    {
+    {        
+        friend class quarre::user;
+
         public :
         input ( std::string id );
 
-        void assign     ( std::string const& id, std::function<void(ossia::value&)> function );
+        void assign     ( std::string const& id,
+                          std::function<void(const ossia::value&)> function );
+
         void unassign   ( std::string const& id );
 
-        private:
+        protected:
         std::string     m_id;
         std::string     m_addr;
         parptr_t        m_available;
@@ -62,8 +67,8 @@ class user // ----------------------------------------------------------- USER
     void make_tree ( std::vector<pdata_t> const& tree );
 
     bool supports_input         ( const std::string& input ) const;
-    void activate_input         ( const std::string& input );
-    void deactivate_input       ( const std::string& input );
+    void activate_input         (const std::string& target );
+    void deactivate_input       (const std::string& target );
 
     bool connected              ( ) const;
     void set_connected          ( bool connected);
@@ -78,11 +83,12 @@ class user // ----------------------------------------------------------- USER
     bool                     m_connected;
     std::string              m_address;
     uint8_t                  m_id;
-    status                   m_status;
+    enum status              m_status;
     std::vector<input*>      m_inputs;
 
     class interaction_hdlr
     {
+        friend class quarre::user;
         public:
         int active_countdown            ( ) const;
         intact_t incoming_interaction   ( ) const;
@@ -104,29 +110,45 @@ class user // ----------------------------------------------------------- USER
         uint8_t  m_interaction_count;
 
     } m_interaction_hdl;
+
+    public:
+    interaction_hdlr& interactions();
 };
 
-class Device final : public Engine::Network::OwningOSSIADevice
+class quarre_device final : public Engine::Network::OwningOSSIADevice
 {
     Q_OBJECT
 
     public: //--------------------------------------------------------------------------------
 
-    static score::addons::quarre::Device* instance();
-    static score::addons::quarre::Device* instance ( const Device::DeviceSettings& settings );
-    static score::addons::quarre::Device::dispatcher const& dispatcher();
-    static const std::unique_ptr<ossia::net::device_base>& device();
+    struct candidate
+    {
+        quarre::user*  user;
+        uint8_t priority;
+    };
 
-    ~Device ( );
+    static quarre_device* instance ( );
+    quarre_device ( const ::Device::DeviceSettings& settings );
+
+    generic_device& device();
+    dispatcher& dispatcher();
+
+    ~quarre_device ( );
 
     virtual bool reconnect  ( ) override;
-    virtual void recreate   ( const Device::Node& n ) override;
+    virtual void recreate   ( const ::Device::Node& n ) override;
 
     void        make_common_tree ( );
     uint8_t     max_users() const;
 
     void        on_client_connected     ( std::string const& ip );
     void        on_client_disconnected  ( std::string const& ip );
+
+    void   dispatch_incoming_interaction    ( intact_t interaction );
+    void   dispatch_active_interaction      ( intact_t interaction );
+    void   dispatch_ending_interaction      ( intact_t interaction );
+    void   dispatch_paused_interaction      ( intact_t interaction );
+    void   dispatch_resumed_interaction     ( intact_t interaction );
 
     signals: // ----------------------------------------------
     void sig_command    ( );
@@ -136,32 +158,13 @@ class Device final : public Engine::Network::OwningOSSIADevice
     void slot_command();
 
     private: //-----------------------------------------------
-    Device     (const Device::DeviceSettings& settings );
+    static quarre_device* m_singleton;
 
-    Device*             m_singleton;
     uint16_t            m_wsport;
     uint16_t            m_oscport;
     uint8_t             m_n_max_users;
 
-    class dispatcher // -----------------------------------------------------------------
-    {
-        public:
-        void   dispatch_incoming_interaction    ( intact_t interaction );
-        void   dispatch_active_interaction      ( intact_t interaction );
-        void   dispatch_ending_interaction      ( intact_t interaction );
-        void   dispatch_paused_interaction      ( intact_t interaction );
-        void   dispatch_resumed_interaction     ( intact_t interaction );
-
-        private:
-        struct candidate // --------------------------------------------- candidate
-        {
-            user*       user;
-            uint8_t     priority;
-        };
-
-        std::vector<quarre::user> m_users;
-
-    } m_dispatcher;
+    std::vector<quarre::user*> m_users;
 
 };
 }

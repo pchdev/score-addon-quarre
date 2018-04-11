@@ -16,7 +16,7 @@ class LocalTreeProcessComponent : public Engine::LocalTree::ProcessComponent_T<P
     public: // ----------------------------------------------------
         LocalTreeProcessComponent(
             const Id<score::Component>& id,
-            ossia::net::node_base& parent,
+            ossia::net::node_base& parent_node,
             score::addons::quarre::ProcessModel& scenario,
             Engine::LocalTree::DocumentPlugin& doc,
             QObject* parent );

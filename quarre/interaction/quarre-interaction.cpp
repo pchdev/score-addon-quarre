@@ -32,6 +32,20 @@ quarre::Interaction::Interaction(
     m_layout->addWidget(plusb);
 }
 
+QStringList quarre::Interaction::inputs() const
+{
+    QStringList res;
+
+    for ( const quarre::Mapping& mapping : m_mappings )
+    {
+        QString source = mapping.source();
+        QString res_src = source.remove("/user/0");
+        res << res_src;
+    }
+
+    return res;
+}
+
 QVBoxLayout* quarre::Interaction::layout()
 {
     return m_layout;

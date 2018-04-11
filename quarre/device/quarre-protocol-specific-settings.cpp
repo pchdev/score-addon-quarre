@@ -20,7 +20,7 @@ template <> void DataStreamReader::read(
 }
 
 template <> void DataStreamWriter::write(
-        const quarre::SpecificSettings& n )
+         quarre::SpecificSettings& n )
 {
     m_stream >> n.osc_port;
     m_stream >> n.ws_port;
@@ -38,7 +38,7 @@ template <> void JSONObjectReader::read(
 }
 
 template <> void JSONObjectWriter::write(
-        const quarre::SpecificSettings& n )
+         quarre::SpecificSettings& n )
 {
     n.osc_port  = obj  [ "OSCPort"  ].toInt();
     n.ws_port   = obj  [ "WSPort"   ].toInt();
