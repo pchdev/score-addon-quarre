@@ -31,77 +31,74 @@ class user // ----------------------------------------------------------- USER
     class input // ----------------------------------------------------- USER_INPUT
     {
         public :
-        input ( std::string id, std::shared_ptr<quarre::user> parent);
+        input ( std::string id );
 
-        void assign ( std::string const& id, std::function<void(ossia::value&)> function );
-        void clear_assignment ( std::string const& id );
+        void assign     ( std::string const& id, std::function<void(ossia::value&)> function );
+        void unassign   ( std::string const& id );
 
         private:
         std::string     m_id;
         std::string     m_addr;
         parptr_t        m_available;
         parptr_t        m_active;
-        std::shared_ptr<quarre::user> m_parent;
+
         std::vector<parptr_t> m_data;
     };
 
     class gesture : public input //--------------------------------------- gesture
     {
         public:
-        gesture ( std::string id, std::shared_ptr<device_base> parent,
-                  std::vector<std::string> subgestures );
+        gesture ( std::string id, std::vector<std::string> subgestures );
     };
 
     class sensor : public input //--------------------------------------- sensor
     {
         public:
-        sensor ( std::string id, std::shared_ptr<device_base> parent,
-                 std::vector<pdata_t> data );
+        sensor ( std::string id, std::vector<pdata_t> data );
     };
 
     user ( uint8_t id, device_base* device );
 
+    void make_tree ( std::vector<pdata_t> const& tree );
+
     bool supports_input         ( const std::string& input ) const;
-    bool connected              ( ) const;
-    uint8_t interaction_count   ( ) const;
-
-    void set_connected          ( );
-
     void activate_input         ( const std::string& input );
     void deactivate_input       ( const std::string& input );
 
-    int active_countdown        () const;
-
-    intact_t incoming_interaction   () const;
-    intact_t active_interaction     () const;
-
-    void set_incoming_interaction   ( intact_t interaction );
-    void set_active_interaction     ( intact_t interaction );
-    void cancel_next_interaction    ( intact_t interaction );
-    void stop_current_interaction   ( intact_t interaction );
-    void end_current_interaction    ( intact_t interaction );
-    void pause_current_interaction  ( intact_t interaction );
-    void resume_current_interaction ( intact_t interaction );
+    bool connected              ( ) const;
+    void set_connected          ( );
 
     status status() const;
 
     protected: //---------------------------------------------
-
     bool                            m_connected;
     uint8_t                         m_id;
-    parptr_t                        m_active_countdown;
-    uint8_t                         m_interaction_count;
     status                          m_status;
-    intact_t                        m_incoming_interaction;
-    intact_t                        m_active_interaction;
-    std::shared_ptr<device_base>    m_device;
     std::vector<input*>             m_inputs;
-};
 
-struct candidate // --------------------------------------------- CANDIDATE
-{
-    user*       user;
-    uint8_t     priority;
+    class interaction_hdlr
+    {
+        public:
+        int active_countdown            ( ) const;
+        intact_t incoming_interaction   ( ) const;
+        intact_t active_interaction     ( ) const;
+        uint8_t interaction_count       ( ) const;
+
+        void set_incoming_interaction   ( intact_t interaction );
+        void set_active_interaction     ( intact_t interaction );
+        void cancel_next_interaction    ( intact_t interaction );
+        void stop_current_interaction   ( intact_t interaction );
+        void end_current_interaction    ( intact_t interaction );
+        void pause_current_interaction  ( intact_t interaction );
+        void resume_current_interaction ( intact_t interaction );
+
+        protected:
+        intact_t m_incoming_interaction;
+        intact_t m_active_interaction;
+        parptr_t m_active_countdown;
+        uint8_t  m_interaction_count;
+
+    } m_interaction_hdl;
 };
 
 class Device final : public Engine::Network::OwningOSSIADevice
@@ -112,26 +109,15 @@ class Device final : public Engine::Network::OwningOSSIADevice
 
     static score::addons::quarre::Device* instance();
     static score::addons::quarre::Device* instance ( const Device::DeviceSettings& settings );
-
-    class user_dispatcher // -----------------------------------------------------------------
-    {
-        public:
-        void   dispatch_incoming_interaction    ( intact_t interaction );
-        void   dispatch_active_interaction      ( intact_t interaction );
-        void   dispatch_ending_interaction      ( intact_t interaction );
-        void   dispatch_paused_interaction      ( intact_t interaction );
-        void   dispatch_resumed_interaction     ( intact_t interaction );
-
-        private:
-        std::vector<quarre::user> m_users;
-    };
+    static score::addons::quarre::Device::dispatcher const& dispatcher();
+    static const std::unique_ptr<ossia::net::device_base>& device();
 
     ~Device ( );
 
     virtual bool reconnect  ( ) override;
     virtual void recreate   ( const Device::Node& n ) override;
 
-    void   make_tree        ( );
+    void   make_common_tree ( );
 
     signals: // ----------------------------------------------
     void sig_command    ( );
@@ -147,7 +133,26 @@ class Device final : public Engine::Network::OwningOSSIADevice
     uint16_t            m_wsport;
     uint16_t            m_oscport;
     uint8_t             m_n_max_users;
-    user_dispatcher     m_dispatcher;
+
+    class dispatcher // -----------------------------------------------------------------
+    {
+        public:
+        void   dispatch_incoming_interaction    ( intact_t interaction );
+        void   dispatch_active_interaction      ( intact_t interaction );
+        void   dispatch_ending_interaction      ( intact_t interaction );
+        void   dispatch_paused_interaction      ( intact_t interaction );
+        void   dispatch_resumed_interaction     ( intact_t interaction );
+
+        private:
+        struct candidate // --------------------------------------------- candidate
+        {
+            user*       user;
+            uint8_t     priority;
+        };
+
+        std::vector<quarre::user> m_users;
+
+    } m_dispatcher;
 
 };
 }

@@ -67,10 +67,6 @@ void quarre::ProcessModel::startExecution()
 
     auto mappings   = interaction->mappings();
     auto device     = quarre::Device::instance();
-
-    auto node = device->get_interaction_candidate(mappings);
-
-    if ( !node ) return;
 }
 
 void quarre::ProcessModel::stopExecution()

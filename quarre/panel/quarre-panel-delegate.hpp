@@ -7,7 +7,6 @@ namespace score     {
 namespace addons    {
 namespace quarre    {
 
-
 class PanelDelegate final : public QObject, public score::PanelDelegate
 {
     public: // ------------------------------------------------

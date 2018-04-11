@@ -8,32 +8,146 @@ using namespace score::addons;
 using namespace ossia::net;
 using namespace ossia::oscquery;
 
+#define QSD *quarre::Device::device()
+
+// --------------------------------------------------------------------------------------------
+// USER_GESTURES
+// --------------------------------------------------------------------------------------------
+static const std::vector<std::pair<std::string,std::vector<std::string>>> g_gestures =
+{
+    { "whip"        , {}},
+    { "cover"       , {}},
+    { "turnover"    , {}},
+    { "pickup"      , {}},
+    { "freefall"    , {}},
+    { "shake",      { "left", "right", "up", "down" }},
+    { "swipe",      { "left", "right", "up", "down"}},
+    { "twist",      { "left", "right" }}
+};
+
+// --------------------------------------------------------------------------------------------
+// USER_SENSORS
+// --------------------------------------------------------------------------------------------
+static const std::vector<std::pair<pdata_t>> g_sensors =
+{
+    { "accelerometers", {
+          { "x", ossia::val_type::FLOAT },
+          { "y", ossia::val_type::FLOAT },
+          { "z", ossia::val_type::FLOAT }}},
+    { "rotation", {
+          { "x", ossia::val_type::FLOAT },
+          { "y", ossia::val_type::FLOAT },
+          { "z", ossia::val_type::FLOAT }}},
+    { "proximity", {
+          { "close", ossia::val_type::BOOL }}}
+};
+
+// --------------------------------------------------------------------------------------------
+// USER_TREE
+// --------------------------------------------------------------------------------------------
+static const std::vector<std::pair<std::string,ossia::val_type>> g_user_tree =
+{
+    { "/address", ossia::val_type::STRING },
+
+    { "/interactions/next/incoming", ossia::val_type::LIST },
+    //! notifies user of an incoming interaction with following information:
+    //! 0 [string] the title of the interaction
+    //! 1 [string] the description of the interaction
+    //! 2 [string] the interaction module to display on the remote
+    //! 3 [ int ] the length of the interaction
+    //! 4 [ int ] the time left before the beginning of the interaction
+
+    { "/interactions/next/cancel", ossia::val_type::INT },
+    //! notifies user that the next interaction is cancelled:
+    //! 0 [ int ] the cancellation reason
+
+    { "/interactions/next/begin", ossia::val_type::LIST },
+    //! starts the incoming interaction, with following arguments:
+    //! 0 [ string ] the title of the interaction
+    //! 1 [ string ] the description of the interaction
+    //! 2 [ string ] the interaction module to display on the remote
+    //! 3 [ int ] the length of the interaction
+    //!
+    //! note that all of these arguments are optional,
+    //! they will be used in case they're different from previous notification
+    //! if user did not have notification of an incoming interaction
+    //! the interaction will not begin
+
+    { "/interactions/next/pause", ossia::val_type::IMPULSE },
+    //! pauses the incoming interaction, countdown will stop
+
+    { "/interactions/next/resume", ossia::val_type::IMPULSE },
+    //! resumes the incoming interaction, countdown will start again
+
+    { "/interactions/current/end", ossia::val_type::IMPULSE },
+    //! the current interaction ends normally, going back to idle or incoming mode
+
+    { "/interactions/current/stop", ossia::val_type::INT },
+    //! the current interaction is forcefully stopped
+
+    { "/interactions/current/pause", ossia::val_type::IMPULSE },
+    //! pauses the current interaction
+
+    { "/interactions/current/resume", ossia::val_type::IMPULSE },
+    //! resumes the current interaction
+
+    { "/interactions/current/force", ossia::val_type::LIST }
+    //! starts the interaction, regardless of the current user status
+    //! and whether a notification has been sent or not
+    //! the arguments are the same as /interactions/next/begin
+};
+
+// --------------------------------------------------------------------------------------------
+// COMMON_TREE
+// --------------------------------------------------------------------------------------------
+static const std::vector<std::pair<std::string,ossia::val_type>> g_common_tree =
+{
+    { "/common/scenario/start", ossia::val_type::IMPULSE },
+    //! starts the scenario, activating global counter
+
+    { "/common/scenario/end", ossia::val_type::IMPULSE },
+    //! notifies the ending of the scenario, remote goes back into idle mode
+
+    { "/common/scenario/pause", ossia::val_type::IMPULSE },
+    //! notifies the pausing of the scenario, all interactions pause
+    //! displaying the pause screen
+
+    { "/common/scenario/resume", ossia::val_type::IMPULSE },
+    //! notifies scenario resuming
+
+    { "/common/scenario/stop", ossia::val_type::INT },
+    //! notifies scenario stopping, because of an error
+
+    { "/common/scenario/reset", ossia::val_type::IMPULSE },
+    //! counter is reinitialized to zero
+
+    { "/common/scenario/name", ossia::val_type::STRING },
+    //! displays the name of the current scenario
+
+    { "/common/scenario/scene/name", ossia::val_type::STRING }
+    //! displays the name of the current scene
+};
+
 // ------------------------------------------------------------------------------
 // USER_INPUT
 // ------------------------------------------------------------------------------
 
-quarre::user::input::input(std::string id, std::shared_ptr<user> parent) :
-
-    m_id        ( id ),
-    m_parent    ( parent )
+quarre::user::input::input(std::string id) : m_id ( id )
 {
-    auto dev            = parent->m_device;
+    auto dev  = m_device;
 
     m_addr = "/user/";
-    m_addr += parent->m_id + "/" + id;
+    m_addr += m_id + "/" + id;
 
-    auto n_avail    = ossia::net::create_node(*dev, m_addr + "/available");
-    m_available     = std::make_shared<parameter_base>(
-                        n_avail.create_parameter(ossia::val_type::BOOL));
+    auto n_avail    = ossia::net::create_node(QSD, m_addr + "/available");
+    m_available     = parptr_t(n_avail.create_parameter(ossia::val_type::BOOL));
 
-    auto n_active   = ossia::net::create_node(*dev, m_addr + "/active");
-    m_active        = std::make_shared<parameter_base>(
-                        n_active.create_parameter(ossia::val_type::BOOL));
+    auto n_active   = ossia::net::create_node(QSD, m_addr + "/active");
+    m_active        = parptr_t(n_active.create_parameter(ossia::val_type::BOOL));
 }
 
-void quarre::user::input::assign(
-        const std::string &id,
-        std::function<void (ossia::value &)> function)
+void quarre::user::input::assign(const std::string &id,
+        std::function<(ossia::value&)> function)
 {
     for ( const auto& data : m_data )
     {
@@ -57,21 +171,17 @@ void quarre::user::input::clear_assignment(const std::string &id)
 // USER_GESTURE
 // ------------------------------------------------------------------------------
 
-quarre::user::gesture::gesture(
-        std::string id, std::shared_ptr<device_base> parent,
-        std::vector<std::string> subgestures )
-
-    : quarre::input ( id, parent )
+quarre::user::gesture::gesture(std::string id, std::vector<std::string> subgestures)
+    : quarre::input ( id )
 {
-
-    auto n_trig = ossia::net::create_node(*m_device, m_addr + id + "/trigger");
+    auto n_trig = ossia::net::create_node(QSD, m_addr + id + "/trigger");
     auto p_trig = n_trig.create_parameter(ossia::val_type::IMPULSE);
 
     m_data.push_back(parptr_t (p_trig));
 
     for ( const auto& subgesture : subgestures )
     {
-        auto n_sub = ossia::net::create_node(*m_device, m_addr + subgesture + "/trigger");
+        auto n_sub = ossia::net::create_node(QSD, m_addr + subgesture + "/trigger");
         auto p_sub = n_sub.create_parameter(ossia::val_type::IMPULSE);
 
         m_data.push_back(parptr_t(p_sub));
@@ -83,14 +193,14 @@ quarre::user::gesture::gesture(
 // ------------------------------------------------------------------------------
 
 quarre::user::sensor::sensor(
-        std::string id, std::shared_ptr<device_base> parent,
+        std::string id,
         std::vector<pdata_t> data ) :
 
-    quarre::user::input ( id, parent )
+    quarre::user::input ( id )
 {
     for ( const auto& d : data )
     {
-        auto ndata = ossia::net::create_node(*m_device, m_addr + "/data/" + d.first());
+        auto ndata = ossia::net::create_node(QSD, m_addr + "/data/" + d.first());
         auto pdata = ndata.create_parameter(d.second());
 
         m_data.push_back(pdata_t(pdata));
@@ -102,14 +212,38 @@ quarre::user::sensor::sensor(
 // ------------------------------------------------------------------------------
 
 quarre::user::user(uint8_t id, device_base *device) :
-    m_id(id), m_device(device)
+    m_id(id), m_status(quarre::user::status::DISCONNECTED)
 {
+    const std::string base_addr = "/user/";
+    base_addr += std::to_string(m_id);
 
+    // make user tree
+    for ( const auto& parameter : g_user_tree )
+    {
+        auto node = ossia::net::create_node(QSD, base_addr + parameter.first());
+        node.create_parameter(parameter.second());
+    }
+
+    for ( const auto& input : g_gestures )
+    {
+        auto gest = new quarre::user::gesture(input.first(), input.second());
+        m_inputs.push_back(gest);
+    }
+
+    for ( const auto& sensor : g_sensors )
+    {
+        auto sens = new quarre::user::sensor(input.first(), input.second());
+        m_inputs.push_back(sens);
+    }
 }
 
 bool quarre::user::supports_input(const std::string& input) const
 {
-
+    for ( const auto& input : m_inputs )
+    {
+        if ( input->m_id == input )
+            return input->m_available;
+    }
 }
 
 bool quarre::user::connected()
@@ -124,35 +258,43 @@ void quarre::user::set_connected(bool connected)
 
 bool quarre::user::interaction_count()
 {
-    return m_interaction_count;
+    return m_interaction_hdl.m_interaction_count;
 }
 
 void quarre::user::activate_input(const std::string& input)
 {
-
+    for ( const auto& input : m_inputs )
+    {
+        if ( input->m_id == input )
+             input->m_active->set_value(true);
+    }
 }
 
 void quarre::user::deactivate_input(const std::string& input)
 {
-
+    for ( const auto& input : m_inputs )
+    {
+        if ( input->m_id == input )
+             input->m_active->set_value(false);
+    }
 }
 
 int quarre::user::active_countdown() const
 {
-    return m_active_countdown->value();
+    return m_interaction_hdl.m_active_countdown->value();
 }
 
 quarre::intact_t quarre::user::incoming_interaction() const
 {
-    return m_incoming_interaction;
+    return m_interaction_hdl.m_incoming_interaction;
 }
 
 quarre::intact_t quarre::user::active_interaction() const
 {
-    return m_active_interaction;
+    return m_interaction_hdl.m_active_interaction;
 }
 
-void quarre::user::set_active_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::set_active_interaction(intact_t interaction)
 {
     if ( interaction == m_incoming_interaction )
         m_incoming_interaction.reset();
@@ -160,32 +302,32 @@ void quarre::user::set_active_interaction(intact_t interaction)
     m_active_interaction = interaction;
 }
 
-void quarre::user::set_incoming_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::set_incoming_interaction(intact_t interaction)
 {
     m_incoming_interaction = interaction;
 }
 
-void quarre::user::cancel_next_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::cancel_next_interaction(intact_t interaction)
 {
     m_incoming_interaction.reset();
 }
 
-void quarre::user::stop_current_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::stop_current_interaction(intact_t interaction)
 {
     m_active_interaction.reset();
 }
 
-void quarre::user::end_current_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::end_current_interaction(intact_t interaction)
 {
     m_active_interaction.reset();
 }
 
-void quarre::user::pause_current_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::pause_current_interaction(intact_t interaction)
 {
 
 }
 
-void quarre::user::resume_current_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::resume_current_interaction(intact_t interaction)
 {
 
 }
@@ -199,7 +341,9 @@ quarre::user::status quarre::user::status() const
 // USER_DISPATCHER
 // ------------------------------------------------------------------------------
 
-void quarre::Device::user_dispatcher::dispatch_incoming_interaction(intact_t interaction)
+using namespace quarre::Device;
+
+void quarre::Device::dispatcher::dispatch_incoming_interaction(intact_t interaction)
 {
     // candidate algorithm
     // eliminate non-connected clients
@@ -207,11 +351,11 @@ void quarre::Device::user_dispatcher::dispatch_incoming_interaction(intact_t int
     // eliminate clients that already have an interaction going on
     // eliminate clients that already have an incoming interaction
 
-    std::vector<quarre::candidate> candidates;
+    std::vector<dispatcher::candidate> candidates;
 
     for ( const auto& user : m_users )
     {
-        quarre::candidate candidate;
+        dispatcher::candidate candidate;
 
         candidate.user      = user;
         candidate.priority  = 0;
@@ -228,7 +372,7 @@ void quarre::Device::user_dispatcher::dispatch_incoming_interaction(intact_t int
         case user::status::ACTIVE:
         {
             if ( interaction->countdown() <
-                 candidate.user->active_countdown() + 5) goto next;
+                 candidate.user->interaction_hdlr().active_countdown() + 5) goto next;
 
             candidate.priority = 1;
             goto check_inputs;
@@ -251,7 +395,7 @@ void quarre::Device::user_dispatcher::dispatch_incoming_interaction(intact_t int
     // if there is no candidate, interaction will not be dispatched
     if ( candidates.size() == 0 ) return;
 
-    quarre::candidate* winner;
+    dispatcher::candidate* winner;
 
     for ( const auto& candidate : candidates )
     {
@@ -260,8 +404,8 @@ void quarre::Device::user_dispatcher::dispatch_incoming_interaction(intact_t int
             winner = &candidate;
             return;
         }
-
-        // if its a draw between two or more candidates, select randomly between them
+        // if its a draw between two or more candidates,
+        // select randomly between them
         if ( candidate.priority == winner->priority )
         {
             std::srand ( std::time(nullptr) );
@@ -275,10 +419,11 @@ void quarre::Device::user_dispatcher::dispatch_incoming_interaction(intact_t int
             winner = &candidate;
     }
 
-    if ( winner->user ) winner->user->set_active_interaction(interaction);
+    if ( winner->user )
+        winner->user->set_active_interaction(interaction);
 }
 
-void quarre::Device::user_dispatcher::dispatch_active_interaction(intact_t interaction)
+void quarre::Device::dispatcher::dispatch_active_interaction(intact_t interaction)
 {
     for ( const auto& user : m_users )
     {
@@ -287,17 +432,17 @@ void quarre::Device::user_dispatcher::dispatch_active_interaction(intact_t inter
     }
 }
 
-void quarre::Device::user_dispatcher::dispatch_ending_interaction(intact_t interaction)
+void quarre::Device::dispatcher::dispatch_ending_interaction(intact_t interaction)
 {
     interaction->host()->end_current_interaction(this);
 }
 
-void quarre::Device::user_dispatcher::dispatch_paused_interaction(intact_t interaction)
+void quarre::Device::dispatcher::dispatch_paused_interaction(intact_t interaction)
 {
     interaction->host()->pause_current_interaction(this);
 }
 
-void quarre::Device::user_dispatcher::dispatch_resumed_interaction(intact_t interaction)
+void quarre::Device::dispatcher::dispatch_resumed_interaction(intact_t interaction)
 {
     interaction->host()->resume_current_interaction(this);
 }
@@ -319,6 +464,16 @@ quarre::Device* quarre::Device::instance()
     return m_singleton;
 }
 
+quarre::Device::dispatcher const& quarre::Device::dispatcher()
+{
+    return m_dispatcher;
+}
+
+const std::unique_ptr<device_base>& quarre::Device::device()
+{
+    return m_dev;
+}
+
 quarre::Device::Device(const Device::DeviceSettings &settings) :
     Device::DeviceInterface ( settings )
 {
@@ -337,12 +492,17 @@ quarre::Device::Device(const Device::DeviceSettings &settings) :
 
     mpx->expose_to  ( std::move(server) );
 
+    // build users
+    for ( int i = 0; i < m_n_max_users; ++i )
+        m_dispatcher.m_users.push_back(new quarre::user(i, m_dev.get()));
+
+    // make common tree
     make_tree();
 }
 
 quarre::Device::~Device() {}
 
-bool quarre::Device::recreate(const Device::Node& n)
+bool quarre::Device::reconnect()
 {
 
 }
@@ -352,44 +512,12 @@ void quarre::Device::recreate(const Device::Node &n)
 
 }
 
-void quarre::Device::make_tree()
+void quarre::Device::make_common_tree()
 {        
-    // COMMON --------------------------------------------------------------------------------
-
-    make_common_parameter   ( root, "/common/scenario/start",  ossia::val_type::IMPULSE );
-    make_common_parameter   ( root, "/common/scenario/end",    ossia::val_type::IMPULSE );
-    make_common_parameter   ( root, "/common/scenario/pause",  ossia::val_type::IMPULSE );
-    make_common_parameter   ( root, "/common/scenario/stop",   ossia::val_type::IMPULSE );
-    make_common_parameter   ( root, "/common/scenario/reset",  ossia::val_type::IMPULSE );
-
-    make_common_parameter   ( root, "/common/scenario/name",        ossia::val_type::STRING );
-    make_common_parameter   ( root, "/common/scenario/scene/name",  ossia::val_type::STRING );
-
-    // ID --------------------------------------------------------------------------------
-
-    make_user_parameter     ( root, "/connected", ossia::val_type::BOOL );
-    make_user_parameter     ( root, "/address", ossia::val_type::STRING );
-
-    // INTERACTIONS ----------------------------------------------------------------------
-
-    make_user_parameter     ( root, "/interactions/next/incoming", ossia::val_type::LIST );
-    make_user_parameter     ( root, "/interactions/next/begin", ossia::val_type::LIST );
-    make_user_parameter     ( root, "/interactions/next/cancel", ossia::val_type::INT );
-    make_user_parameter     ( root, "/interactions/current/end", ossia::val_type::INT );
-    make_user_parameter     ( root, "/interactions/current/force", ossia::val_type::LIST );
-    make_user_parameter     ( root, "/interactions/reset", ossia::val_type::IMPULSE );
-
-    // SENSORS --------------------------------------------------------------------------
-
-    make_user_parameter     ( root, "/sensors/{accelerometers,rotation}/data/{x,y,z}", ossia::val_type::FLOAT );
-    make_user_parameter     ( root, "/sensors/{accelerometers,rotation,proximity}/{available,active}", ossia::val_type::BOOL );
-    make_user_parameter     ( root, "/sensors/proximity/data/close", ossia::val_type::BOOL );
-
-    // GESTURES --------------------------------------------------------------------------
-
-    make_user_parameter     ( root, "/gestures/{whip,cover,turnover,freefall,twist,twist/left,twist/right,shake,shake/left,shake/right,shake/up,shake/down,pickup,swipe}/{active,available}", ossia::val_type::BOOL);
-    make_user_parameter     ( root, "/gestures/{whip,cover,turnover,freefall,twist,twist/left,twist/right,shake,shake/left,shake/right,shake/up,shake/down,pickup,swipe}/trigger", ossia::val_type::IMPULSE );
-
-
+    for ( const auto& parameter : g_common_tree )
+    {
+        auto node = ossia::net::create_node(*m_dev, parameter.first());
+        node.create_parameter(parameter.second());
+    }
 }
 
