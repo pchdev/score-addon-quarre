@@ -10,9 +10,9 @@ using namespace score::addons;
 quarre::ProcessModel::ProcessModel(
         const TimeVal& duration,
         const Id<Process::ProcessModel>& id,
-        QObject* parent ) : ProcessModel(duration, id, "quarrè-process", parent)
+        QObject* parent ) : Process::ProcessModel(duration, id, "quarrè-process", parent)
 {
-    metadata().setInstanceName(*this);
+    metadata().setInstanceName<quarre::ProcessModel>(*this);
 }
 
 QString quarre::ProcessModel::prettyName() const
@@ -20,37 +20,37 @@ QString quarre::ProcessModel::prettyName() const
     return tr ( "quarrè-process" );
 }
 
-QString quarre::ProcessModel::prettyShortName() const
+std::shared_ptr<quarre::interaction> quarre::ProcessModel::interaction() const
 {
-    return tr ( "quarrè" );
+    return m_interaction;
 }
 
 void quarre::ProcessModel::onInteractionTitleChanged(const QString &title)
 {
-    interaction.title = title;
+    m_interaction->set_title(title);
 }
 
 void quarre::ProcessModel::onInteractionDescriptionChanged(const QString &description)
 {
-    interaction.description = description;
+    m_interaction->set_description(description);
 }
 
-quarre::ProcessModel::onInteractionModuleChanged(const QString &module_id)
+void quarre::ProcessModel::onInteractionModuleChanged(const QString &module_id)
 {
-    interaction.module = module_id;
+    m_interaction->set_module(module_id);
 }
 
-quarre::ProcessModel::onInteractionLengthChanged(uint16_t length)
+void quarre::ProcessModel::onInteractionLengthChanged(uint16_t length)
 {
-    interaction.length = length;
+    m_interaction->set_length(length);
 }
 
-quarre::ProcessModel::onInteractionCountdownChanged(uint16_t countdown)
+void quarre::ProcessModel::onInteractionCountdownChanged(uint16_t countdown)
 {
-    interaction.countdown = countdown;
+    m_interaction->set_countdown(countdown);
 }
 
-quarre::ProcessModel::onInteractionMappingsChanged(QVector<QStringList> mappings)
+void quarre::ProcessModel::onInteractionMappingsChanged(QVector<QStringList> mappings)
 {
 
 }
@@ -65,8 +65,8 @@ void quarre::ProcessModel::startExecution()
     // when countdown is over
     // start interaction
 
-    auto mappings   = interaction->mappings();
-    auto device     = quarre::Device::instance();
+    auto mappings       = m_interaction->mappings();
+    auto qrdevice       = quarre::quarre_device::instance();
 }
 
 void quarre::ProcessModel::stopExecution()
@@ -126,21 +126,21 @@ void quarre::ProcessModel::setDurationAndShrink(const TimeVal &newDuration)
 template <> void DataStreamReader::read(
         const quarre::ProcessModel& process )
 {
-    readFrom ( process.interaction );
+    readFrom ( process.m_interaction );
     insertDelimiter();
 }
 
 template <> void DataStreamWriter::write(
         quarre::ProcessModel& process )
 {   
-    writeTo ( process.interaction );
+    writeTo ( process.m_interaction );
     checkDelimiter();
 }
 
 template <> void JSONObjectReader::read(
         const quarre::ProcessModel& process )
 {
-    obj [ "Interaction" ] = toJsonObject( process.interaction );
+    obj [ "Interaction" ] = toJsonObject( process.m_interaction );
 }
 
 template <> void JSONObjectWriter::write(
@@ -149,7 +149,7 @@ template <> void JSONObjectWriter::write(
     auto json_obj = obj [ "Interaction" ].toObject();
 
     JSONObject::Deserializer deserializer ( json_obj );
-    process.interaction = quarre::Interaction(deserializer, &process);
+    process.m_interaction = std::make_shared<quarre::interaction>(deserializer, &process);
 }
 
 

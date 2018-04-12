@@ -13,7 +13,7 @@ namespace score     {
 namespace addons    {
 namespace quarre    {
 
-class Mapping final : public IdentifiedObject<Mapping>
+class mapping final : public IdentifiedObject<mapping>
 {
     Q_OBJECT
     SCORE_SERIALIZE_FRIENDS
@@ -23,10 +23,10 @@ class Mapping final : public IdentifiedObject<Mapping>
     Q_PROPERTY  ( QString expression READ expression WRITE set_expression NOTIFY expressionChanged )
 
     public: // ----------------------------------------------------
-    Mapping ();
-    Mapping ( const Id<Mapping>& id, QObject* parent );
+    mapping ();
+    mapping ( const Id<mapping>& id, QObject* parent );
 
-    template <typename impl> Mapping(impl& vis, QObject* parent) :
+    template <typename impl> mapping(impl& vis, QObject* parent) :
         IdentifiedObject(vis, parent)
     {
         vis.writeTo(*this);

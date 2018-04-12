@@ -19,8 +19,8 @@ static const QStringList gestures_list =
     "Twist", "Twist/Left", "Twist/Right"
 };
 
-quarre::Mapping::Mapping(
-        const Id<quarre::Mapping> &id,
+quarre::mapping::mapping(
+        const Id<quarre::mapping> &id,
         QObject *parent) :
 
     IdentifiedObject    ( id, "quarrè-mapping", parent ),
@@ -41,43 +41,43 @@ quarre::Mapping::Mapping(
     m_layout->addWidget(m_expression);
 }
 
-QLayout* quarre::Mapping::layout() const
+QLayout* quarre::mapping::layout() const
 {
     return m_layout;
 }
 
-const QString& quarre::Mapping::source()
+const QString& quarre::mapping::source()
 {
     return m_source->text();
 }
 
-const QString& quarre::Mapping::destination()
+const QString& quarre::mapping::destination()
 {
     return m_destination->text();
 }
 
-const QString& quarre::Mapping::expression()
+const QString& quarre::mapping::expression()
 {
     return m_expression->toPlainText();
 }
 
-void quarre::Mapping::set_source(const QString &source)
+void quarre::mapping::set_source(const QString &source)
 {
     m_source->setText(source);
 }
 
-void quarre::Mapping::set_destination(const QString &destination)
+void quarre::mapping::set_destination(const QString &destination)
 {
     m_destination->setText(destination);
 }
 
-void quarre::Mapping::set_expression(const QString &expression)
+void quarre::mapping::set_expression(const QString &expression)
 {
     m_expression->setPlainText(expression);
 }
 
 template <> void DataStreamReader::read(
-        const quarre::Mapping& e )
+        const quarre::mapping& e )
 {
     m_stream << e.source();
     m_stream << e.destination();
@@ -87,7 +87,7 @@ template <> void DataStreamReader::read(
 }
 
 template <> void DataStreamWriter::write(
-        quarre::Mapping& e )
+        quarre::mapping& e )
 {
     QString src, dest, exp;
     m_stream >> src >> dest >> exp;
@@ -100,7 +100,7 @@ template <> void DataStreamWriter::write(
 }
 
 template <> void JSONObjectReader::read(
-        const quarre::Mapping& e )
+        const quarre::mapping& e )
 {
     obj [ "Source" ]            = e.source();
     obj [ "Destination"  ]      = e.destination();
@@ -108,7 +108,7 @@ template <> void JSONObjectReader::read(
 }
 
 template <> void JSONObjectWriter::write(
-        quarre::Mapping& e )
+        quarre::mapping& e )
 {
     e.m_source->setText             ( obj [ "Source" ].toString() );
     e.m_destination->setText        ( obj [ "Destination" ].toString() );

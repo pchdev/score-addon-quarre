@@ -37,7 +37,7 @@ void quarre::ProcessExecutor::resume()
 
 ossia::state_element quarre::ProcessExecutor::state(ossia::time_value date, double pos)
 {
-
+    return {};
 }
 
 

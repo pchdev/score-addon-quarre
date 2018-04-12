@@ -12,7 +12,7 @@ namespace quarre    {
 class ProcessModel final : public Process::ProcessModel
 {
     SCORE_SERIALIZE_FRIENDS
-    PROCESS_METADATA_IMPL       ( quarre::ProcessModel )
+    PROCESS_METADATA_IMPL       ( score::addons::quarre::ProcessModel )
 
     //Q_PROPERTY      ( )
 
@@ -30,6 +30,19 @@ class ProcessModel final : public Process::ProcessModel
         vis.writeTo(*this);
     }
 
+    // clone
+
+    ProcessModel(
+            const ProcessModel& other,
+            const Id<Process::ProcessModel>& id,
+            QObject* parent) :
+        Process::ProcessModel (other, id, Metadata<ObjectKey_k,ProcessModel>::get(), parent )
+    {
+
+    }
+
+    std::shared_ptr<quarre::interaction> interaction() const;
+
     protected slots: //--------------------------------------------------------------
 
     void onPlusMappingButtonPressed         ( );
@@ -43,10 +56,9 @@ class ProcessModel final : public Process::ProcessModel
 
     private: //-------------------------------------------------------------------
 
-    quarre::Interaction* interaction;
+    std::shared_ptr<quarre::interaction> m_interaction;
 
     virtual QString prettyName      ( ) const override;
-    virtual QString prettyShortName ( ) const override;
 
     virtual void startExecution     ( ) override;
     virtual void stopExecution      ( ) override;

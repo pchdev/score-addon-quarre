@@ -5,12 +5,12 @@
 using namespace score::addons;
 
 quarre::InspectorWidget::InspectorWidget(
-        const quarre::ProcessModel &object,
+        quarre::ProcessModel &object,
         const score::DocumentContext &ctx, QWidget *parent) :
 
     InspectorWidgetDelegate_T   ( object, parent ),
     m_dispatcher                ( ctx.commandStack )
 {
-    auto interaction = object.interaction;
+    auto interaction = object.interaction();
     interaction->layout()->setParent(this);
 }

@@ -7,6 +7,7 @@
 #include <score/model/Identifier.hpp>
 
 #include <quarre/process/quarre-process-model.hpp>
+#include <quarre/process/layer/quarre-process-layer-view.hpp>
 
 namespace score     {
 namespace addons    {
@@ -18,7 +19,7 @@ class ProcessLayerPresenter final : public Process::LayerPresenter
 
     explicit ProcessLayerPresenter (
             const score::addons::quarre::ProcessModel& model,
-            const score::addons::quarre::ProcessLayerView* view,
+            score::addons::quarre::ProcessLayerView* view,
             const Process::ProcessPresenterContext& ctx,
             QObject* parent );
 
@@ -37,7 +38,7 @@ class ProcessLayerPresenter final : public Process::LayerPresenter
 
     void on_doubleClicked();
     const ProcessModel& m_layer;
-    quarre::ProcessLayerView* m_view {};
+    quarre::ProcessLayerView* m_view;
 
 };
 

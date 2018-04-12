@@ -13,7 +13,7 @@ namespace quarre    {
 
 class user;
 
-class Interaction final : public IdentifiedObject<Interaction>
+class interaction final : public IdentifiedObject<interaction>
 {
     Q_OBJECT
     SCORE_SERIALIZE_FRIENDS
@@ -25,9 +25,9 @@ class Interaction final : public IdentifiedObject<Interaction>
     Q_PROPERTY  ( int countdown READ countdown WRITE set_countdown NOTIFY countdownChanged )
 
     public: //-----------------------------------------------------
-    Interaction ( const Id<Interaction>& id, QObject* parent );
+    interaction ( const Id<interaction>& id, QObject* parent );
 
-    template <typename impl> Interaction(impl& vis, QObject* parent) :
+    template <typename impl> interaction(impl& vis, QObject* parent) :
         IdentifiedObject(vis, parent)
     {
         vis.writeTo(*this);
@@ -35,9 +35,9 @@ class Interaction final : public IdentifiedObject<Interaction>
 
     QVBoxLayout* layout         () const;
 
-    const QString& module       () const;
-    const QString& title        () const;
-    const QString& description  () const;
+    const QString module        () const;
+    const QString title         () const;
+    const QString description   () const;
     const int length            () const;
     const int countdown         () const;
 
@@ -49,10 +49,10 @@ class Interaction final : public IdentifiedObject<Interaction>
 
     QStringList inputs()    const;
 
-    void set_host ( std::shared_ptr<quarre::user> host );
-    std::shared_ptr<quarre::user> host() const;
+    void set_current_host ( std::shared_ptr<quarre::user> host );
+    std::shared_ptr<quarre::user> current_host() const;
 
-    QVector<quarre::Mapping> mappings();
+    score::EntityMap<mapping> mappings() const;
 
     signals: //----------------------------------------------------
     void moduleChanged      ();
@@ -75,8 +75,7 @@ class Interaction final : public IdentifiedObject<Interaction>
     QVBoxLayout*    m_layout;
 
     std::shared_ptr<quarre::user> m_host;
-
-    score::EntityMap<quarre::Mapping> m_mappings;
+    score::EntityMap<quarre::mapping> m_mappings;
 
 };
 

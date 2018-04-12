@@ -415,7 +415,7 @@ void quarre::quarre_device::dispatch_incoming_interaction(intact_t interaction)
     // if there is no candidate, interaction will not be dispatched
     if ( candidates.size() == 0 ) return;
 
-    quarre_device::  candidate* winner;
+    quarre_device::candidate* winner;
 
     for ( auto& candidate : candidates )
     {
@@ -483,6 +483,12 @@ void quarre::quarre_device::dispatch_resumed_interaction(intact_t interaction)
 // DEVICE
 // ------------------------------------------------------------------------------
 
+quarre::quarre_device *quarre::quarre_device::instance(const Device::DeviceSettings& settings )
+{
+    if ( ! m_singleton ) m_singleton = new quarre_device(settings);
+    return m_singleton;
+}
+
 quarre::quarre_device *quarre::quarre_device::instance()
 {
     return m_singleton;
@@ -527,7 +533,7 @@ quarre::quarre_device::~quarre_device() {}
 
 bool quarre::quarre_device::reconnect()
 {
-
+    return false
 }
 
 void quarre::quarre_device::recreate(const Device::Node &n)

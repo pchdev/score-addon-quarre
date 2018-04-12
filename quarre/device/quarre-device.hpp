@@ -14,8 +14,8 @@ namespace score     {
 namespace addons    {
 namespace quarre    {
 
-class Interaction;
-using intact_t = std::shared_ptr<quarre::Interaction>;
+class interaction;
+using intact_t = std::shared_ptr<quarre::interaction>;
 
 class user // ----------------------------------------------------------- USER
 {
@@ -67,8 +67,8 @@ class user // ----------------------------------------------------------- USER
     void make_tree ( std::vector<pdata_t> const& tree );
 
     bool supports_input         ( const std::string& input ) const;
-    void activate_input         (const std::string& target );
-    void deactivate_input       (const std::string& target );
+    void activate_input         ( const std::string& target );
+    void deactivate_input       ( const std::string& target );
 
     bool connected              ( ) const;
     void set_connected          ( bool connected);
@@ -127,11 +127,10 @@ class quarre_device final : public Engine::Network::OwningOSSIADevice
         uint8_t priority;
     };
 
-    static quarre_device* instance ( );
     quarre_device ( const ::Device::DeviceSettings& settings );
-
+    static quarre_device* instance ( const Device::DeviceSettings &settings);
+    static quarre_device* instance ( );
     generic_device& device();
-    dispatcher& dispatcher();
 
     ~quarre_device ( );
 

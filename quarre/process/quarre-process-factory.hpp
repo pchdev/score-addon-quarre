@@ -7,7 +7,7 @@ namespace score {
 namespace addons {
 namespace quarre {
 
-using ProcessFactory = Process::ProcessFactory_T<quarre::ProcessModel>;
+using ProcessFactory = Process::GenericProcessModelFactory<quarre::ProcessModel>;
 
 }
 }

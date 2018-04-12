@@ -7,9 +7,8 @@ using namespace score::addons;
 
 // controller: establishes connections between view and model
 
-quarre::ProcessLayerPresenter::ProcessLayerPresenter (
-        const quarre::ProcessModel &layer,
-        const score::addons::quarre::ProcessLayerView *view,
+quarre::ProcessLayerPresenter::ProcessLayerPresenter (const quarre::ProcessModel &layer,
+        ProcessLayerView *view,
         const Process::ProcessPresenterContext &ctx,
         QObject *parent ) :
 
@@ -61,7 +60,7 @@ const Process::ProcessModel& quarre::ProcessLayerPresenter::model() const
 
 const Id<Process::ProcessModel>& quarre::ProcessLayerPresenter::modelId() const
 {
-    return m_layer.id;
+    return m_layer.id();
 }
 
 void quarre::ProcessLayerPresenter::on_doubleClicked()

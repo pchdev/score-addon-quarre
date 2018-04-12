@@ -56,7 +56,7 @@ std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_quarre::factories
     >(ctx, key);
 }
 
-score::GUIApplicationPlugin* score_addon_quarre::make_applicationPlugin(
+score::GUIApplicationPlugin* score_addon_quarre::make_guiApplicationPlugin(
         const score::GUIApplicationContext& app)
 {
     return new quarre::ApplicationPlugin ( app );
