@@ -51,9 +51,10 @@ QVBoxLayout* quarre::interaction::layout() const
     return m_layout;
 }
 
-score::EntityMap<quarre::mapping> quarre::interaction::mappings() const
+std::shared_ptr<score::EntityMap<quarre::mapping> >quarre::interaction::mappings() const
 {
-    return m_mappings;
+    std::shared_ptr<score::EntityMap<quarre::mapping> ptr(&m_mappings);
+    return ptr;
 }
 
 const QString quarre::interaction::module() const
@@ -71,12 +72,12 @@ const QString quarre::interaction::description() const
     return m_description->text();
 }
 
-const int quarre::interaction::length() const
+int quarre::interaction::length() const
 {
     return m_length->value();
 }
 
-const int quarre::interaction::countdown() const
+int quarre::interaction::countdown() const
 {
     return m_countdown->value();
 }
@@ -136,7 +137,7 @@ template <> void DataStreamReader::read(
     m_stream << e.length();
     m_stream << e.countdown();
 
-    m_stream << e.mappings().size();
+    m_stream << e.mappings()->size();
     for ( const auto& mapping : e.mappings() )
         readFrom( mapping );
 

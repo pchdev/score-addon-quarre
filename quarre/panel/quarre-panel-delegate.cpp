@@ -14,7 +14,7 @@ quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
     m_widget = new QWidget;
     auto lay = new QFormLayout ( m_widget );
 
-    auto dev = quarre::Device::instance();
+    auto dev = quarre::quarre_device::instance();
     auto max_u = dev->max_users();
 
     for ( int i = 0; i < max_u; ++i )
@@ -27,7 +27,7 @@ quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
         lay->addRow(tr, qle);
     }
 
-    auto server = quarre::Device::device();
+    auto server = quarre::quarre_device::instance()->device();
     auto proto = dynamic_cast<ossia::oscquery::oscquery_server_protocol*>(server->get_protocol());
 
     // a qlineedit for each user with ip address

@@ -12,6 +12,7 @@ namespace addons    {
 namespace quarre    {
 
 class user;
+class mapping;
 
 class interaction final : public IdentifiedObject<interaction>
 {
@@ -38,8 +39,8 @@ class interaction final : public IdentifiedObject<interaction>
     const QString module        () const;
     const QString title         () const;
     const QString description   () const;
-    const int length            () const;
-    const int countdown         () const;
+    int length                  () const;
+    int countdown               () const;
 
     void set_module         ( QString const& module );
     void set_title          ( QString const& title );
@@ -52,7 +53,7 @@ class interaction final : public IdentifiedObject<interaction>
     void set_current_host ( std::shared_ptr<quarre::user> host );
     std::shared_ptr<quarre::user> current_host() const;
 
-    score::EntityMap<mapping> mappings() const;
+    std::shared_ptr<score::EntityMap<mapping> > mappings() const;
 
     signals: //----------------------------------------------------
     void moduleChanged      ();

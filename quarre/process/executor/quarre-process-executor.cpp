@@ -5,6 +5,7 @@
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Engine/score2OSSIA.hpp>
 #include <ossia/editor/state/state_element.hpp>
+#include <Engine/Executor/DocumentPlugin.hpp>
 
 using namespace score::addons;
 
@@ -50,5 +51,5 @@ quarre::ProcessExecutorComponent::ProcessExecutorComponent(
 
     ProcessComponent_T ( parent_interval, element, ctx, id, "quarrè-executor-component", parent )
 {
-    m_process = std::make_shared<quarre::ProcessExecutor>(ctx.devices.list());
+    m_ossia_process = std::make_shared<quarre::ProcessExecutor>(ctx.devices.list());
 }

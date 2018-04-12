@@ -533,7 +533,7 @@ quarre::quarre_device::~quarre_device() {}
 
 bool quarre::quarre_device::reconnect()
 {
-    return false
+    return false;
 }
 
 void quarre::quarre_device::recreate(const Device::Node &n)

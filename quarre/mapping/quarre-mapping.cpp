@@ -5,20 +5,6 @@
 
 using namespace score::addons;
 
-static const QStringList sensors_list =
-{
-    "Accelerometer_x", "Accelerometer_y", "Accelerometer_z",
-    "Rotation_x", "Rotation_y", "Rotation_z",
-    "Proximiy"
-};
-
-static const QStringList gestures_list =
-{
-    "Whip", "Cover", "Turnover", "Freefall", "Pickup",
-    "Shake", "Shake/Left", "Shake/Right", "Shake/Up", "Shake/Down",
-    "Twist", "Twist/Left", "Twist/Right"
-};
-
 quarre::mapping::mapping(
         const Id<quarre::mapping> &id,
         QObject *parent) :
@@ -41,22 +27,22 @@ quarre::mapping::mapping(
     m_layout->addWidget(m_expression);
 }
 
-QLayout* quarre::mapping::layout() const
+QVBoxLayout* quarre::mapping::layout() const
 {
     return m_layout;
 }
 
-const QString& quarre::mapping::source()
+const QString quarre::mapping::source() const
 {
     return m_source->text();
 }
 
-const QString& quarre::mapping::destination()
+const QString quarre::mapping::destination() const
 {
     return m_destination->text();
 }
 
-const QString& quarre::mapping::expression()
+const QString quarre::mapping::expression() const
 {
     return m_expression->toPlainText();
 }

@@ -9,6 +9,7 @@
 #include <quarre/process/inspector/quarre-process-inspector.hpp>
 #include <quarre/panel/quarre-panel-delegate-factory.hpp>
 #include <quarre/device/quarre-protocol-factory.hpp>
+#include <quarre/commands/quarre-command-factory.hpp>
 
 using namespace score::addons;
 
@@ -65,7 +66,7 @@ score::GUIApplicationPlugin* score_addon_quarre::make_guiApplicationPlugin(
 std::pair<const CommandGroupKey, CommandGeneratorMap> score_addon_quarre::make_commands()
 {
     std::pair<const CommandGroupKey, CommandGeneratorMap> cmds{
-        CommandFactoryName(),
+        quarre::CommandFactoryName(),
         CommandGeneratorMap{}};
 
     // CMake generates the "addon_commands.hpp" and "addon_commands_file.hpp"

@@ -27,7 +27,7 @@ class ProcessExecutor final : public ossia::time_process
 
 };
 
-class ProcessExecutorComponent final : public Engine::Execution::ProcessComponent_T<
+class ProcessExecutorComponent final : public ::Engine::Execution::ProcessComponent_T<
         score::addons::quarre::ProcessModel,
         score::addons::quarre::ProcessExecutor>
 {

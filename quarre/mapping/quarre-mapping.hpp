@@ -32,10 +32,10 @@ class mapping final : public IdentifiedObject<mapping>
         vis.writeTo(*this);
     }
 
-    QVBoxLayout* layout         () const;
-    const QString& source       () const;
-    const QString& destination  () const;
-    const QString& expression   () const;
+    QVBoxLayout* layout        () const;
+    const QString source       () const;
+    const QString destination  () const;
+    const QString expression   () const;
 
     void set_source         ( const QString& source );
     void set_destination    ( const QString& destination );
