@@ -13,7 +13,7 @@ quarre::ProcessModel::ProcessModel(
         QObject* parent ) : Process::ProcessModel(duration, id, "quarrè-process", parent)
 {
     metadata().setInstanceName<quarre::ProcessModel>(*this);
-    m_interactions.add(new quarre::interaction(getStrongId(m_interactions), this));
+    m_interactions.push_back(new quarre::interaction(getStrongId(m_interactions), this));
 }
 
 QString quarre::ProcessModel::prettyName() const
@@ -23,7 +23,7 @@ QString quarre::ProcessModel::prettyName() const
 
 quarre::interaction* quarre::ProcessModel::interaction() const
 {
-    return m_interactions.at(0);
+    return m_interactions[0];
 }
 
 void quarre::ProcessModel::onInteractionTitleChanged(const QString &title)
@@ -66,7 +66,7 @@ void quarre::ProcessModel::startExecution()
     // when countdown is over
     // start interaction
 
-    const auto& mappings  = m_interaction->m_mappings;
+    const auto& mappings  = interaction()->m_mappings;
     auto qrdevice         = quarre::quarre_device::instance();
 }
 
@@ -150,7 +150,7 @@ template <> void JSONObjectWriter::write(
     auto json_obj = obj [ "Interaction" ].toObject();
 
     JSONObject::Deserializer deserializer ( json_obj );
-    process.m_interactions.add(new quarre::interaction(deserializer, &process));
+    process.m_interactions.push_back(new quarre::interaction(deserializer, &process));
 }
 
 

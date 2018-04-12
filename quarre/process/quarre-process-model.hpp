@@ -57,7 +57,7 @@ class ProcessModel final : public Process::ProcessModel
 
     private: //-------------------------------------------------------------------
 
-    score::EntityMap<quarre::interaction> m_interactions;
+    std::vector<quarre::interaction*> m_interactions;
 
     virtual QString prettyName      ( ) const override;
 
