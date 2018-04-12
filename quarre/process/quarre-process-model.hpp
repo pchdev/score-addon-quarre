@@ -46,8 +46,6 @@ class ProcessModel final : public Process::ProcessModel
 
     protected slots: //--------------------------------------------------------------
 
-    void onPlusMappingButtonPressed         ( );
-    void onMinusMappingButtonPressed        ( );
     void onInteractionTitleChanged          ( QString const& title );
     void onInteractionDescriptionChanged    ( QString const& description );
     void onInteractionModuleChanged         ( QString const& module_id );

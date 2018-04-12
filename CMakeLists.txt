@@ -7,7 +7,6 @@ set(QUARRE_SCORE_ADDON_HEADERS
     score_addon_quarre.hpp
     quarre/application-plugin/quarre-application-plugin.hpp
     quarre/commands/quarre-command-factory.hpp
-    quarre/commands/quarre-command-add-mapping.hpp
     quarre/device/quarre-device.hpp
     quarre/device/quarre-protocol-factory.hpp
     quarre/device/quarre-protocol-settings-widget.hpp
@@ -30,7 +29,6 @@ set(QUARRE_SCORE_ADDON_HEADERS
 set(QUARRE_SCORE_ADDON_IMPLEMENTATIONS
     score_addon_quarre.cpp
     quarre/application-plugin/quarre-application-plugin.cpp
-    quarre/commands/quarre-command-add-mapping.cpp
     quarre/device/quarre-device.cpp
     quarre/device/quarre-protocol-factory.cpp
     quarre/device/quarre-protocol-settings-widget.cpp

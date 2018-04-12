@@ -580,3 +580,8 @@ void quarre::quarre_device::make_common_tree()
     }
 }
 
+void quarre::quarre_device::slot_command()
+{
+
+}
+
