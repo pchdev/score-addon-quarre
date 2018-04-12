@@ -5,7 +5,6 @@
 #include <QTextEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include <quarre/interaction/quarre-interaction.hpp>
 
 #include <score/model/IdentifiedObject.hpp>
 
@@ -13,7 +12,7 @@ namespace score     {
 namespace addons    {
 namespace quarre    {
 
-class mapping final : public IdentifiedObject<mapping>
+class mapping final : public IdentifiedObject<score::addons::quarre::mapping>
 {
     Q_OBJECT
     SCORE_SERIALIZE_FRIENDS
@@ -23,7 +22,6 @@ class mapping final : public IdentifiedObject<mapping>
     Q_PROPERTY  ( QString expression READ expression WRITE set_expression NOTIFY expressionChanged )
 
     public: // ----------------------------------------------------
-    mapping ();
     mapping ( const Id<mapping>& id, QObject* parent );
 
     template <typename impl> mapping(impl& vis, QObject* parent) :

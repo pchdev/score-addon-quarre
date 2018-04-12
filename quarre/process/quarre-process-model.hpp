@@ -9,6 +9,8 @@ namespace score     {
 namespace addons    {
 namespace quarre    {
 
+class interaction;
+
 class ProcessModel final : public Process::ProcessModel
 {
     SCORE_SERIALIZE_FRIENDS
@@ -31,7 +33,6 @@ class ProcessModel final : public Process::ProcessModel
     }
 
     // clone
-
     ProcessModel(
             const ProcessModel& other,
             const Id<Process::ProcessModel>& id,
@@ -41,7 +42,7 @@ class ProcessModel final : public Process::ProcessModel
 
     }
 
-    std::shared_ptr<quarre::interaction> interaction() const;
+    quarre::interaction* interaction() const;
 
     protected slots: //--------------------------------------------------------------
 
@@ -56,7 +57,7 @@ class ProcessModel final : public Process::ProcessModel
 
     private: //-------------------------------------------------------------------
 
-    std::shared_ptr<quarre::interaction> m_interaction;
+    score::EntityMap<quarre::interaction> m_interactions;
 
     virtual QString prettyName      ( ) const override;
 

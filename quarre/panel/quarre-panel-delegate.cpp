@@ -27,8 +27,8 @@ quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
         lay->addRow(tr, qle);
     }
 
-    auto server = quarre::quarre_device::instance()->device();
-    auto proto = dynamic_cast<ossia::oscquery::oscquery_server_protocol*>(server->get_protocol());
+    auto& server = quarre::quarre_device::instance()->device();
+    auto proto = dynamic_cast<ossia::oscquery::oscquery_server_protocol*>(&server.get_protocol());
 
     // a qlineedit for each user with ip address
     // or 'disconnected'

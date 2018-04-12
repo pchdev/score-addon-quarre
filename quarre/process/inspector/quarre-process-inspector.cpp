@@ -4,8 +4,7 @@
 
 using namespace score::addons;
 
-quarre::InspectorWidget::InspectorWidget(
-        quarre::ProcessModel &object,
+quarre::InspectorWidget::InspectorWidget(const ProcessModel &object,
         const score::DocumentContext &ctx, QWidget *parent) :
 
     InspectorWidgetDelegate_T   ( object, parent ),

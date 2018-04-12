@@ -3,6 +3,8 @@
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
 #include <QFormLayout>
+#include <score/tools/IdentifierGeneration.hpp>
+
 
 using namespace score::addons;
 
@@ -49,12 +51,6 @@ QStringList quarre::interaction::inputs() const
 QVBoxLayout* quarre::interaction::layout() const
 {
     return m_layout;
-}
-
-std::shared_ptr<score::EntityMap<quarre::mapping> >quarre::interaction::mappings() const
-{
-    std::shared_ptr<score::EntityMap<quarre::mapping> ptr(&m_mappings);
-    return ptr;
 }
 
 const QString quarre::interaction::module() const
@@ -109,7 +105,7 @@ void quarre::interaction::set_countdown(const int countdown)
 
 void quarre::interaction::onPlusMappingButtonPressed()
 {
-    m_mappings.add(new quarre::mapping);
+    m_mappings.add(new quarre::mapping(getStrongId(m_mappings), this));
 }
 
 void quarre::interaction::set_current_host(std::shared_ptr<quarre::user> host)
@@ -124,7 +120,7 @@ std::shared_ptr<quarre::user> quarre::interaction::current_host() const
 
 void quarre::interaction::onMinusMappingButtonPressed()
 {
-    auto sender = qobject_cast<quarre::mapping*>(QObject::sender());
+    auto& sender = *qobject_cast<quarre::mapping*>(QObject::sender());
     m_mappings.erase(sender);
 }
 
@@ -137,8 +133,8 @@ template <> void DataStreamReader::read(
     m_stream << e.length();
     m_stream << e.countdown();
 
-    m_stream << e.mappings()->size();
-    for ( const auto& mapping : e.mappings() )
+    m_stream << (qint64) e.m_mappings.size();
+    for ( const auto& mapping : e.m_mappings )
         readFrom( mapping );
 
     insertDelimiter();

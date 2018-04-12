@@ -27,7 +27,8 @@ class InspectorWidget final :
 {
     public: //----------------------------------------------------------
 
-    explicit InspectorWidget(ProcessModel &object,
+    explicit InspectorWidget(
+            const ProcessModel &object,
             const score::DocumentContext& ctx,
             QWidget* parent );
 

@@ -3,6 +3,7 @@
 #include <quarre/mapping/quarre-mapping.hpp>
 #include <quarre/device/quarre-device.hpp>
 #include <score/model/IdentifiedObject.hpp>
+#include <quarre/process/quarre-process-model.hpp>
 #include <QVBoxLayout>
 #include <QLineEdit>
 #include <QSpinBox>
@@ -12,12 +13,13 @@ namespace addons    {
 namespace quarre    {
 
 class user;
-class mapping;
 
 class interaction final : public IdentifiedObject<interaction>
 {
     Q_OBJECT
     SCORE_SERIALIZE_FRIENDS
+
+    friend class quarre::ProcessModel;
 
     Q_PROPERTY  ( QString module READ module WRITE set_module NOTIFY moduleChanged )
     Q_PROPERTY  ( QString title READ title WRITE set_title NOTIFY titleChanged )
@@ -53,8 +55,6 @@ class interaction final : public IdentifiedObject<interaction>
     void set_current_host ( std::shared_ptr<quarre::user> host );
     std::shared_ptr<quarre::user> current_host() const;
 
-    std::shared_ptr<score::EntityMap<mapping> > mappings() const;
-
     signals: //----------------------------------------------------
     void moduleChanged      ();
     void titleChanged       ();
@@ -72,12 +72,10 @@ class interaction final : public IdentifiedObject<interaction>
     QLineEdit*         m_description;
     QSpinBox*          m_length;
     QSpinBox*          m_countdown;
-
-    QVBoxLayout*    m_layout;
+    QVBoxLayout*       m_layout;
 
     std::shared_ptr<quarre::user> m_host;
     score::EntityMap<quarre::mapping> m_mappings;
-
 };
 
 }
