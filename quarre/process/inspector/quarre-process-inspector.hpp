@@ -32,8 +32,21 @@ class InspectorWidget final :
             const score::DocumentContext& ctx,
             QWidget* parent );
 
+    public slots:
+    void onModuleChanged        ( QString module );
+    void onTitleChanged         ( QString title );
+    void onDescriptionChanged   ( QString description );
+    void onLengthChanged        ( int length );
+    void onCountdownChanged     ( int countdown );
+
     private: //---------------------------------------------------------
     CommandDispatcher<> m_dispatcher;
+    QLineEdit*         m_module;
+    QLineEdit*         m_title;
+    QLineEdit*         m_description;
+    QSpinBox*          m_length;
+    QSpinBox*          m_countdown;
+    QVBoxLayout*       m_layout;
 };
 
 class InspectorFactory final :

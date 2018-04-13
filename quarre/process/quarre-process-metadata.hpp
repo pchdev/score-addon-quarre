@@ -14,5 +14,5 @@ class ProcessModel;
 
 PROCESS_METADATA (, score::addons::quarre::ProcessModel,
         "471625BB-3B6B-4E7D-86EF-BF66F1387C06",
-        "quarre",
-        "quarre" )
+        "quarre-interaction",
+        "quarre-interaction" )

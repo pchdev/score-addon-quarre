@@ -534,7 +534,8 @@ bool quarre::quarre_device::reconnect()
     enableCallbacks();
 
     // build users
-    // note that user 0 is a wildcard: it will select the best candidate to receive the interaction
+    // note that user 0 is a wildcard:
+    // it will select the best candidate to receive the interaction
     auto& gendev = *dynamic_cast<generic_device*>(m_dev.get());
 
     for ( int i = 0; i < m_n_max_users+1; ++i )
@@ -542,7 +543,6 @@ bool quarre::quarre_device::reconnect()
 
     // make common tree
     make_common_tree();
-
     return connected();
 }
 

@@ -7,6 +7,7 @@
 #include <quarre/process/quarre-process-factory.hpp>
 #include <quarre/process/quarre-process-model.hpp>
 #include <quarre/process/inspector/quarre-process-inspector.hpp>
+#include <quarre/process/layer/quarre-process-layer-factory.hpp>
 #include <quarre/panel/quarre-panel-delegate-factory.hpp>
 #include <quarre/device/quarre-protocol-factory.hpp>
 #include <quarre/commands/quarre-command-factory.hpp>
@@ -47,8 +48,8 @@ std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_quarre::factories
         const score::InterfaceKey& key) const
 {
     return instantiate_factories<score::ApplicationContext,
-
             FW<Process::ProcessModelFactory, quarre::ProcessFactory>,
+            FW<Process::LayerFactory, quarre::LayerFactory>,
             FW<Process::InspectorWidgetDelegateFactory, quarre::InspectorFactory>,
             FW<Engine::Execution::ProcessComponentFactory, quarre::ProcessExecutorComponentFactory>,
             FW<score::PanelDelegateFactory, quarre::PanelDelegateFactory>,

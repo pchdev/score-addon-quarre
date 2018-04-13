@@ -26,36 +26,6 @@ quarre::interaction* quarre::ProcessModel::interaction() const
     return m_interactions[0];
 }
 
-void quarre::ProcessModel::onInteractionTitleChanged(const QString &title)
-{
-    interaction()->set_title(title);
-}
-
-void quarre::ProcessModel::onInteractionDescriptionChanged(const QString &description)
-{
-    interaction()->set_description(description);
-}
-
-void quarre::ProcessModel::onInteractionModuleChanged(const QString &module_id)
-{
-    interaction()->set_module(module_id);
-}
-
-void quarre::ProcessModel::onInteractionLengthChanged(uint16_t length)
-{
-    interaction()->set_length(length);
-}
-
-void quarre::ProcessModel::onInteractionCountdownChanged(uint16_t countdown)
-{
-    interaction()->set_countdown(countdown);
-}
-
-void quarre::ProcessModel::onInteractionMappingsChanged(QVector<QStringList> mappings)
-{
-
-}
-
 void quarre::ProcessModel::startExecution()
 {
     // get quarre-server-device singleton

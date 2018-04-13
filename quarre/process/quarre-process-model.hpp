@@ -44,15 +44,6 @@ class ProcessModel final : public Process::ProcessModel
 
     quarre::interaction* interaction() const;
 
-    protected slots: //--------------------------------------------------------------
-
-    void onInteractionTitleChanged          ( QString const& title );
-    void onInteractionDescriptionChanged    ( QString const& description );
-    void onInteractionModuleChanged         ( QString const& module_id );
-    void onInteractionLengthChanged         ( uint16_t length );
-    void onInteractionCountdownChanged      ( uint16_t countdown );
-    void onInteractionMappingsChanged       ( QVector<QStringList> mappings );
-
     private: //-------------------------------------------------------------------
 
     std::vector<quarre::interaction*> m_interactions;
