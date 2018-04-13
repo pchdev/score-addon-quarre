@@ -35,7 +35,7 @@ quarre::ProtocolSettingsWidget::ProtocolSettingsWidget(QWidget *parent)
 Device::DeviceSettings quarre::ProtocolSettingsWidget::getSettings() const
 {
     Device::DeviceSettings settings;
-    settings.name = "quarrè-server";
+    settings.name = "quarre-server";
 
     quarre::SpecificSettings qsettings;
 

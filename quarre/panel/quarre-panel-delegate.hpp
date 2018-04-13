@@ -2,6 +2,7 @@
 
 #include <score/plugins/panel/PanelDelegate.hpp>
 #include <score/plugins/panel/PanelDelegateFactory.hpp>
+#include <quarre/device/quarre-device.hpp>
 
 namespace score     {
 namespace addons    {
@@ -13,8 +14,9 @@ class PanelDelegate final : public QObject, public score::PanelDelegate
 
     PanelDelegate( const score::GUIApplicationContext& ctx );
 
-    void on_client_connected(std::string const& ip);
-    void on_client_disconnected(std::string const& ip);
+    void on_server_instantiated     (quarre_device &device );
+    void on_client_connected        ( std::string const& ip );
+    void on_client_disconnected     ( std::string const& ip );
 
     private: //-----------------------------------------------
 

@@ -134,15 +134,15 @@ static const std::vector<std::pair<std::string,ossia::val_type>> g_common_tree =
 // USER_INPUT
 // ------------------------------------------------------------------------------
 
-quarre::user::input::input(std::string id) : m_id ( id )
+quarre::user::input::input(std::string id, generic_device& device) : m_id ( id )
 {
     m_addr = "/user/";
     m_addr += m_id + "/" + id;
 
-    auto& n_avail    = ossia::net::create_node(QSD, m_addr + "/available");
+    auto& n_avail    = ossia::net::create_node(device, m_addr + "/available");
     m_available      = parptr_t(n_avail.create_parameter(ossia::val_type::BOOL));
 
-    auto& n_active   = ossia::net::create_node(QSD, m_addr + "/active");
+    auto& n_active   = ossia::net::create_node(device, m_addr + "/active");
     m_active         = parptr_t(n_active.create_parameter(ossia::val_type::BOOL));
 }
 
@@ -171,17 +171,19 @@ void quarre::user::input::unassign(const std::string &id)
 // USER_GESTURE
 // ------------------------------------------------------------------------------
 
-quarre::user::gesture::gesture(std::string id, std::vector<std::string> subgestures)
-    : quarre::user::input ( id )
+quarre::user::gesture::gesture(
+        std::string id, std::vector<std::string> subgestures,
+        generic_device& device)
+    : quarre::user::input ( id, device )
 {
-    auto& n_trig = ossia::net::create_node(QSD, m_addr + id + "/trigger");
+    auto& n_trig = ossia::net::create_node(device, m_addr + id + "/trigger");
     auto p_trig = n_trig.create_parameter(ossia::val_type::IMPULSE);
 
     m_data.push_back(parptr_t (p_trig));
 
     for ( const auto& subgesture : subgestures )
     {
-        auto& n_sub = ossia::net::create_node(QSD, m_addr + subgesture + "/trigger");
+        auto& n_sub = ossia::net::create_node(device, m_addr + subgesture + "/trigger");
         auto p_sub = n_sub.create_parameter(ossia::val_type::IMPULSE);
 
         m_data.push_back(parptr_t(p_sub));
@@ -194,13 +196,13 @@ quarre::user::gesture::gesture(std::string id, std::vector<std::string> subgestu
 
 quarre::user::sensor::sensor(
         std::string id,
-        std::vector<pdata_t> data ) :
+        std::vector<pdata_t> data, generic_device& device) :
 
-    quarre::user::input ( id )
+    quarre::user::input ( id, device)
 {
     for ( const auto& d : data )
     {
-        auto& ndata = ossia::net::create_node(QSD, m_addr + "/data/" + d.first);
+        auto& ndata = ossia::net::create_node(device, m_addr + "/data/" + d.first);
         auto pdata = ndata.create_parameter(d.second);
 
         m_data.push_back(parptr_t(pdata));
@@ -211,7 +213,7 @@ quarre::user::sensor::sensor(
 // USER
 // ------------------------------------------------------------------------------
 
-quarre::user::user(uint8_t id, device_base *device) :
+quarre::user::user(uint8_t id, generic_device& device) :
     m_id(id), m_status(quarre::user::status::DISCONNECTED)
 {
     std::string base_addr = "/user/";
@@ -220,19 +222,19 @@ quarre::user::user(uint8_t id, device_base *device) :
     // make user tree
     for ( const auto& parameter : g_user_tree )
     {
-        auto& node = ossia::net::create_node(QSD, base_addr + parameter.first);
+        auto& node = ossia::net::create_node(device, base_addr + parameter.first);
         node.create_parameter(parameter.second);
     }
 
     for ( const auto& input : g_gestures )
     {
-        auto gest = new quarre::user::gesture(input.first, input.second);
+        auto gest = new quarre::user::gesture(input.first, input.second, device);
         m_inputs.push_back(gest);
     }
 
     for ( const auto& sensor : g_sensors )
     {
-        auto sens = new quarre::user::sensor(sensor.first, sensor.second);
+        auto sens = new quarre::user::sensor(sensor.first, sensor.second, device);
         m_inputs.push_back(sens);
     }
 }
@@ -368,7 +370,6 @@ void quarre::quarre_device::dispatch_incoming_interaction(intact_t interaction)
     // candidate algorithm
     // eliminate non-connected clients
     // eliminate clients that cannot support the requested inputs
-    // eliminate clients that already have an interaction going on
     // eliminate clients that already have an incoming interaction
 
     std::vector<quarre_device::candidate> candidates;
@@ -485,7 +486,7 @@ void quarre::quarre_device::dispatch_resumed_interaction(intact_t interaction)
 
 quarre::quarre_device *quarre::quarre_device::instance(const Device::DeviceSettings& settings )
 {
-    if ( ! m_singleton ) m_singleton = new quarre_device(settings);
+    if ( !m_singleton ) m_singleton = new quarre_device(settings);
     return m_singleton;
 }
 
@@ -502,43 +503,53 @@ generic_device& quarre::quarre_device::device()
 quarre::quarre_device::quarre_device(const Device::DeviceSettings &settings) :
     OwningOSSIADevice ( settings )
 {
-    quarre::SpecificSettings qsettings;
+    m_capas.canRefreshTree      = true;
+    m_capas.canRenameNode       = false;
+    m_capas.canSetProperties    = false;
+    m_capas.canRemoveNode       = false;
 
-    if ( m_settings.deviceSpecificSettings.canConvert<quarre::SpecificSettings>() )
-        qsettings = m_settings.deviceSpecificSettings.value<quarre::SpecificSettings>();
+    connect(this, &quarre_device::sig_command,
+            this, &quarre_device::slot_command, Qt::QueuedConnection);
 
-    m_n_max_users = qsettings.max_users;
-
-    auto mpx = std::make_unique<multiplex_protocol>( );
-    m_dev = std::make_unique<generic_device>( std::move(mpx), m_settings.name.toStdString());
-
-    auto server     = std::make_unique<oscquery_server_protocol>(
-                      qsettings.osc_port, qsettings.ws_port );
-
-    mpx->expose_to  ( std::move(server) );
-
-    // build users
-    // note that user 0 is a wildcard: it will select the best candidate to receive the interaction
-
-    for ( int i = 0; i < m_n_max_users+1; ++i )
-        m_users.push_back(new quarre::user(i, m_dev.get()));
-
-    // make common tree
-    make_common_tree();
-
-    m_singleton = this;
+    reconnect();
 }
 
 quarre::quarre_device::~quarre_device() {}
 
 bool quarre::quarre_device::reconnect()
 {
-    return false;
+    disconnect();
+    quarre::SpecificSettings qsettings;
+
+    if ( m_settings.deviceSpecificSettings.canConvert<quarre::SpecificSettings>() )
+        qsettings = m_settings.deviceSpecificSettings.value<quarre::SpecificSettings>();
+
+    m_n_max_users   = qsettings.max_users;
+    auto server     = std::make_unique<oscquery_server_protocol>(
+                      qsettings.osc_port, qsettings.ws_port );
+
+    m_dev = std::make_unique<generic_device>( std::move(server), m_settings.name.toStdString());
+
+    setLogging_impl(isLogging());
+    enableCallbacks();
+
+    // build users
+    // note that user 0 is a wildcard: it will select the best candidate to receive the interaction
+    auto& gendev = *dynamic_cast<generic_device*>(m_dev.get());
+
+    for ( int i = 0; i < m_n_max_users+1; ++i )
+        m_users.push_back(new quarre::user(i, gendev));
+
+    // make common tree
+    make_common_tree();
+
+    return connected();
 }
 
 void quarre::quarre_device::recreate(const Device::Node &n)
 {
-
+    for ( auto& child : n )
+        addNode(child);
 }
 
 void quarre::quarre_device::on_client_connected(const std::string &ip)
@@ -575,7 +586,8 @@ void quarre::quarre_device::make_common_tree()
 {        
     for ( const auto& parameter : g_common_tree )
     {
-        auto& node = ossia::net::create_node(QSD, parameter.first);
+        auto& gendev = *dynamic_cast<generic_device*>(m_dev.get());
+        auto& node = ossia::net::create_node(gendev, parameter.first);
         node.create_parameter(parameter.second);
     }
 }

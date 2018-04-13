@@ -34,7 +34,7 @@ class user // ----------------------------------------------------------- USER
         friend class quarre::user;
 
         public :
-        input ( std::string id );
+        input ( std::string id, generic_device& device);
 
         void assign     ( std::string const& id,
                           std::function<void(const ossia::value&)> function );
@@ -53,16 +53,16 @@ class user // ----------------------------------------------------------- USER
     class gesture : public input //--------------------------------------- gesture
     {
         public:
-        gesture ( std::string id, std::vector<std::string> subgestures );
+        gesture (std::string id, std::vector<std::string> subgestures, generic_device &device);
     };
 
     class sensor : public input //--------------------------------------- sensor
     {
         public:
-        sensor ( std::string id, std::vector<pdata_t> data );
+        sensor ( std::string id, std::vector<pdata_t> data, generic_device& device );
     };
 
-    user ( uint8_t id, device_base* device );
+    user ( uint8_t id, generic_device& device);
 
     void make_tree ( std::vector<pdata_t> const& tree );
 

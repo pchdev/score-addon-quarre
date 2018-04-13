@@ -10,7 +10,7 @@ using namespace score::addons;
 quarre::ProcessModel::ProcessModel(
         const TimeVal& duration,
         const Id<Process::ProcessModel>& id,
-        QObject* parent ) : Process::ProcessModel(duration, id, "quarrè-process", parent)
+        QObject* parent ) : Process::ProcessModel(duration, id, "quarre-process", parent)
 {
     metadata().setInstanceName<quarre::ProcessModel>(*this);
     m_interactions.push_back(new quarre::interaction(getStrongId(m_interactions), this));
@@ -18,7 +18,7 @@ quarre::ProcessModel::ProcessModel(
 
 QString quarre::ProcessModel::prettyName() const
 {
-    return tr ( "quarrè-process" );
+    return tr ( "quarre-process" );
 }
 
 quarre::interaction* quarre::ProcessModel::interaction() const

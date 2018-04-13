@@ -1,6 +1,5 @@
 #include "quarre-panel-delegate-factory.hpp"
 #include "quarre-panel-delegate.hpp"
-#include <quarre/device/quarre-device.hpp>
 
 #include <QFormLayout>
 #include <QLabel>
@@ -12,10 +11,12 @@ quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
     score::PanelDelegate(ctx)
 {
     m_widget = new QWidget;
-    auto lay = new QFormLayout ( m_widget );
+}
 
-    auto dev = quarre::quarre_device::instance();
-    auto max_u = dev->max_users();
+void quarre::PanelDelegate::on_server_instantiated(quarre::quarre_device &device)
+{
+    auto lay = new QFormLayout ( m_widget );
+    auto max_u = device.max_users();
 
     for ( int i = 0; i < max_u; ++i )
     {
@@ -23,17 +24,16 @@ quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
         tr += i;
         tr += " :";
 
+        // a qlineedit for each user with ip address
+        // or 'disconnected'
+        // to be completed with controls to test interactions quickly
+
         auto qle = new QLineEdit("disconnected");
         lay->addRow(tr, qle);
     }
 
-    auto& server = quarre::quarre_device::instance()->device();
+    auto& server = device.device();
     auto proto = dynamic_cast<ossia::oscquery::oscquery_server_protocol*>(&server.get_protocol());
-
-    // a qlineedit for each user with ip address
-    // or 'disconnected'
-    // to be completed with controls to test interactions quickly
-
 }
 
 void quarre::PanelDelegate::on_client_connected(const std::string &ip)

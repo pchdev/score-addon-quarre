@@ -8,7 +8,7 @@ using namespace score::addons;
 
 QString quarre::ProtocolFactory::prettyName() const
 {
-    return QObject::tr ( "quarrè-server" );
+    return QObject::tr ( "quarre-server" );
 }
 
 int quarre::ProtocolFactory::visualPriority() const
@@ -19,7 +19,7 @@ int quarre::ProtocolFactory::visualPriority() const
 Device::DeviceInterface* quarre::ProtocolFactory::makeDevice(
         const Device::DeviceSettings &settings, const DocumentContext &ctx)
 {
-    return new quarre::quarre_device(settings);
+    return quarre::quarre_device::instance(settings);
 }
 
 const Device::DeviceSettings& quarre::ProtocolFactory::defaultSettings() const
@@ -28,7 +28,7 @@ const Device::DeviceSettings& quarre::ProtocolFactory::defaultSettings() const
 
         Device::DeviceSettings s;
         s.protocol = concreteKey();
-        s.name = "quarrè";
+        s.name = "quarre-server";
 
         quarre::SpecificSettings qsettings;
         qsettings.max_users     = 4;
