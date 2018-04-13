@@ -134,15 +134,12 @@ static const std::vector<std::pair<std::string,ossia::val_type>> g_common_tree =
 // USER_INPUT
 // ------------------------------------------------------------------------------
 
-quarre::user::input::input(std::string id, generic_device& device) : m_id ( id )
+quarre::user::input::input(std::string addr, generic_device& device) : m_addr ( addr )
 {
-    m_addr = "/user/";
-    m_addr += m_id + "/" + id;
-
-    auto& n_avail    = ossia::net::create_node(device, m_addr + "/available");
+    auto& n_avail    = ossia::net::create_node(device, addr + "/available");
     m_available      = parptr_t(n_avail.create_parameter(ossia::val_type::BOOL));
 
-    auto& n_active   = ossia::net::create_node(device, m_addr + "/active");
+    auto& n_active   = ossia::net::create_node(device, addr + "/active");
     m_active         = parptr_t(n_active.create_parameter(ossia::val_type::BOOL));
 }
 
@@ -172,18 +169,18 @@ void quarre::user::input::unassign(const std::string &id)
 // ------------------------------------------------------------------------------
 
 quarre::user::gesture::gesture(
-        std::string id, std::vector<std::string> subgestures,
+        std::string addr, std::vector<std::string> subgestures,
         generic_device& device)
-    : quarre::user::input ( id, device )
+    : quarre::user::input ( addr, device )
 {
-    auto& n_trig = ossia::net::create_node(device, m_addr + id + "/trigger");
+    auto& n_trig = ossia::net::create_node(device, m_addr + "/trigger");
     auto p_trig = n_trig.create_parameter(ossia::val_type::IMPULSE);
 
     m_data.push_back(parptr_t (p_trig));
 
     for ( const auto& subgesture : subgestures )
     {
-        auto& n_sub = ossia::net::create_node(device, m_addr + subgesture + "/trigger");
+        auto& n_sub = ossia::net::create_node(device, m_addr + "/" + subgesture + "/trigger");
         auto p_sub = n_sub.create_parameter(ossia::val_type::IMPULSE);
 
         m_data.push_back(parptr_t(p_sub));
@@ -195,10 +192,10 @@ quarre::user::gesture::gesture(
 // ------------------------------------------------------------------------------
 
 quarre::user::sensor::sensor(
-        std::string id,
+        std::string addr,
         std::vector<pdata_t> data, generic_device& device) :
 
-    quarre::user::input ( id, device)
+    quarre::user::input ( addr, device)
 {
     for ( const auto& d : data )
     {
@@ -219,6 +216,9 @@ quarre::user::user(uint8_t id, generic_device& device) :
     std::string base_addr = "/user/";
     base_addr += std::to_string(m_id);
 
+    auto gest_addr = base_addr + "/gestures/";
+    auto sens_addr = base_addr + "/sensors/";
+
     // make user tree
     for ( const auto& parameter : g_user_tree )
     {
@@ -228,13 +228,13 @@ quarre::user::user(uint8_t id, generic_device& device) :
 
     for ( const auto& input : g_gestures )
     {
-        auto gest = new quarre::user::gesture(input.first, input.second, device);
+        auto gest = new quarre::user::gesture(gest_addr + input.first, input.second, device);
         m_inputs.push_back(gest);
     }
 
     for ( const auto& sensor : g_sensors )
     {
-        auto sens = new quarre::user::sensor(sensor.first, sensor.second, device);
+        auto sens = new quarre::user::sensor(sens_addr + sensor.first, sensor.second, device);
         m_inputs.push_back(sens);
     }
 }

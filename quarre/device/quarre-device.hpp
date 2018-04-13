@@ -34,7 +34,7 @@ class user // ----------------------------------------------------------- USER
         friend class quarre::user;
 
         public :
-        input ( std::string id, generic_device& device);
+        input (std::string addr, generic_device& device);
 
         void assign     ( std::string const& id,
                           std::function<void(const ossia::value&)> function );
@@ -150,6 +150,7 @@ class quarre_device final : public Engine::Network::OwningOSSIADevice
     void   dispatch_resumed_interaction     ( intact_t interaction );
 
     signals: // ----------------------------------------------
+    void running        ( );
     void sig_command    ( );
     void sig_disconnect ( );
 
