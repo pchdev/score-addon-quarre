@@ -33,11 +33,8 @@ class InspectorWidget final :
             QWidget* parent );
 
     public slots:
-    void onModuleChanged        ( QString module );
-    void onTitleChanged         ( QString title );
-    void onDescriptionChanged   ( QString description );
-    void onLengthChanged        ( int length );
-    void onCountdownChanged     ( int countdown );
+    void on_mapping_added(const quarre::mapping& mapping);
+
 
     private: //---------------------------------------------------------
     CommandDispatcher<> m_dispatcher;

@@ -47,7 +47,6 @@ class ProcessModel final : public Process::ProcessModel
     private: //-------------------------------------------------------------------
 
     std::vector<quarre::interaction*> m_interactions;
-
     virtual QString prettyName      ( ) const override;
 
     virtual void startExecution     ( ) override;

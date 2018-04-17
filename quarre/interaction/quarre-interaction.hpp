@@ -38,6 +38,10 @@ class interaction final : public IdentifiedObject<interaction>
 
     QStringList inputs()    const;
 
+    signals:
+    void mapping_added      ( const quarre::mapping& mapping );
+    void mapping_removed    ( const quarre::mapping& mapping );
+
     public slots: //-----------------------------------------------
     void onModuleChanged            ( QString module );
     void onTitleChanged             ( QString title );
@@ -56,7 +60,7 @@ class interaction final : public IdentifiedObject<interaction>
     int             m_countdown;
 
     std::shared_ptr<quarre::user> m_host;
-    score::EntityMap<quarre::mapping> m_mappings;
+    std::vector<quarre::mapping*> m_mappings;
 };
 
 }

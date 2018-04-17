@@ -13,7 +13,7 @@ quarre::interaction::interaction(
         QObject *parent) :
 
     IdentifiedObject    ( id, "quarrè-interaction", parent ),
-    m_module            ( "Unknown"),
+    m_module            ( "No selected module"),
     m_title             ( "Untitled"),
     m_description       ( "No description"),
     m_length            ( 0 ),
@@ -27,9 +27,9 @@ QStringList quarre::interaction::inputs() const
 {
     QStringList res;
 
-    for ( const quarre::mapping& mapping : m_mappings )
+    for ( const auto& mapping : m_mappings )
     {
-        QString source = mapping.source();
+        QString source = mapping->source();
         QString res_src = source.remove("/user/0");
         res << res_src;
     }
@@ -89,13 +89,17 @@ int quarre::interaction::countdown() const
 
 void quarre::interaction::onPlusMappingButtonPressed()
 {
-    m_mappings.add(new quarre::mapping(getStrongId(m_mappings), this));
+    auto mp = new quarre::mapping(getStrongId(m_mappings), this);
+    m_mappings.push_back(mp);
+    emit mapping_added(*mp);
 }
 
 void quarre::interaction::onMinusMappingButtonPressed()
 {
-    auto& sender = *qobject_cast<quarre::mapping*>(QObject::sender());
-    m_mappings.erase(sender);
+    auto sender = qobject_cast<quarre::mapping*>(QObject::sender());
+    auto mapping = std::find(m_mappings.begin(), m_mappings.end(), sender);
+    delete *mapping;
+    m_mappings.erase ( mapping );
 }
 
 template <> void DataStreamReader::read(
@@ -109,7 +113,7 @@ template <> void DataStreamReader::read(
 
     m_stream << (qint64) e.m_mappings.size();
     for ( const auto& mapping : e.m_mappings )
-        readFrom( mapping );
+        readFrom( *mapping );
 
     insertDelimiter();
 }
@@ -125,7 +129,9 @@ template <> void DataStreamWriter::write(
     for (; msz-- >0;)
     {
         auto mp = new quarre::mapping(*this, &e);
-        e.m_mappings.add(mp);
+        QObject::connect ( mp, SIGNAL(minusButtonPressed()), &e, SLOT(onMinusMappingButtonPressed()));
+        writeTo(*mp);
+        e.m_mappings.push_back(mp);
     }
 
     checkDelimiter();
@@ -156,7 +162,7 @@ template <> void JSONObjectWriter::write(
         JSONObject::Deserializer dsrz (json_vref.toObject());
         auto mp = new quarre::mapping(dsrz, &e);
 
-        e.m_mappings.add(mp);
+        e.m_mappings.push_back(mp);
     }
 }
 
