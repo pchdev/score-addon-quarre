@@ -23,6 +23,11 @@ quarre::interaction::interaction(
 
 }
 
+void quarre::interaction::set_inspector(quarre::InspectorWidget *inspector)
+{
+    m_inspector = inspector;
+}
+
 QStringList quarre::interaction::inputs() const
 {
     QStringList res;

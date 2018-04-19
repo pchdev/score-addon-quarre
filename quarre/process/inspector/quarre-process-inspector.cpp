@@ -16,10 +16,12 @@ quarre::InspectorWidget::InspectorWidget(const ProcessModel &object,
     m_title             ( new QLineEdit ( object.interaction()->title())),
     m_description       ( new QLineEdit ( object.interaction()->description())),
     m_length            ( new QSpinBox ),
-    m_countdown         ( new QSpinBox )
+    m_countdown         ( new QSpinBox ),
+    m_dctx              ( ctx )
 {
 
     quarre::interaction* interaction = object.interaction();
+    interaction->set_inspector(this);
 
     m_length->setValue      ( interaction->length() );
     m_length->setRange      ( 0, 999 );

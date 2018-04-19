@@ -2,6 +2,8 @@
 #include <score/serialization/DataStreamVisitor.hpp>
 #include <score/serialization/JSONVisitor.hpp>
 #include <QFormLayout>
+#include <quarre/process/inspector/quarre-process-inspector.hpp>
+#include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 
 using namespace score::addons;
 
@@ -10,12 +12,17 @@ quarre::mapping::mapping(
         QObject *parent) :
 
     IdentifiedObject    ( id, "quarrè-mapping", parent ),
-    m_source            ( new QLineEdit ),
-    m_destination       ( new QLineEdit ),
     m_minus_button      ( new QPushButton("-")),
     m_layout            ( new QVBoxLayout ),
     m_expression        ( new QTextEdit )
 {
+
+    auto inspector      = dynamic_cast<quarre::interaction*>(parent)->m_inspector;
+    const auto& doc     = inspector->m_dctx;
+    auto& explorer      = doc.plugin<Explorer::DeviceDocumentPlugin>().explorer();
+    m_source            = new Explorer::AddressAccessorEditWidget(explorer, inspector);
+    m_destination       = new Explorer::AddressAccessorEditWidget(explorer, inspector);
+
     m_expression->setPlainText("( function(v, dest) { dest[\"value\"] = v; } )");
 
     auto form = new QFormLayout;
@@ -34,12 +41,12 @@ QVBoxLayout* quarre::mapping::layout() const
 
 const QString quarre::mapping::source() const
 {
-    return m_source->text();
+    return m_source->addressString();
 }
 
 const QString quarre::mapping::destination() const
 {
-    return m_destination->text();
+    return m_destination->addressString();
 }
 
 const QString quarre::mapping::expression() const
@@ -49,12 +56,14 @@ const QString quarre::mapping::expression() const
 
 void quarre::mapping::set_source(const QString &source)
 {
-    m_source->setText(source);
+    State::AddressAccessor lame;
+    m_source->setAddress(State::AddressAccessor::fromString(source).value_or(lame));
 }
 
 void quarre::mapping::set_destination(const QString &destination)
 {
-    m_destination->setText(destination);
+    State::AddressAccessor lame;
+    m_destination->setAddress(State::AddressAccessor::fromString(destination).value_or(lame));
 }
 
 void quarre::mapping::set_expression(const QString &expression)
@@ -96,9 +105,9 @@ template <> void JSONObjectReader::read(
 template <> void JSONObjectWriter::write(
         quarre::mapping& e )
 {
-    e.m_source->setText             ( obj [ "Source" ].toString() );
-    e.m_destination->setText        ( obj [ "Destination" ].toString() );
-    e.m_expression->setPlainText    ( obj [ "Expression" ].toString() );
+    e.set_source        ( obj [ "Source" ].toString() );
+    e.set_destination   ( obj [ "Destination" ].toString() );
+    e.set_expression    ( obj [ "Expression" ].toString() );
 }
 
 

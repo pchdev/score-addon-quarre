@@ -13,6 +13,7 @@ namespace addons    {
 namespace quarre    {
 
 class user;
+class InspectorWidget;
 
 class interaction final : public IdentifiedObject<interaction>
 {
@@ -20,6 +21,7 @@ class interaction final : public IdentifiedObject<interaction>
     SCORE_SERIALIZE_FRIENDS
 
     friend class quarre::ProcessModel;
+    friend class quarre::mapping;
 
     public: //-----------------------------------------------------
     interaction ( const Id<interaction>& id, QObject* parent );
@@ -37,6 +39,7 @@ class interaction final : public IdentifiedObject<interaction>
     int countdown               () const;
 
     QStringList inputs()    const;
+    void set_inspector ( quarre::InspectorWidget* inspector );
 
     signals:
     void mapping_added      ( const quarre::mapping& mapping );
@@ -58,6 +61,8 @@ class interaction final : public IdentifiedObject<interaction>
     QString         m_description;
     int             m_length;
     int             m_countdown;
+
+    quarre::InspectorWidget* m_inspector;
 
     std::shared_ptr<quarre::user> m_host;
     std::vector<quarre::mapping*> m_mappings;

@@ -27,6 +27,8 @@ class InspectorWidget final :
 {
     Q_OBJECT
 
+    friend class quarre::mapping;
+
     public: //----------------------------------------------------------
 
     explicit InspectorWidget(
@@ -46,6 +48,7 @@ class InspectorWidget final :
     QSpinBox*          m_length;
     QSpinBox*          m_countdown;
     QVBoxLayout*       m_layout;
+    const score::DocumentContext&  m_dctx;
 };
 
 class InspectorFactory final :

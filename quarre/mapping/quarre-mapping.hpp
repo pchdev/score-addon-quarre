@@ -5,6 +5,7 @@
 #include <QTextEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <Explorer/Widgets/AddressAccessorEditWidget.hpp>
 
 #include <score/model/IdentifiedObject.hpp>
 
@@ -46,8 +47,8 @@ class mapping final : public IdentifiedObject<score::addons::quarre::mapping>
     void minusButtonPressed     ();
 
     private: // ---------------------------------------------------
-    QLineEdit* m_source;
-    QLineEdit* m_destination;
+    Explorer::AddressAccessorEditWidget* m_source;
+    Explorer::AddressAccessorEditWidget* m_destination;
     QTextEdit* m_expression;
     QPushButton* m_minus_button;
     QVBoxLayout* m_layout;
