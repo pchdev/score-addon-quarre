@@ -28,6 +28,8 @@ class mapping_view : public QObject
     mapping_view    ( const score::DocumentContext& dctx,
                       mapping &map, QWidget *parent);
 
+    ~mapping_view();
+
     QVBoxLayout* layout        () const;
     const QString source       () const;
     const QString destination  () const;
@@ -55,6 +57,7 @@ class mapping_view : public QObject
     QTextEdit* m_expression;
     QPushButton* m_minus_button;
     QVBoxLayout* m_layout;
+    QFormLayout* m_form;
     quarre::mapping* m_mapmodel;
 
 };
@@ -77,11 +80,11 @@ class InspectorWidget final :
             QWidget* parent );
 
     signals:
-    void mappingDeleteRequest(quarre::mapping*);
+    void mappingDeleteRequest( quarre::mapping* );
 
     public slots:
-    void on_mapping_added   (mapping &mapping );
-    void on_mapping_removed ( mapping *mapping );
+    void on_mapping_added   ( quarre::mapping &mapping );
+    void on_mapping_removed ( quarre::mapping *mapping );
 
     private: //---------------------------------------------------------
     CommandDispatcher<> m_dispatcher;

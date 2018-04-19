@@ -26,23 +26,33 @@ quarre::mapping_view::mapping_view(const score::DocumentContext &dctx, mapping &
 
     m_expression        ->setPlainText("( function(v, dest) { dest[\"value\"] = v; } )");
 
-    auto form    = new QFormLayout;
-    form->addRow ( tr ( "delete" ), m_minus_button );
-    form->addRow ( tr ( "source" ), m_source );
-    form->addRow ( tr ( "destination" ), m_destination );
+    m_form    = new QFormLayout;
+    m_form->addRow ( tr ( "delete" ), m_minus_button );
+    m_form->addRow ( tr ( "source" ), m_source );
+    m_form->addRow ( tr ( "destination" ), m_destination );
 
-    m_layout->addLayout ( form );
+    m_layout->addLayout ( m_form );
     m_layout->addWidget ( m_expression );
 
     QObject::connect(m_source, SIGNAL(addressChanged(Device::FullAddressAccessorSettings)), this, SLOT(on_source_address_changed(Device::FullAddressAccessorSettings)));
     QObject::connect(m_destination, SIGNAL(addressChanged(Device::FullAddressAccessorSettings)), this, SLOT(on_destination_address_changed(Device::FullAddressAccessorSettings)));
-    QObject::connect(m_expression, SIGNAL(textChanged()), this, SLOT(on_expressionChanged()));
+    QObject::connect(m_expression, SIGNAL(textChanged()), this, SLOT(on_expression_changed()));
     QObject::connect(m_minus_button, SIGNAL(released()), this, SLOT(on_minus_button_pressed()));
 
     QObject::connect(this, SIGNAL(sourceChanged(QString)), &map, SLOT(on_source_changed(QString)));
     QObject::connect(this, SIGNAL(destinationChanged(QString)), &map, SLOT(on_destination_changed(QString)));
     QObject::connect(this, SIGNAL(expressionChanged(QString)), &map, SLOT(on_expression_changed(QString)));
 
+}
+
+quarre::mapping_view::~mapping_view()
+{
+    delete m_source;
+    delete m_destination;
+    delete m_expression;
+    delete m_minus_button;
+    delete m_form;
+    delete m_layout;
 }
 
 void quarre::mapping_view::on_minus_button_pressed()
@@ -147,23 +157,29 @@ quarre::InspectorWidget::InspectorWidget(const ProcessModel &object,
     connect(m_module, SIGNAL(textChanged(QString)), m_interaction, SLOT(onModuleChanged(QString)));
     connect(m_length, SIGNAL(valueChanged(int)), m_interaction, SLOT(onLengthChanged(int)));
     connect(m_countdown, SIGNAL(valueChanged(int)), m_interaction, SLOT(onCountdownChanged(int)));
-    connect(plusb, SIGNAL(pressed()), m_interaction, SLOT(on_mapping_added()));
+    connect(plusb, SIGNAL(released()), m_interaction, SLOT(on_mapping_added()));
 
-    connect( m_interaction, SIGNAL(mapping_added(quarre::mapping)), this, SLOT(on_mapping_added(quarre::mapping)));
+    connect( m_interaction, SIGNAL(mapping_added(quarre::mapping&)), this, SLOT(on_mapping_added(quarre::mapping&)));
+    connect( this, SIGNAL(mappingDeleteRequest(quarre::mapping*)), m_interaction, SLOT(on_mapping_removed(quarre::mapping*)));
 
 }
 
 void quarre::InspectorWidget::on_mapping_added(quarre::mapping &mapping)
 {
-    auto mapview = new quarre::mapping_view(m_dctx, mapping, this);
+    auto mapview = new quarre::mapping_view ( m_dctx, mapping, this );
     QObject::connect(mapview, SIGNAL(mappingDeleteRequest(quarre::mapping*)), this, SLOT(on_mapping_removed(quarre::mapping*)));
-    QObject::connect(mapview, SIGNAL(mappingDeleteRequest(quarre::mapping*)), m_interaction, SLOT(on_mapping_removed(quarre::mapping*)));
+
     m_layout->addLayout(mapview->layout());
-    m_mapping_views.push_back(mapview);
+    m_mapping_views.push_back( mapview );
 }
 
 void quarre::InspectorWidget::on_mapping_removed(quarre::mapping* mapping )
 {
+    // delete view first, pass on signal to model
     auto sender = qobject_cast<quarre::mapping_view*>(QObject::sender());
-    m_mapping_views.removeOne(sender);
+    m_layout->removeItem(sender->layout());
+    m_mapping_views.removeAll(sender);
+    delete sender;
+
+    emit mappingDeleteRequest(mapping);
 }

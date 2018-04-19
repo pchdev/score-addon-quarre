@@ -23,11 +23,18 @@ quarre::interaction::interaction(
 
 }
 
+void quarre::interaction::on_mapping_added()
+{
+    auto mp = new quarre::mapping(getStrongId(m_mappings), this);
+    m_mappings.push_back(mp);
+    emit mapping_added(*mp);
+}
+
 void quarre::interaction::on_mapping_removed(quarre::mapping *target)
 {
-    auto mapping = std::find(m_mappings.begin(), m_mappings.end(), target);
-    delete *mapping;
-    m_mappings.erase ( mapping );
+    m_mappings.erase (std::remove(m_mappings.begin(), m_mappings.end(), target), m_mappings.end());
+    delete target;
+    qDebug() << m_mappings.size();
 }
 
 const std::vector<quarre::mapping*>& quarre::interaction::mappings()
@@ -99,13 +106,6 @@ int quarre::interaction::countdown() const
     return m_countdown;
 }
 
-void quarre::interaction::on_mapping_added()
-{
-    auto mp = new quarre::mapping(getStrongId(m_mappings), this);
-    m_mappings.push_back(mp);
-    emit mapping_added(*mp);
-}
-
 template <> void DataStreamReader::read(
         const quarre::interaction& e )
 {
@@ -133,7 +133,6 @@ template <> void DataStreamWriter::write(
     for (; msz-- >0;)
     {
         auto mp = new quarre::mapping(*this, &e);
-        QObject::connect ( mp, SIGNAL(minusButtonPressed()), &e, SLOT(onMinusMappingButtonPressed()));
         writeTo(*mp);
         e.m_mappings.push_back(mp);
     }
