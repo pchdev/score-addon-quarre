@@ -212,16 +212,16 @@ quarre::user::user(uint8_t id, generic_device& device) :
     m_id ( id ), m_status ( quarre::user::status::DISCONNECTED ),
     m_interaction_hdl(new interaction_hdl(*this))
 {
-    std::string base_addr = "/user/";
-    base_addr += std::to_string(m_id);
+    m_address = "/user/";
+    m_address += std::to_string(m_id);
 
-    auto gest_addr = base_addr + "/gestures/";
-    auto sens_addr = base_addr + "/sensors/";
+    auto gest_addr = m_address + "/gestures/";
+    auto sens_addr = m_address + "/sensors/";
 
     // make user tree
     for ( const auto& parameter : g_user_tree )
     {
-        auto& node = ossia::net::create_node(device, base_addr + parameter.first);
+        auto& node = ossia::net::create_node(device, m_address + parameter.first);
         node.create_parameter(parameter.second);
     }
 
@@ -363,6 +363,8 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
 
 void quarre::user::interaction_hdl::set_incoming_interaction(quarre::interaction* interaction)
 {
+    qDebug() << m_user.m_address;
+
     m_incoming_interaction = interaction;    
     auto p_inc = get_parameter_from_string(m_user.m_address+"/interactions/next/incoming");
 
@@ -582,7 +584,9 @@ bool quarre::quarre_device::reconnect()
     // it will select the best candidate to receive the interaction
     auto& gendev = *dynamic_cast<generic_device*>(m_dev.get());
 
-    for ( int i = 0; i < m_n_max_users+1; ++i )
+    m_user_zero = new quarre::user(0, gendev);
+
+    for ( int i = 1; i <= m_n_max_users; ++i )
         m_users.push_back(new quarre::user(i, gendev));
 
     // make common tree

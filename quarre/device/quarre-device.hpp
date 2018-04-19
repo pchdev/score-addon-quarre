@@ -169,6 +169,7 @@ class quarre_device final : public Engine::Network::OwningOSSIADevice
     uint16_t            m_oscport;
     uint8_t             m_n_max_users;
 
+    quarre::user* m_user_zero;
     std::vector<quarre::user*> m_users;
 
 };
