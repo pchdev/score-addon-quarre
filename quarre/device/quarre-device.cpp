@@ -59,6 +59,7 @@ static const std::vector<std::pair<std::string,ossia::val_type>> g_user_tree =
     //! 3 [ int ] the length of the interaction
     //! 4 [ int ] the time left before the beginning of the interaction
 
+    { "/interactions/next/countdown", ossia::val_type::INT },
     { "/interactions/next/cancel", ossia::val_type::INT },
     //! notifies user that the next interaction is cancelled:
     //! 0 [ int ] the cancellation reason
@@ -80,6 +81,8 @@ static const std::vector<std::pair<std::string,ossia::val_type>> g_user_tree =
 
     { "/interactions/next/resume", ossia::val_type::IMPULSE },
     //! resumes the incoming interaction, countdown will start again
+
+    { "/interactions/current/countdown", ossia::val_type::INT },
 
     { "/interactions/current/end", ossia::val_type::IMPULSE },
     //! the current interaction ends normally, going back to idle or incoming mode
@@ -210,7 +213,7 @@ quarre::user::sensor::sensor(std::string addr, std::vector<pdata_t> data, generi
 
 quarre::user::user(uint8_t id, generic_device& device) :
     m_id ( id ), m_status ( quarre::user::status::DISCONNECTED ),
-    m_interaction_hdl(new interaction_hdl(*this))
+    m_interaction_hdl(new quarre::user::interaction_hdl(*this))
 {
     m_address = "/user/";
     m_address += std::to_string(m_id);
@@ -329,9 +332,9 @@ quarre::user::interaction_hdl::interaction_hdl(const quarre::user &parent)
 
 }
 
-quarre::user::interaction_hdl& quarre::user::interactions()
+quarre::user::interaction_hdl *quarre::user::interactions()
 {
-    return *m_interaction_hdl;
+    return m_interaction_hdl;
 }
 
 int quarre::user::interaction_hdl::active_countdown() const
@@ -363,8 +366,6 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
 
 void quarre::user::interaction_hdl::set_incoming_interaction(quarre::interaction* interaction)
 {
-    qDebug() << m_user.m_address;
-
     m_incoming_interaction = interaction;    
     auto p_inc = get_parameter_from_string(m_user.m_address+"/interactions/next/incoming");
 
@@ -431,7 +432,7 @@ void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* i
         case user::status::ACTIVE:
         {
             if ( interaction->countdown() <
-                 candidate.user->interactions().active_countdown() + 5) goto next;
+                 candidate.user->interactions()->active_countdown() + 5) goto next;
 
             candidate.priority = 1;
             goto check_inputs;
@@ -443,7 +444,7 @@ void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* i
             if ( !user->supports_input(input.toStdString()) ) goto next;
 
         select:
-        candidate.priority += user->interactions().interaction_count();
+        candidate.priority += user->interactions()->interaction_count();
         candidates.push_back(candidate);
 
         next:
@@ -454,7 +455,7 @@ void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* i
     // if there is no candidate, interaction will not be dispatched
     if ( candidates.size() == 0 ) return;
 
-    quarre_device::candidate* winner;
+    quarre_device::candidate* winner = 0;
 
     for ( auto& candidate : candidates )
     {
@@ -479,15 +480,15 @@ void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* i
     }
 
     if ( winner->user )
-        winner->user->interactions().set_incoming_interaction(interaction);
+        winner->user->interactions()->set_incoming_interaction(interaction);
 }
 
 void quarre::quarre_device::dispatch_active_interaction(quarre::interaction* interaction)
 {
     for ( const auto& user : m_users )
     {
-        if ( user->interactions().incoming_interaction() == interaction )
-            user->interactions().set_active_interaction ( interaction );
+        if ( user->interactions()->incoming_interaction() == interaction )
+            user->interactions()->set_active_interaction ( interaction );
     }
 }
 
@@ -495,8 +496,8 @@ void quarre::quarre_device::dispatch_ending_interaction(quarre::interaction* int
 {
     for ( const auto& user : m_users )
     {
-        if ( user->interactions().active_interaction() == interaction )
-            user->interactions().end_current_interaction ( interaction );
+        if ( user->interactions()->active_interaction() == interaction )
+            user->interactions()->end_current_interaction ( interaction );
     }
 }
 
@@ -504,8 +505,8 @@ void quarre::quarre_device::dispatch_paused_interaction(quarre::interaction* int
 {
     for ( const auto& user : m_users )
     {
-        if ( user->interactions().active_interaction() == interaction )
-            user->interactions().pause_current_interaction( interaction );
+        if ( user->interactions()->active_interaction() == interaction )
+            user->interactions()->pause_current_interaction( interaction );
     }
 }
 
@@ -513,8 +514,8 @@ void quarre::quarre_device::dispatch_resumed_interaction(quarre::interaction* in
 {
     for ( const auto& user : m_users )
     {
-        if ( user->interactions().active_interaction() == interaction )
-            user->interactions().resume_current_interaction( interaction );
+        if ( user->interactions()->active_interaction() == interaction )
+            user->interactions()->resume_current_interaction( interaction );
     }
 }
 
@@ -576,8 +577,8 @@ bool quarre::quarre_device::reconnect()
 
     m_dev = std::make_unique<generic_device>( std::move(server), m_settings.name.toStdString());
 
-    setLogging_impl(isLogging());
-    enableCallbacks();
+    setLogging_impl ( isLogging() );
+    enableCallbacks ( );
 
     // build users
     // note that user 0 is a wildcard:

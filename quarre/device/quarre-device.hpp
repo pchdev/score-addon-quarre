@@ -117,7 +117,7 @@ class user // ----------------------------------------------------------- USER
     quarre::user::interaction_hdl* m_interaction_hdl;
 
     public:
-    interaction_hdl& interactions();
+    quarre::user::interaction_hdl* interactions();
 };
 
 class quarre_device final : public Engine::Network::OwningOSSIADevice
