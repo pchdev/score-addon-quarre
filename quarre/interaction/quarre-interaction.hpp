@@ -38,6 +38,8 @@ class interaction final : public IdentifiedObject<interaction>
     int length                  () const;
     int countdown               () const;
 
+    std::vector<ossia::value> to_list() const;
+
     QStringList inputs()    const;
     const std::vector<quarre::mapping*>& mappings();
 

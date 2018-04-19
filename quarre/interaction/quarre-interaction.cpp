@@ -42,6 +42,19 @@ const std::vector<quarre::mapping*>& quarre::interaction::mappings()
     return m_mappings;
 }
 
+std::vector<ossia::value> quarre::interaction::to_list() const
+{
+    std::vector<ossia::value> list;
+
+    list.push_back  ( m_title.toStdString() );
+    list.push_back  ( m_description.toStdString() );
+    list.push_back  ( m_module.toStdString() );
+    list.push_back  ( m_length );
+    list.push_back  ( m_countdown );
+
+    return list;
+}
+
 QStringList quarre::interaction::inputs() const
 {
     QStringList res;

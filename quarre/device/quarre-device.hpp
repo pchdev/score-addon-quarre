@@ -64,9 +64,9 @@ class user // ----------------------------------------------------------- USER
 
     user ( uint8_t id, generic_device& device);
 
-    void make_tree ( std::vector<pdata_t> const& tree );
+    void make_tree              ( std::vector<pdata_t> const& tree );
 
-    bool supports_input         (const std::string &input ) const;
+    bool supports_input         ( const std::string &input ) const;
     void activate_input         ( const std::string& target );
     void deactivate_input       ( const std::string& target );
 
@@ -86,11 +86,11 @@ class user // ----------------------------------------------------------- USER
     enum status              m_status;
     std::vector<input*>      m_inputs;
 
-    class interaction_hdlr
+    class interaction_hdl
     {
         friend class quarre::user;
         public:
-
+        interaction_hdl( const quarre::user& parent );
         quarre::interaction* incoming_interaction   ( ) const;
         quarre::interaction* active_interaction     ( ) const;
 
@@ -110,11 +110,14 @@ class user // ----------------------------------------------------------- USER
         quarre::interaction* m_active_interaction;
         parptr_t m_active_countdown;
         uint8_t  m_interaction_count;
+        const quarre::user& m_user;
 
-    } m_interaction_hdl;
+    };
+
+    quarre::user::interaction_hdl* m_interaction_hdl;
 
     public:
-    interaction_hdlr& interactions();
+    interaction_hdl& interactions();
 };
 
 class quarre_device final : public Engine::Network::OwningOSSIADevice

@@ -173,8 +173,8 @@ quarre::user::gesture::gesture(
         generic_device& device)
     : quarre::user::input ( addr, device )
 {
-    auto& n_trig = ossia::net::create_node(device, m_addr + "/trigger");
-    auto p_trig = n_trig.create_parameter(ossia::val_type::IMPULSE);
+    auto& n_trig    = ossia::net::create_node(device, m_addr + "/trigger");
+    auto p_trig     = n_trig.create_parameter(ossia::val_type::IMPULSE);
 
     m_data.push_back(parptr_t (p_trig));
 
@@ -191,16 +191,14 @@ quarre::user::gesture::gesture(
 // USER_SENSOR
 // ------------------------------------------------------------------------------
 
-quarre::user::sensor::sensor(
-        std::string addr,
-        std::vector<pdata_t> data, generic_device& device) :
+quarre::user::sensor::sensor(std::string addr, std::vector<pdata_t> data, generic_device& device) :
 
     quarre::user::input ( addr, device)
 {
     for ( const auto& d : data )
     {
-        auto& ndata = ossia::net::create_node(device, m_addr + "/data/" + d.first);
-        auto pdata = ndata.create_parameter(d.second);
+        auto& ndata     = ossia::net::create_node(device, m_addr + "/data/" + d.first);
+        auto pdata      = ndata.create_parameter(d.second);
 
         m_data.push_back(parptr_t(pdata));
     }
@@ -211,7 +209,8 @@ quarre::user::sensor::sensor(
 // ------------------------------------------------------------------------------
 
 quarre::user::user(uint8_t id, generic_device& device) :
-    m_id(id), m_status(quarre::user::status::DISCONNECTED)
+    m_id ( id ), m_status ( quarre::user::status::DISCONNECTED ),
+    m_interaction_hdl(new interaction_hdl(*this))
 {
     std::string base_addr = "/user/";
     base_addr += std::to_string(m_id);
@@ -269,14 +268,25 @@ void quarre::user::set_connected(bool connected)
     m_connected = connected;
 }
 
+inline parameter_base* get_parameter_from_string ( std::string address )
+{
+    auto& dev   = quarre::quarre_device::instance()->device();
+    auto node   = ossia::net::find_node(dev, address);
+    return node->get_parameter();
+}
+
 void quarre::user::set_address(const std::string &address)
 {
-    m_address = address;
+    auto param = get_parameter_from_string(m_address+"/address");
+    auto& addr = param->set_value(address);
 }
 
 std::string const& quarre::user::address() const
 {
-    return m_address;
+    auto param = get_parameter_from_string(m_address+"/address");
+    auto& addr = param->value().get<std::string>();
+
+    return addr;
 }
 
 enum quarre::user::status quarre::user::status() const
@@ -289,7 +299,7 @@ void quarre::user::set_status(const enum status &st)
     m_status = st;
 }
 
-uint8_t quarre::user::interaction_hdlr::interaction_count() const
+uint8_t quarre::user::interaction_hdl::interaction_count() const
 {
     return m_interaction_count;
 }
@@ -312,62 +322,77 @@ void quarre::user::deactivate_input(const std::string& target)
     }
 }
 
-quarre::user::interaction_hdlr& quarre::user::interactions()
+
+quarre::user::interaction_hdl::interaction_hdl(const quarre::user &parent)
+    : m_user(parent)
 {
-    return m_interaction_hdl;
+
 }
 
-int quarre::user::interaction_hdlr::active_countdown() const
+quarre::user::interaction_hdl& quarre::user::interactions()
+{
+    return *m_interaction_hdl;
+}
+
+int quarre::user::interaction_hdl::active_countdown() const
 {
     return m_active_countdown->value().get<int>();
 }
 
-quarre::interaction* quarre::user::interaction_hdlr::incoming_interaction() const
+quarre::interaction* quarre::user::interaction_hdl::incoming_interaction() const
 {
     return m_incoming_interaction;
 }
 
-quarre::interaction* quarre::user::interaction_hdlr::active_interaction() const
+quarre::interaction* quarre::user::interaction_hdl::active_interaction() const
 {
     return m_active_interaction;
 }
 
-void quarre::user::interaction_hdlr::set_active_interaction(quarre::interaction* interaction)
+void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* interaction)
 {
-    qDebug() << "active interaction for user: ";
-
     if ( interaction == m_incoming_interaction )
         m_incoming_interaction = 0;
 
     m_active_interaction = interaction;
+
+    auto p_act = get_parameter_from_string(m_user.m_address+"/interactions/next/next/begin");
+    p_act->set_value(interaction->to_list());
 }
 
-void quarre::user::interaction_hdlr::set_incoming_interaction(quarre::interaction* interaction)
+
+void quarre::user::interaction_hdl::set_incoming_interaction(quarre::interaction* interaction)
 {
-    m_incoming_interaction = interaction;
+    m_incoming_interaction = interaction;    
+    auto p_inc = get_parameter_from_string(m_user.m_address+"/interactions/next/incoming");
+
+    p_inc->set_value(interaction->to_list());
 }
 
-void quarre::user::interaction_hdlr::cancel_next_interaction(quarre::interaction* interaction)
+void quarre::user::interaction_hdl::cancel_next_interaction(quarre::interaction* interaction)
 {
     m_incoming_interaction = 0;
 }
 
-void quarre::user::interaction_hdlr::stop_current_interaction(quarre::interaction* interaction)
+void quarre::user::interaction_hdl::stop_current_interaction(quarre::interaction* interaction)
 {
     m_active_interaction = 0;
 }
 
-void quarre::user::interaction_hdlr::end_current_interaction(quarre::interaction* interaction)
+void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction* interaction)
 {
     m_active_interaction = 0;
+
+    auto p_end = get_parameter_from_string(m_user.m_address+"/interactions/current/end");
+    p_end->set_value ( ossia::impulse{} );
 }
 
-void quarre::user::interaction_hdlr::pause_current_interaction(quarre::interaction* interaction)
+void quarre::user::interaction_hdl::pause_current_interaction(quarre::interaction* interaction)
 {
 
 }
 
-void quarre::user::interaction_hdlr::resume_current_interaction(quarre::interaction* interaction)
+void quarre::user::interaction_hdl::resume_current_interaction(quarre::interaction* interaction)
 {
 
 }
@@ -539,8 +564,13 @@ bool quarre::quarre_device::reconnect()
     auto server     = std::make_unique<oscquery_server_protocol>(
                       qsettings.osc_port, qsettings.ws_port );
 
-    server->onClientConnected.connect<quarre::quarre_device, &quarre::quarre_device::on_client_connected>(this);
-    server->onClientDisconnected.connect<quarre::quarre_device, &quarre::quarre_device::on_client_disconnected>(this);
+    server->onClientConnected.connect<
+            quarre::quarre_device,
+            &quarre::quarre_device::on_client_connected>(this);
+
+    server->onClientDisconnected.connect<
+            quarre::quarre_device,
+            &quarre::quarre_device::on_client_disconnected>(this);
 
     m_dev = std::make_unique<generic_device>( std::move(server), m_settings.name.toStdString());
 
