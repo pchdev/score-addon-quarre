@@ -15,7 +15,6 @@ namespace addons    {
 namespace quarre    {
 
 class interaction;
-using intact_t = std::shared_ptr<quarre::interaction>;
 
 class user // ----------------------------------------------------------- USER
 {
@@ -40,6 +39,7 @@ class user // ----------------------------------------------------------- USER
                           std::function<void(const ossia::value&)> function );
 
         void unassign   ( std::string const& id );
+        std::string     address();
 
         protected:
         std::string     m_id;
@@ -66,7 +66,7 @@ class user // ----------------------------------------------------------- USER
 
     void make_tree ( std::vector<pdata_t> const& tree );
 
-    bool supports_input         ( const std::string& input ) const;
+    bool supports_input         (const std::string &input ) const;
     void activate_input         ( const std::string& target );
     void deactivate_input       ( const std::string& target );
 
@@ -90,22 +90,24 @@ class user // ----------------------------------------------------------- USER
     {
         friend class quarre::user;
         public:
+
+        quarre::interaction* incoming_interaction   ( ) const;
+        quarre::interaction* active_interaction     ( ) const;
+
         int active_countdown            ( ) const;
-        intact_t incoming_interaction   ( ) const;
-        intact_t active_interaction     ( ) const;
         uint8_t interaction_count       ( ) const;
 
-        void set_incoming_interaction   ( intact_t interaction );
-        void set_active_interaction     ( intact_t interaction );
-        void cancel_next_interaction    ( intact_t interaction );
-        void stop_current_interaction   ( intact_t interaction );
-        void end_current_interaction    ( intact_t interaction );
-        void pause_current_interaction  ( intact_t interaction );
-        void resume_current_interaction ( intact_t interaction );
+        void set_incoming_interaction   ( quarre::interaction* interaction );
+        void set_active_interaction     ( quarre::interaction* interaction );
+        void cancel_next_interaction    ( quarre::interaction* interaction );
+        void stop_current_interaction   ( quarre::interaction* interaction );
+        void end_current_interaction    ( quarre::interaction* interaction );
+        void pause_current_interaction  ( quarre::interaction* interaction );
+        void resume_current_interaction ( quarre::interaction* interaction );
 
         protected:
-        intact_t m_incoming_interaction;
-        intact_t m_active_interaction;
+        quarre::interaction* m_incoming_interaction;
+        quarre::interaction* m_active_interaction;
         parptr_t m_active_countdown;
         uint8_t  m_interaction_count;
 
@@ -143,11 +145,11 @@ class quarre_device final : public Engine::Network::OwningOSSIADevice
     void        on_client_connected     ( std::string const& ip );
     void        on_client_disconnected  ( std::string const& ip );
 
-    void   dispatch_incoming_interaction    ( intact_t interaction );
-    void   dispatch_active_interaction      ( intact_t interaction );
-    void   dispatch_ending_interaction      ( intact_t interaction );
-    void   dispatch_paused_interaction      ( intact_t interaction );
-    void   dispatch_resumed_interaction     ( intact_t interaction );
+    void   dispatch_incoming_interaction    ( quarre::interaction* interaction );
+    void   dispatch_active_interaction      ( quarre::interaction* interaction );
+    void   dispatch_ending_interaction      ( quarre::interaction* interaction );
+    void   dispatch_paused_interaction      ( quarre::interaction* interaction );
+    void   dispatch_resumed_interaction     ( quarre::interaction* interaction );
 
     signals: // ----------------------------------------------
     void running        ( );

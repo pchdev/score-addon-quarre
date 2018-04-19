@@ -239,11 +239,20 @@ quarre::user::user(uint8_t id, generic_device& device) :
     }
 }
 
+std::string quarre::user::input::address()
+{
+    return m_addr;
+}
+
 bool quarre::user::supports_input(const std::string& target) const
 {
-    for ( const auto& input : m_inputs )
+    for ( auto& input : m_inputs )
     {
-        if ( input->m_id == target )
+        std::string stripped_input = input->address();
+        stripped_input.erase(0, 7);
+        qDebug() << stripped_input;
+
+        if ( stripped_input == target )
             return input->m_available->value().get<bool>();
     }
 
@@ -313,50 +322,52 @@ int quarre::user::interaction_hdlr::active_countdown() const
     return m_active_countdown->value().get<int>();
 }
 
-quarre::intact_t quarre::user::interaction_hdlr::incoming_interaction() const
+quarre::interaction* quarre::user::interaction_hdlr::incoming_interaction() const
 {
     return m_incoming_interaction;
 }
 
-quarre::intact_t quarre::user::interaction_hdlr::active_interaction() const
+quarre::interaction* quarre::user::interaction_hdlr::active_interaction() const
 {
     return m_active_interaction;
 }
 
-void quarre::user::interaction_hdlr::set_active_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::set_active_interaction(quarre::interaction* interaction)
 {
+    qDebug() << "active interaction for user: ";
+
     if ( interaction == m_incoming_interaction )
-        m_incoming_interaction.reset();
+        m_incoming_interaction = 0;
 
     m_active_interaction = interaction;
 }
 
-void quarre::user::interaction_hdlr::set_incoming_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::set_incoming_interaction(quarre::interaction* interaction)
 {
     m_incoming_interaction = interaction;
 }
 
-void quarre::user::interaction_hdlr::cancel_next_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::cancel_next_interaction(quarre::interaction* interaction)
 {
-    m_incoming_interaction.reset();
+    m_incoming_interaction = 0;
 }
 
-void quarre::user::interaction_hdlr::stop_current_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::stop_current_interaction(quarre::interaction* interaction)
 {
-    m_active_interaction.reset();
+    m_active_interaction = 0;
 }
 
-void quarre::user::interaction_hdlr::end_current_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::end_current_interaction(quarre::interaction* interaction)
 {
-    m_active_interaction.reset();
+    m_active_interaction = 0;
 }
 
-void quarre::user::interaction_hdlr::pause_current_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::pause_current_interaction(quarre::interaction* interaction)
 {
 
 }
 
-void quarre::user::interaction_hdlr::resume_current_interaction(intact_t interaction)
+void quarre::user::interaction_hdlr::resume_current_interaction(quarre::interaction* interaction)
 {
 
 }
@@ -365,7 +376,7 @@ void quarre::user::interaction_hdlr::resume_current_interaction(intact_t interac
 // USER_DISPATCHER
 // ------------------------------------------------------------------------------
 
-void quarre::quarre_device::dispatch_incoming_interaction(intact_t interaction)
+void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* interaction)
 {
     // candidate algorithm
     // eliminate non-connected clients
@@ -441,10 +452,10 @@ void quarre::quarre_device::dispatch_incoming_interaction(intact_t interaction)
     }
 
     if ( winner->user )
-        winner->user->interactions().set_active_interaction(interaction);
+        winner->user->interactions().set_incoming_interaction(interaction);
 }
 
-void quarre::quarre_device::dispatch_active_interaction(intact_t interaction)
+void quarre::quarre_device::dispatch_active_interaction(quarre::interaction* interaction)
 {
     for ( const auto& user : m_users )
     {
@@ -453,7 +464,7 @@ void quarre::quarre_device::dispatch_active_interaction(intact_t interaction)
     }
 }
 
-void quarre::quarre_device::dispatch_ending_interaction(intact_t interaction)
+void quarre::quarre_device::dispatch_ending_interaction(quarre::interaction* interaction)
 {
     for ( const auto& user : m_users )
     {
@@ -462,7 +473,7 @@ void quarre::quarre_device::dispatch_ending_interaction(intact_t interaction)
     }
 }
 
-void quarre::quarre_device::dispatch_paused_interaction(intact_t interaction)
+void quarre::quarre_device::dispatch_paused_interaction(quarre::interaction* interaction)
 {
     for ( const auto& user : m_users )
     {
@@ -471,7 +482,7 @@ void quarre::quarre_device::dispatch_paused_interaction(intact_t interaction)
     }
 }
 
-void quarre::quarre_device::dispatch_resumed_interaction(intact_t interaction)
+void quarre::quarre_device::dispatch_resumed_interaction(quarre::interaction* interaction)
 {
     for ( const auto& user : m_users )
     {

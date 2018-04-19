@@ -31,13 +31,10 @@ void quarre::ProcessModel::startExecution()
     // get quarre-server-device singleton
     // request potential user, who can use the requested sensors/gestures
 
-    // send countdown
-
-    // when countdown is over
-    // start interaction
-
-    const auto& mappings  = interaction()->m_mappings;
+    auto inter            = interaction();
     auto qrdevice         = quarre::quarre_device::instance();
+
+    qrdevice->dispatch_incoming_interaction(inter);
 }
 
 void quarre::ProcessModel::stopExecution()

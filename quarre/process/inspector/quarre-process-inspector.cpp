@@ -175,7 +175,7 @@ void quarre::InspectorWidget::on_mapping_added(quarre::mapping &mapping)
 
 void quarre::InspectorWidget::on_mapping_removed(quarre::mapping* mapping )
 {
-    // delete view first, pass on signal to model
+    // delete view first, chain on signal to model
     auto sender = qobject_cast<quarre::mapping_view*>(QObject::sender());
     m_layout->removeItem(sender->layout());
     m_mapping_views.removeAll(sender);
