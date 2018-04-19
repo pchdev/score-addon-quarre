@@ -539,6 +539,9 @@ bool quarre::quarre_device::reconnect()
     auto server     = std::make_unique<oscquery_server_protocol>(
                       qsettings.osc_port, qsettings.ws_port );
 
+    server->onClientConnected.connect<quarre::quarre_device, &quarre::quarre_device::on_client_connected>(this);
+    server->onClientDisconnected.connect<quarre::quarre_device, &quarre::quarre_device::on_client_disconnected>(this);
+
     m_dev = std::make_unique<generic_device>( std::move(server), m_settings.name.toStdString());
 
     setLogging_impl(isLogging());
@@ -565,6 +568,7 @@ void quarre::quarre_device::recreate(const Device::Node &n)
 
 void quarre::quarre_device::on_client_connected(const std::string &ip)
 {
+    qDebug() << ip;
     for ( const auto& user : m_users )
     {
         if ( !user->connected() )
@@ -579,6 +583,7 @@ void quarre::quarre_device::on_client_connected(const std::string &ip)
 
 void quarre::quarre_device::on_client_disconnected(const std::string &ip)
 {
+    qDebug() << ip;
     for ( const auto& user : m_users )
         if ( user->address() == ip )
         {

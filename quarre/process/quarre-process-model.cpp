@@ -34,6 +34,12 @@ void quarre::ProcessModel::startExecution()
     auto inter            = interaction();
     auto qrdevice         = quarre::quarre_device::instance();
 
+    if ( !qrdevice )
+    {
+        qDebug() << "quarrè-server is not instantiated.. aborting";
+        return;
+    }
+
     qrdevice->dispatch_incoming_interaction(inter);
 }
 
