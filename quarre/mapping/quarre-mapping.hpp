@@ -5,7 +5,7 @@
 #include <QTextEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include <Explorer/Widgets/AddressAccessorEditWidget.hpp>
+
 
 #include <score/model/IdentifiedObject.hpp>
 
@@ -18,9 +18,9 @@ class mapping final : public IdentifiedObject<score::addons::quarre::mapping>
     Q_OBJECT
     SCORE_SERIALIZE_FRIENDS
 
-    Q_PROPERTY  ( QString source READ source WRITE set_source NOTIFY sourceChanged )
-    Q_PROPERTY  ( QString destination READ destination WRITE set_destination NOTIFY destinationChanged )
-    Q_PROPERTY  ( QString expression READ expression WRITE set_expression NOTIFY expressionChanged )
+    Q_PROPERTY  ( QString source READ source WRITE on_source_changed )
+    Q_PROPERTY  ( QString destination READ destination WRITE on_destination_changed )
+    Q_PROPERTY  ( QString expression READ expression WRITE on_expression_changed)
 
     public: // ----------------------------------------------------
     mapping ( const Id<mapping>& id, QObject* parent );
@@ -36,22 +36,15 @@ class mapping final : public IdentifiedObject<score::addons::quarre::mapping>
     const QString destination  () const;
     const QString expression   () const;
 
-    void set_source         ( const QString& source );
-    void set_destination    ( const QString& destination );
-    void set_expression     ( const QString& expression );
-
-    signals: // ---------------------------------------------------
-    void sourceChanged          ();
-    void destinationChanged     ();
-    void expressionChanged      ();
-    void minusButtonPressed     ();
+    public slots:
+    void on_source_changed         ( const QString& source );
+    void on_destination_changed    ( const QString& destination );
+    void on_expression_changed     ( const QString& expression );
 
     private: // ---------------------------------------------------
-    Explorer::AddressAccessorEditWidget* m_source;
-    Explorer::AddressAccessorEditWidget* m_destination;
-    QTextEdit* m_expression;
-    QPushButton* m_minus_button;
-    QVBoxLayout* m_layout;
+    QString m_source;
+    QString m_destination;
+    QString m_expression;
 };
 
 }

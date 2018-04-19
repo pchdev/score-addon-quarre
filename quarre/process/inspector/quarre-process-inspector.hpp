@@ -4,6 +4,7 @@
 #include <Process/Inspector/ProcessInspectorWidgetDelegate.hpp>
 #include <Process/Inspector/ProcessInspectorWidgetDelegateFactory.hpp>
 #include <score/command/Dispatchers/CommandDispatcher.hpp>
+#include <Explorer/Widgets/AddressAccessorEditWidget.hpp>
 
 #include <QFormLayout>
 #include <QVBoxLayout>
@@ -18,6 +19,45 @@
 namespace score     {
 namespace addons    {
 namespace quarre    {
+
+class mapping_view : public QObject
+{
+    Q_OBJECT
+
+    public:
+    mapping_view    ( const score::DocumentContext& dctx,
+                      mapping &map, QWidget *parent);
+
+    QVBoxLayout* layout        () const;
+    const QString source       () const;
+    const QString destination  () const;
+    const QString expression   () const;
+
+    void set_source             ( const QString &source );
+    void set_destination        ( const QString &source );
+    void set_expression         ( const QString &source );
+
+    protected slots:
+    void on_source_address_changed ( const Device::FullAddressAccessorSettings );
+    void on_destination_address_changed ( const Device::FullAddressAccessorSettings );
+    void on_expression_changed          ( );
+    void on_minus_button_pressed        ( );
+
+    signals: // ---------------------------------------------------
+    void sourceChanged          ( QString );
+    void destinationChanged     ( QString );
+    void expressionChanged      ( QString );
+    void mappingDeleteRequest   ( quarre::mapping* );
+
+    private: // ---------------------------------------------------
+    Explorer::AddressAccessorEditWidget* m_source;
+    Explorer::AddressAccessorEditWidget* m_destination;
+    QTextEdit* m_expression;
+    QPushButton* m_minus_button;
+    QVBoxLayout* m_layout;
+    quarre::mapping* m_mapmodel;
+
+};
 
 class ProcessModel;
 
@@ -36,9 +76,12 @@ class InspectorWidget final :
             const score::DocumentContext& ctx,
             QWidget* parent );
 
-    public slots:
-    void on_mapping_added(const quarre::mapping& mapping);
+    signals:
+    void mappingDeleteRequest(quarre::mapping*);
 
+    public slots:
+    void on_mapping_added   (mapping &mapping );
+    void on_mapping_removed ( mapping *mapping );
 
     private: //---------------------------------------------------------
     CommandDispatcher<> m_dispatcher;
@@ -48,7 +91,9 @@ class InspectorWidget final :
     QSpinBox*          m_length;
     QSpinBox*          m_countdown;
     QVBoxLayout*       m_layout;
-    const score::DocumentContext&  m_dctx;
+    QVector<quarre::mapping_view*> m_mapping_views;
+    const score::DocumentContext& m_dctx;
+    quarre::interaction* m_interaction;
 };
 
 class InspectorFactory final :

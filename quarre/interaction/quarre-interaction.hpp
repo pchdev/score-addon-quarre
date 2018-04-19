@@ -39,11 +39,11 @@ class interaction final : public IdentifiedObject<interaction>
     int countdown               () const;
 
     QStringList inputs()    const;
-    void set_inspector ( quarre::InspectorWidget* inspector );
+    const std::vector<quarre::mapping*>& mappings();
 
     signals:
-    void mapping_added      ( const quarre::mapping& mapping );
-    void mapping_removed    ( const quarre::mapping& mapping );
+    void mapping_added      ( quarre::mapping& mapping );
+    void mapping_removed    ( quarre::mapping& mapping );
 
     public slots: //-----------------------------------------------
     void onModuleChanged            ( QString module );
@@ -52,8 +52,8 @@ class interaction final : public IdentifiedObject<interaction>
     void onLengthChanged            ( int length );
     void onCountdownChanged         ( int countdown );
 
-    void onPlusMappingButtonPressed     ( );
-    void onMinusMappingButtonPressed    ( );
+    void on_mapping_added          ( );
+    void on_mapping_removed        ( quarre::mapping* mapping );
 
     private:  //---------------------------------------------------
     QString         m_module;

@@ -23,9 +23,16 @@ quarre::interaction::interaction(
 
 }
 
-void quarre::interaction::set_inspector(quarre::InspectorWidget *inspector)
+void quarre::interaction::on_mapping_removed(quarre::mapping *target)
 {
-    m_inspector = inspector;
+    auto mapping = std::find(m_mappings.begin(), m_mappings.end(), target);
+    delete *mapping;
+    m_mappings.erase ( mapping );
+}
+
+const std::vector<quarre::mapping*>& quarre::interaction::mappings()
+{
+    return m_mappings;
 }
 
 QStringList quarre::interaction::inputs() const
@@ -92,19 +99,11 @@ int quarre::interaction::countdown() const
     return m_countdown;
 }
 
-void quarre::interaction::onPlusMappingButtonPressed()
+void quarre::interaction::on_mapping_added()
 {
     auto mp = new quarre::mapping(getStrongId(m_mappings), this);
     m_mappings.push_back(mp);
     emit mapping_added(*mp);
-}
-
-void quarre::interaction::onMinusMappingButtonPressed()
-{
-    auto sender = qobject_cast<quarre::mapping*>(QObject::sender());
-    auto mapping = std::find(m_mappings.begin(), m_mappings.end(), sender);
-    delete *mapping;
-    m_mappings.erase ( mapping );
 }
 
 template <> void DataStreamReader::read(

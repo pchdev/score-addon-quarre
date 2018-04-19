@@ -11,64 +11,39 @@ quarre::mapping::mapping(
         const Id<quarre::mapping> &id,
         QObject *parent) :
 
-    IdentifiedObject    ( id, "quarrè-mapping", parent ),
-    m_minus_button      ( new QPushButton("-")),
-    m_layout            ( new QVBoxLayout ),
-    m_expression        ( new QTextEdit )
+    IdentifiedObject    ( id, "quarrè-mapping", parent )
 {
-
-    auto inspector      = dynamic_cast<quarre::interaction*>(parent)->m_inspector;
-    const auto& doc     = inspector->m_dctx;
-    auto& explorer      = doc.plugin<Explorer::DeviceDocumentPlugin>().explorer();
-    m_source            = new Explorer::AddressAccessorEditWidget(explorer, inspector);
-    m_destination       = new Explorer::AddressAccessorEditWidget(explorer, inspector);
-
-    m_expression->setPlainText("( function(v, dest) { dest[\"value\"] = v; } )");
-
-    auto form = new QFormLayout;
-    form->addRow ( tr ( "delete" ), m_minus_button );
-    form->addRow ( tr ( "source" ), m_source );
-    form->addRow ( tr ( "destination" ), m_destination );
-
-    m_layout->addLayout(form);
-    m_layout->addWidget(m_expression);
-}
-
-QVBoxLayout* quarre::mapping::layout() const
-{
-    return m_layout;
+    m_expression = "( function(v, dest) { dest[\"value\"] = v; } )";
 }
 
 const QString quarre::mapping::source() const
 {
-    return m_source->addressString();
+    return m_source;
 }
 
 const QString quarre::mapping::destination() const
 {
-    return m_destination->addressString();
+    return m_destination;
 }
 
 const QString quarre::mapping::expression() const
 {
-    return m_expression->toPlainText();
+    return m_expression;
 }
 
-void quarre::mapping::set_source(const QString &source)
+void quarre::mapping::on_source_changed(const QString &source)
 {
-    State::AddressAccessor lame;
-    m_source->setAddress(State::AddressAccessor::fromString(source).value_or(lame));
+    m_source = source;
 }
 
-void quarre::mapping::set_destination(const QString &destination)
+void quarre::mapping::on_destination_changed(const QString &destination)
 {
-    State::AddressAccessor lame;
-    m_destination->setAddress(State::AddressAccessor::fromString(destination).value_or(lame));
+    m_destination = destination;
 }
 
-void quarre::mapping::set_expression(const QString &expression)
+void quarre::mapping::on_expression_changed(const QString &expression)
 {
-    m_expression->setPlainText(expression);
+    m_expression = expression;
 }
 
 template <> void DataStreamReader::read(
@@ -87,9 +62,9 @@ template <> void DataStreamWriter::write(
     QString src, dest, exp;
     m_stream >> src >> dest >> exp;
 
-    e.set_source        ( src );
-    e.set_destination   ( dest );
-    e.set_expression    ( exp );
+    e.on_source_changed        ( src );
+    e.on_destination_changed   ( dest );
+    e.on_expression_changed    ( exp );
 
     checkDelimiter();
 }
@@ -105,9 +80,9 @@ template <> void JSONObjectReader::read(
 template <> void JSONObjectWriter::write(
         quarre::mapping& e )
 {
-    e.set_source        ( obj [ "Source" ].toString() );
-    e.set_destination   ( obj [ "Destination" ].toString() );
-    e.set_expression    ( obj [ "Expression" ].toString() );
+    e.on_source_changed         ( obj [ "Source" ].toString() );
+    e.on_destination_changed    ( obj [ "Destination" ].toString() );
+    e.on_expression_changed     ( obj [ "Expression" ].toString() );
 }
 
 
