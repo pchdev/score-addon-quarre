@@ -12,9 +12,11 @@ namespace score     {
 namespace addons    {
 namespace quarre    {
 
-using LayerFactory = WidgetLayer::LayerFactory<
+using LayerFactory = Process::GenericLayerFactory<
     score::addons::quarre::ProcessModel,
-    score::addons::quarre::InspectorWidget>;
+    score::addons::quarre::ProcessLayerPresenter,
+    score::addons::quarre::ProcessLayerView,
+    Process::GraphicsViewLayerPanelProxy>;
 
 }
 }

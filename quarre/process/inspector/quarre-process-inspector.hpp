@@ -25,6 +25,8 @@ class InspectorWidget final :
         public Process::InspectorWidgetDelegate_T<quarre::ProcessModel>,
         public Nano::Observer
 {
+    Q_OBJECT
+
     public: //----------------------------------------------------------
 
     explicit InspectorWidget(

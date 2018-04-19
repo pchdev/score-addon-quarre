@@ -22,7 +22,11 @@ quarre::InspectorWidget::InspectorWidget(const ProcessModel &object,
     quarre::interaction* interaction = object.interaction();
 
     m_length->setValue      ( interaction->length() );
+    m_length->setRange      ( 0, 999 );
+
     m_countdown->setValue   ( interaction->countdown() );
+    m_countdown->setRange   ( 0, 999 );
+
     setObjectName           ( "quarrè-process-inspector" );
     setParent               ( parent );
 
