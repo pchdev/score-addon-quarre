@@ -108,6 +108,9 @@ static const std::vector<std::pair<std::string,ossia::val_type>> g_user_tree =
 // --------------------------------------------------------------------------------------------
 static const std::vector<std::pair<std::string,ossia::val_type>> g_common_tree =
 {
+    { "/connections/ids", ossia::val_type::LIST },
+    //! binding user id by ipv4 address
+
     { "/common/scenario/start", ossia::val_type::IMPULSE },
     //! starts the scenario, activating global counter
 
@@ -625,6 +628,15 @@ void quarre::quarre_device::on_client_connected(const std::string &ip)
 
             quarre::PanelDelegate::instance()->on_user_changed(*user);
 
+            // update id bindings
+            auto ids_p = get_parameter_from_string("/connections/ids");
+            auto ids_v = ids_p->value().get<std::vector<ossia::value>>();
+
+            ids_v.push_back(ip);
+            ids_v.push_back(user->index());
+
+            ids_p->set_value(ids_v);
+
             return;
         }
     }
@@ -640,6 +652,17 @@ void quarre::quarre_device::on_client_disconnected(const std::string &ip)
             user->set_status     ( quarre::user::status::DISCONNECTED );
 
             quarre::PanelDelegate::instance()->on_user_changed(*user);
+
+            // update id bindings
+            auto ids_p = get_parameter_from_string("/connections/ids");
+            auto ids_v = ids_p->value().get<std::vector<ossia::value>>();
+
+            ids_v.erase(std::remove(ids_v.begin(), ids_v.end(), ip), ids_v.end());
+            ids_v.erase(std::remove(ids_v.begin(), ids_v.end(), user->index()), ids_v.end());
+
+            ids_p->set_value(ids_v);
+
+            return;
         }
 }
 
