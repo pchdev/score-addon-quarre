@@ -2,6 +2,7 @@
 #include "quarre-device.hpp"
 #include <quarre/device/quarre-protocol-specific-settings.hpp>
 #include <quarre/device/quarre-protocol-settings-widget.hpp>
+#include <quarre/panel/quarre-panel-delegate.hpp>
 #include <Device/Protocol/DeviceSettings.hpp>
 #include <utility>
 
@@ -302,6 +303,11 @@ void quarre::user::set_status(const enum status &st)
     m_status = st;
 }
 
+uint8_t quarre::user::index() const
+{
+    return m_id;
+}
+
 uint8_t quarre::user::interaction_hdl::interaction_count() const
 {
     return m_interaction_count;
@@ -392,11 +398,14 @@ void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction*
 
 void quarre::user::interaction_hdl::pause_current_interaction(quarre::interaction* interaction)
 {
-
+    auto p_pause = get_parameter_from_string(m_user.m_address+"/interactions/current/pause");
+    p_pause->set_value ( ossia::impulse{} );
 }
 
 void quarre::user::interaction_hdl::resume_current_interaction(quarre::interaction* interaction)
 {
+    auto p_pause = get_parameter_from_string(m_user.m_address+"/interactions/current/resume");
+    p_pause->set_value ( ossia::impulse{} );
 
 }
 
@@ -590,8 +599,11 @@ bool quarre::quarre_device::reconnect()
     for ( int i = 1; i <= m_n_max_users; ++i )
         m_users.push_back(new quarre::user(i, gendev));
 
-    // make common tree
     make_common_tree();
+
+    auto panel = quarre::PanelDelegate::instance();
+    panel->on_server_instantiated(*this);
+
     return connected();
 }
 
@@ -603,7 +615,6 @@ void quarre::quarre_device::recreate(const Device::Node &n)
 
 void quarre::quarre_device::on_client_connected(const std::string &ip)
 {
-    qDebug() << ip;
     for ( const auto& user : m_users )
     {
         if ( !user->connected() )
@@ -611,6 +622,9 @@ void quarre::quarre_device::on_client_connected(const std::string &ip)
             user->set_connected  ( true );
             user->set_address    ( ip );
             user->set_status     ( quarre::user::status::IDLE );
+
+            quarre::PanelDelegate::instance()->on_user_changed(*user);
+
             return;
         }
     }
@@ -618,13 +632,14 @@ void quarre::quarre_device::on_client_connected(const std::string &ip)
 
 void quarre::quarre_device::on_client_disconnected(const std::string &ip)
 {
-    qDebug() << ip;
     for ( const auto& user : m_users )
         if ( user->address() == ip )
         {
             user->set_connected  ( false );
             user->set_address    ( "" );
             user->set_status     ( quarre::user::status::DISCONNECTED );
+
+            quarre::PanelDelegate::instance()->on_user_changed(*user);
         }
 }
 

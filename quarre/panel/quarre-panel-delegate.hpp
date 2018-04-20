@@ -3,6 +3,9 @@
 #include <score/plugins/panel/PanelDelegate.hpp>
 #include <score/plugins/panel/PanelDelegateFactory.hpp>
 #include <quarre/device/quarre-device.hpp>
+#include <QFormLayout>
+#include <QLabel>
+#include <QLineEdit>
 
 namespace score     {
 namespace addons    {
@@ -14,11 +17,13 @@ class PanelDelegate final : public QObject, public score::PanelDelegate
 
     PanelDelegate( const score::GUIApplicationContext& ctx );
 
-    void on_server_instantiated     (quarre_device &device );
-    void on_client_connected        ( std::string const& ip );
-    void on_client_disconnected     ( std::string const& ip );
+    static PanelDelegate* instance  ( );
+
+    void on_user_changed            (const user &user );
+    void on_server_instantiated     ( const quarre::quarre_device &device );
 
     private: //-----------------------------------------------
+    static PanelDelegate* m_singleton;
 
     virtual QWidget* widget() override;
     virtual const score::PanelStatus& defaultPanelStatus() const override;
@@ -30,6 +35,8 @@ class PanelDelegate final : public QObject, public score::PanelDelegate
     virtual void setNewSelection(const Selection& s) override;
 
     QWidget* m_widget;
+    QFormLayout* m_layout;
+    QVector<QLabel*> m_user_connection_displays;
 
 };
 

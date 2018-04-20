@@ -1,50 +1,46 @@
 #include "quarre-panel-delegate-factory.hpp"
 #include "quarre-panel-delegate.hpp"
 
-#include <QFormLayout>
-#include <QLabel>
-#include <QLineEdit>
-
 using namespace score::addons;
+quarre::PanelDelegate* quarre::PanelDelegate::m_singleton;
 
 quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
-    score::PanelDelegate(ctx)
+    score::PanelDelegate(ctx),
+    m_widget(new QWidget),
+    m_layout(new QFormLayout)
 {
-    m_widget = new QWidget;
+    m_singleton = this;
 }
 
-void quarre::PanelDelegate::on_server_instantiated(quarre::quarre_device &device)
+quarre::PanelDelegate* quarre::PanelDelegate::instance()
 {
-    auto lay = new QFormLayout ( m_widget );
+    return m_singleton;
+}
+
+void quarre::PanelDelegate::on_user_changed(const quarre::user& user)
+{
+    auto target_label = m_user_connection_displays[user.index()-1];
+    target_label->setText(QString::fromStdString(user.address()));
+}
+
+void quarre::PanelDelegate::on_server_instantiated(const quarre::quarre_device &device)
+{
+    m_layout = new QFormLayout ( m_widget );
     auto max_u = device.max_users();
 
     for ( int i = 0; i < max_u; ++i )
     {
         QString tr = "user ";
-        tr += i;
+        tr += QString::number(i+1);
         tr += " :";
 
-        // a qlineedit for each user with ip address
-        // or 'disconnected'
-        // to be completed with controls to test interactions quickly
-
-        auto qle = new QLineEdit("disconnected");
-        lay->addRow(tr, qle);
+        auto qle = new QLabel("disconnected");
+        m_layout->addRow ( tr, qle );
+        m_user_connection_displays.push_back(qle);
     }
-
-    auto& server = device.device();
-    auto proto = dynamic_cast<ossia::oscquery::oscquery_server_protocol*>(&server.get_protocol());
 }
 
-void quarre::PanelDelegate::on_client_connected(const std::string &ip)
-{
 
-}
-
-void quarre::PanelDelegate::on_client_disconnected(const std::string &ip)
-{
-
-}
 
 QWidget* quarre::PanelDelegate::widget() { return m_widget; }
 

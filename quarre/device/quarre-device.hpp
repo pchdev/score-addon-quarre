@@ -77,7 +77,8 @@ class user // ----------------------------------------------------------- USER
     void set_address            ( std::string const& address );
 
     void set_status             ( status const& st );
-    status status               ( ) const;
+    status status               ( ) const;    
+    uint8_t index               ( ) const;
 
     protected: //---------------------------------------------
     bool                     m_connected;
