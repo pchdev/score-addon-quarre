@@ -3,6 +3,7 @@
 #include <Engine/Executor/ProcessComponent.hpp>
 #include <Device/Protocol/DeviceList.hpp>
 #include <quarre/process/quarre-process-model.hpp>
+#include <Engine/Executor/IntervalComponent.hpp>
 
 namespace score     {
 namespace addons    {
@@ -13,7 +14,10 @@ class ProcessModel;
 class ProcessExecutor final : public ossia::time_process
 {
     public: //-----------------------------
-    ProcessExecutor(const Device::DeviceList& list);
+    ProcessExecutor(
+            const Device::DeviceList& list,
+            Engine::Execution::IntervalComponent& interval,
+            quarre::ProcessModel& model);
 
     virtual void start      ( ossia::state &st ) override;
     virtual void stop       ( ) override;
@@ -24,6 +28,8 @@ class ProcessExecutor final : public ossia::time_process
 
     private: // --------------------------
     const Device::DeviceList& m_devices;
+    Engine::Execution::IntervalComponentBase& m_interval;
+    quarre::ProcessModel& m_model;
 
 };
 

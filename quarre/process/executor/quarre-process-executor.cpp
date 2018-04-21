@@ -9,7 +9,11 @@
 
 using namespace score::addons;
 
-quarre::ProcessExecutor::ProcessExecutor(const Device::DeviceList& list) : m_devices(list)
+quarre::ProcessExecutor::ProcessExecutor(const Device::DeviceList& list,
+        Engine::Execution::IntervalComponent& interval, ProcessModel &model) :
+    m_devices(list),
+    m_interval(interval),
+    m_model(model)
 {
 
 }
@@ -17,13 +21,27 @@ quarre::ProcessExecutor::ProcessExecutor(const Device::DeviceList& list) : m_dev
 void quarre::ProcessExecutor::start(ossia::state &st)
 {
     // parse the interaction
+    auto inter            = m_model.interaction();
+    auto qrdevice         = quarre::quarre_device::instance();
 
+    if ( !qrdevice )
+    {
+        qDebug() << "quarrè-server is not instantiated.. aborting";
+        return;
+    }
+
+    qrdevice->dispatch_incoming_interaction(inter);
+
+    //uto& bla = m_interval.scoreInterval().duration.setDefaultDuration();
+    //auto& bla = m_interval.scoreInterval().duration.setMinDuration();
+    //auto& bla = m_interval.scoreInterval().duration.setMaxDuration();
 
 }
 
 void quarre::ProcessExecutor::stop()
 {
-
+    auto dev = quarre::quarre_device::instance();
+    dev->dispatch_ending_interaction(m_model.interaction());
 }
 
 void quarre::ProcessExecutor::pause()
@@ -38,12 +56,33 @@ void quarre::ProcessExecutor::resume()
 
 ossia::state_element quarre::ProcessExecutor::state(ossia::time_value date, double pos)
 {
+    // when countdown is over (date is microseconds)
+    // start the interaction
+
+    auto cd = m_model.interaction()->countdown();
+    cd*=1000000;
+    if ( date >= cd && date < cd+5000 )
+    {
+        qDebug() << "trigger interacton";
+        auto dev = quarre::quarre_device::instance();
+        dev->dispatch_active_interaction(m_model.interaction());
+    }
+
+    /*qDebug() << date;
+    if ( pos >= 0.5 && pos <= 0.51)
+    {
+        ossia::state st;
+        auto& end_event = m_interval.OSSIAInterval()->get_end_event();
+        auto& end_tsync = end_event.get_time_sync();
+        end_tsync.trigger_request = true;
+    }*/
+
     return {};
 }
 
 
 quarre::ProcessExecutorComponent::ProcessExecutorComponent(
-        Engine::Execution::IntervalComponent &parent_interval,
+        Engine::Execution::IntervalComponent& parent_interval,
         ProcessModel &element,
         const Engine::Execution::Context &ctx,
         const Id<score::Component> &id,
@@ -51,5 +90,5 @@ quarre::ProcessExecutorComponent::ProcessExecutorComponent(
 
     ProcessComponent_T ( parent_interval, element, ctx, id, "quarrè-executor-component", parent )
 {
-    m_ossia_process = std::make_shared<quarre::ProcessExecutor>(ctx.devices.list());
+    m_ossia_process = std::make_shared<quarre::ProcessExecutor>(ctx.devices.list(), parent_interval, element);
 }

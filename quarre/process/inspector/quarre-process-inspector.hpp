@@ -83,8 +83,8 @@ class InspectorWidget final :
     void mappingDeleteRequest( quarre::mapping* );
 
     public slots:
-    void on_mapping_added   ( quarre::mapping &mapping );
-    void on_mapping_removed ( quarre::mapping *mapping );
+    void on_mapping_added   ( quarre::mapping& mapping );
+    void on_mapping_removed ( quarre::mapping* mapping );
 
     private: //---------------------------------------------------------
     CommandDispatcher<> m_dispatcher;
@@ -94,6 +94,9 @@ class InspectorWidget final :
     QSpinBox*          m_length;
     QSpinBox*          m_countdown;
     QVBoxLayout*       m_layout;
+
+    Explorer::AddressAccessorEditWidget* m_end_expression;
+
     QVector<quarre::mapping_view*> m_mapping_views;
     const score::DocumentContext& m_dctx;
     quarre::interaction* m_interaction;

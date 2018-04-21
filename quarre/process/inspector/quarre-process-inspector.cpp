@@ -126,6 +126,9 @@ quarre::InspectorWidget::InspectorWidget(const ProcessModel &object,
     m_dctx              ( ctx )
 {
 
+    auto& explorer      = ctx.plugin<Explorer::DeviceDocumentPlugin>().explorer();
+    m_end_expression    = new Explorer::AddressAccessorEditWidget(explorer, this);
+
     m_interaction = object.interaction();
 
     m_length->setValue      ( m_interaction->length() );
@@ -143,6 +146,7 @@ quarre::InspectorWidget::InspectorWidget(const ProcessModel &object,
     form->addRow ( tr ("Module"), m_module );
     form->addRow ( tr ("Length"), m_length );
     form->addRow ( tr ("Countdown"), m_countdown);
+    form->addRow ( tr ("Ending"), m_end_expression );
 
     auto plusb = new QPushButton("+");
 
@@ -158,6 +162,9 @@ quarre::InspectorWidget::InspectorWidget(const ProcessModel &object,
     connect(m_length, SIGNAL(valueChanged(int)), m_interaction, SLOT(onLengthChanged(int)));
     connect(m_countdown, SIGNAL(valueChanged(int)), m_interaction, SLOT(onCountdownChanged(int)));
     connect(plusb, SIGNAL(released()), m_interaction, SLOT(on_mapping_added()));
+
+    connect(m_length, SIGNAL(valueChanged(int)), &object, SLOT(on_interaction_length_changed(int)));
+    connect(m_countdown, SIGNAL(valueChanged(int)), &object, SLOT(on_interaction_countdown_changed(int)));
 
     connect( m_interaction, SIGNAL(mapping_added(quarre::mapping&)), this, SLOT(on_mapping_added(quarre::mapping&)));
     connect( this, SIGNAL(mappingDeleteRequest(quarre::mapping*)), m_interaction, SLOT(on_mapping_removed(quarre::mapping*)));

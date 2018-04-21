@@ -4,6 +4,7 @@
 #include <score/application/ApplicationContext.hpp>
 #include <score/tools/IdentifierGeneration.hpp>
 #include <quarre/device/quarre-device.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
 
 using namespace score::addons;
 
@@ -26,32 +27,70 @@ quarre::interaction* quarre::ProcessModel::interaction() const
     return m_interactions[0];
 }
 
-void quarre::ProcessModel::startExecution()
+void quarre::ProcessModel::on_interaction_length_changed(int length)
 {
-    // get quarre-server-device singleton
-    // request potential user, who can use the requested sensors/gestures
+    qDebug() << parent()->objectName();
+    auto itv = qobject_cast<Scenario::IntervalModel*>(parent());
 
-    auto inter            = interaction();
-    auto qrdevice         = quarre::quarre_device::instance();
-
-    if ( !qrdevice )
+    if (!itv)
     {
-        qDebug() << "quarrè-server is not instantiated.. aborting";
+        qDebug() << "cast did not succeed";
         return;
     }
 
-    qrdevice->dispatch_incoming_interaction(inter);
+    TimeVal default_duration, max_duration;
+
+    if ( length == -1 )
+        max_duration = TimeVal::infinite();
+
+    else
+    {
+        default_duration = TimeVal::fromMsecs(
+                        length*1000 + interaction()->countdown()*1000 );
+        itv->duration.setDefaultDuration(default_duration);
+    }
+
+    itv->duration.setMaxDuration(max_duration);
+
+}
+
+void quarre::ProcessModel::on_interaction_countdown_changed(int duration)
+{
+    qDebug() << parent()->objectName();
+    auto itv = qobject_cast<Scenario::IntervalModel*>(parent());
+
+    if (!itv)
+    {
+        qDebug() << "cast did not succeed";
+        return;
+    }
+
+    TimeVal min_duration = TimeVal::fromMsecs(duration*1000);
+    TimeVal default_duration;
+
+    if ( interaction()->length() != -1 )
+    {
+        default_duration = TimeVal::fromMsecs(
+                    duration*1000+interaction()->length()*1000);
+
+        itv->duration.setDefaultDuration( default_duration );
+    }
+
+    itv->duration.setMinDuration( min_duration );
+}
+
+void quarre::ProcessModel::startExecution()
+{
+    // handled by executor
 }
 
 void quarre::ProcessModel::stopExecution()
 {
-    // end interaction
-
+    // handled by executor
 }
 
 void quarre::ProcessModel::reset()
 {
-    // ?
 
 }
 

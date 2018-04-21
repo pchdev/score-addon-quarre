@@ -18,7 +18,6 @@ quarre::interaction::interaction(
     m_description       ( "No description"),
     m_length            ( 0 ),
     m_countdown         ( 0 )
-
 {
 
 }

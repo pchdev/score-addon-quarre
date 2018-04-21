@@ -108,6 +108,8 @@ static const std::vector<std::pair<std::string,ossia::val_type>> g_user_tree =
 // --------------------------------------------------------------------------------------------
 static const std::vector<std::pair<std::string,ossia::val_type>> g_common_tree =
 {
+    { "/interaction/end", ossia::val_type::INT },
+
     { "/connections/ids", ossia::val_type::LIST },
     //! binding user id by ipv4 address
 
@@ -368,8 +370,8 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
 
     m_active_interaction = interaction;
 
-    auto p_act = get_parameter_from_string(m_user.m_address+"/interactions/next/next/begin");
-    p_act->set_value(interaction->to_list());
+    auto p_act = get_parameter_from_string(m_user.m_address+"/interactions/next/begin");
+    p_act->push_value(interaction->to_list());
 }
 
 
@@ -378,7 +380,7 @@ void quarre::user::interaction_hdl::set_incoming_interaction(quarre::interaction
     m_incoming_interaction = interaction;    
     auto p_inc = get_parameter_from_string(m_user.m_address+"/interactions/next/incoming");
 
-    p_inc->set_value(interaction->to_list());
+    p_inc->push_value(interaction->to_list());
 }
 
 void quarre::user::interaction_hdl::cancel_next_interaction(quarre::interaction* interaction)

@@ -44,6 +44,10 @@ class ProcessModel final : public Process::ProcessModel
 
     quarre::interaction* interaction() const;
 
+    public slots:
+    void on_interaction_countdown_changed(int duration);
+    void on_interaction_length_changed(int length);
+
     private: //-------------------------------------------------------------------
 
     std::vector<quarre::interaction*> m_interactions;
