@@ -4,6 +4,7 @@
 #include <ossia/ossia.hpp>
 #include <Engine/Protocols/OSSIADevice.hpp>
 #include <quarre/interaction/quarre-interaction.hpp>
+#include <QJSEngine>
 
 using namespace ossia::net;
 
@@ -107,6 +108,7 @@ class user // ----------------------------------------------------------- USER
         void resume_current_interaction ( quarre::interaction* interaction );
 
         protected:
+        QJSEngine m_js_engine;
         quarre::interaction* m_incoming_interaction;
         quarre::interaction* m_active_interaction;
         parptr_t m_active_countdown;

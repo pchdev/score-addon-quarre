@@ -5,7 +5,6 @@
 #include <quarre/panel/quarre-panel-delegate.hpp>
 #include <Device/Protocol/DeviceSettings.hpp>
 #include <utility>
-#include <QJSEngine>
 
 using namespace score::addons;
 using namespace ossia::net;
@@ -239,6 +238,7 @@ quarre::user::user(uint8_t id, generic_device& device) :
 
     auto gest_addr = m_address + "/gestures/";
     auto sens_addr = m_address + "/sensors/";
+    auto ctrl_addr = m_address + "/controllers/";
 
     // make user tree
     for ( const auto& parameter : g_user_tree )
@@ -258,6 +258,16 @@ quarre::user::user(uint8_t id, generic_device& device) :
         auto sens = new quarre::user::sensor(sens_addr + sensor.first, sensor.second, device);
         m_inputs.push_back(sens);
     }
+
+    for ( const auto& controller : g_controllers )
+    {
+        auto ctrl_name = std::get<0>(controller);
+        for ( int i = 0; i < std::get<1>(controller); ++i )
+        {
+            auto& node = ossia::net::create_node(device, ctrl_addr + std::to_string(i));
+            auto param = node.create_parameter(std::get<2>(controller));
+        }
+    }
 }
 
 std::string quarre::user::input::address()
@@ -269,8 +279,12 @@ bool quarre::user::supports_input(const std::string& target) const
 {
     for ( auto& input : m_inputs )
     {
-        std::string stripped_input = input->address();
-        stripped_input.erase(0, 7);
+        QString stripped_input = QString::fromStdString(input->address());
+        stripped_input.remove(0, 7);
+
+        if ( stripped_input.startsWith("/controllers"))
+            return true;
+
         qDebug() << stripped_input;
 
         if ( stripped_input == target )
@@ -393,22 +407,21 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
         QString source_fmt = mapping->source();
         source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
 
-        QString dest = mapping->destination();
-        auto p_input = get_parameter_from_string(source_fmt.toStdString());
-        auto p_output = get_parameter_from_string(dest.toStdString());
+        QString dest    = mapping->destination();
+        auto p_input    = get_parameter_from_string(source_fmt.toStdString());
+        auto p_output   = get_parameter_from_string(dest.toStdString());
 
         p_input->add_callback([&](const ossia::value& v) {
 
-            QJSEngine engine;
             QJSValueList arguments;
-            QJSValue fun = engine.evaluate(mapping->expression());
+            QJSValue fun = m_js_engine.evaluate(mapping->expression());
 
             switch (v.getType())
             {
             case ossia::val_type::BOOL: arguments << v.get<bool>(); break;
             case ossia::val_type::INT: arguments << v.get<int>(); break;
             case ossia::val_type::FLOAT: arguments << v.get<float>(); break;
-            case ossia::val_type::STRING: arguments << v.get<std::string>() break;
+            case ossia::val_type::STRING: arguments << QString::fromStdString(v.get<std::string>()); break;
             case ossia::val_type::LIST: arguments << v.get<std::vector<ossia::value>>(); break;
             case ossia::val_type::VEC2F: arguments << v.get<ossia::vec2f>(); break;
             case ossia::val_type::VEC3F: arguments << v.get<ossia::vec3f>(); break;
@@ -424,7 +437,7 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
             case ossia::val_type::INT: p_output->push_value(result.toInt()); break;
             case ossia::val_type::FLOAT: p_output->push_value(result.toNumber()); break;
             case ossia::val_type::STRING: p_output->push_value(result.toString().toStdString()); break;
-            case ossia::val_type::LIST: break;
+            case ossia::val_type::LIST: break; // non-priority for Reaper
             case ossia::val_type::VEC2F: break;
             case ossia::val_type::VEC3F: break;
             case ossia::val_type::VEC4F: break;
