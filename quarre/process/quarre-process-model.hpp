@@ -5,6 +5,12 @@
 #include <quarre/interaction/quarre-interaction.hpp>
 #include <score/model/EntityMap.hpp>
 
+#include <Scenario/Document/State/StateModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
+#include <Scenario/Document/Event/EventModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
+#include <Scenario/Process/ScenarioModel.hpp>
+
 namespace score     {
 namespace addons    {
 namespace quarre    {
@@ -44,9 +50,11 @@ class ProcessModel final : public Process::ProcessModel
 
     quarre::interaction* interaction() const;
 
-    public slots:
-    void on_interaction_countdown_changed(int duration);
-    void on_interaction_length_changed(int length);
+    Scenario::IntervalModel&    interval            ( ) const;
+    Scenario::EventModel&       start_event         ( ) const;
+    Scenario::EventModel&       end_event           ( ) const;
+    Scenario::TimeSyncModel&    end_tsync           ( ) const;
+    Scenario::ProcessModel&     parent_scenario     ( ) const;
 
     private: //-------------------------------------------------------------------
 
@@ -68,6 +76,14 @@ class ProcessModel final : public Process::ProcessModel
     virtual void setDurationAndScale    ( const TimeVal &newDuration ) override;
     virtual void setDurationAndGrow     ( const TimeVal &newDuration ) override;
     virtual void setDurationAndShrink   ( const TimeVal& newDuration ) override;
+
+
+
+    Scenario::IntervalModel*    m_interval;
+    Scenario::EventModel*       m_end_event;
+    Scenario::TimeSyncModel*    m_end_tsync;
+    Scenario::ProcessModel*     m_parent_scenario;
+    Scenario::EventModel*       m_start_event;
 };
 
 }

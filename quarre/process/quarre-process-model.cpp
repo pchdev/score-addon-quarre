@@ -4,7 +4,7 @@
 #include <score/application/ApplicationContext.hpp>
 #include <score/tools/IdentifierGeneration.hpp>
 #include <quarre/device/quarre-device.hpp>
-#include <Scenario/Document/Interval/IntervalModel.hpp>
+
 
 using namespace score::addons;
 
@@ -15,6 +15,16 @@ quarre::ProcessModel::ProcessModel(
 {
     metadata().setInstanceName<quarre::ProcessModel>(*this);
     m_interactions.push_back(new quarre::interaction(getStrongId(m_interactions), this));
+
+    // get elements for inspector use
+    m_interval = qobject_cast<Scenario::IntervalModel*>(parent);
+    m_parent_scenario = qobject_cast<Scenario::ProcessModel*>(m_interval->parent());
+
+    auto& start_state = m_parent_scenario->state    ( m_interval->startState());
+    auto& end_state = m_parent_scenario->state      ( m_interval->endState() );
+    m_end_event = &m_parent_scenario->event         ( end_state.eventId() );
+    m_end_tsync = &m_parent_scenario->timeSync      ( m_end_event->timeSync() );
+    m_start_event = &m_parent_scenario->event       ( start_state.eventId());
 }
 
 QString quarre::ProcessModel::prettyName() const
@@ -27,56 +37,29 @@ quarre::interaction* quarre::ProcessModel::interaction() const
     return m_interactions[0];
 }
 
-void quarre::ProcessModel::on_interaction_length_changed(int length)
+Scenario::IntervalModel& quarre::ProcessModel::interval() const
 {
-    qDebug() << parent()->objectName();
-    auto itv = qobject_cast<Scenario::IntervalModel*>(parent());
-
-    if (!itv)
-    {
-        qDebug() << "cast did not succeed";
-        return;
-    }
-
-    TimeVal default_duration, max_duration;
-
-    if ( length == -1 )
-        max_duration = TimeVal::infinite();
-
-    else
-    {
-        default_duration = TimeVal::fromMsecs(
-                        length*1000 + interaction()->countdown()*1000 );
-        itv->duration.setDefaultDuration(default_duration);
-    }
-
-    itv->duration.setMaxDuration(max_duration);
-
+    return *m_interval;
 }
 
-void quarre::ProcessModel::on_interaction_countdown_changed(int duration)
+Scenario::EventModel& quarre::ProcessModel::start_event() const
 {
-    qDebug() << parent()->objectName();
-    auto itv = qobject_cast<Scenario::IntervalModel*>(parent());
+    return *m_start_event;
+}
 
-    if (!itv)
-    {
-        qDebug() << "cast did not succeed";
-        return;
-    }
+Scenario::EventModel& quarre::ProcessModel::end_event() const
+{
+    return *m_end_event;
+}
 
-    TimeVal min_duration = TimeVal::fromMsecs(duration*1000);
-    TimeVal default_duration;
+Scenario::TimeSyncModel& quarre::ProcessModel::end_tsync() const
+{
+    return *m_end_tsync;
+}
 
-    if ( interaction()->length() != -1 )
-    {
-        default_duration = TimeVal::fromMsecs(
-                    duration*1000+interaction()->length()*1000);
-
-        itv->duration.setDefaultDuration( default_duration );
-    }
-
-    itv->duration.setMinDuration( min_duration );
+Scenario::ProcessModel& quarre::ProcessModel::parent_scenario() const
+{
+    return *m_parent_scenario;
 }
 
 void quarre::ProcessModel::startExecution()

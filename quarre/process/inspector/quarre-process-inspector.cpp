@@ -4,6 +4,18 @@
 #include <QFormLayout>
 #include <QVBoxLayout>
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
+#include <Scenario/Commands/Interval/SetMaxDuration.hpp>
+#include <Scenario/Commands/Interval/SetMinDuration.hpp>
+#include <Scenario/Commands/Scenario/Displacement/MoveEvent.hpp>
+#include <Scenario/Commands/Scenario/Displacement/MoveEventMeta.hpp>
+#include <Scenario/Document/BaseScenario/BaseScenario.hpp>
+#include <Scenario/Document/State/StateModel.hpp>
+#include <Scenario/Document/Interval/IntervalModel.hpp>
+#include <Scenario/Document/Event/EventModel.hpp>
+#include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
+#include <Scenario/Process/ScenarioModel.hpp>
+
+#include <score/tools/Todo.hpp>
 
 using namespace score::addons;
 
@@ -112,11 +124,13 @@ void quarre::mapping_view::set_expression(const QString &expression)
     m_expression->setPlainText(expression);
 }
 
-quarre::InspectorWidget::InspectorWidget(const ProcessModel &object,
+quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
         const score::DocumentContext &ctx, QWidget *parent) :
 
     InspectorWidgetDelegate_T   ( object, parent ),
     m_dispatcher                ( ctx.commandStack ),
+
+    m_quarre_process    ( object ),
     m_layout            ( new QVBoxLayout(this) ),
     m_module            ( new QLineEdit ( object.interaction()->module())),
     m_title             ( new QLineEdit ( object.interaction()->title())),
@@ -163,11 +177,44 @@ quarre::InspectorWidget::InspectorWidget(const ProcessModel &object,
     connect(m_countdown, SIGNAL(valueChanged(int)), m_interaction, SLOT(onCountdownChanged(int)));
     connect(plusb, SIGNAL(released()), m_interaction, SLOT(on_mapping_added()));
 
-    connect(m_length, SIGNAL(valueChanged(int)), &object, SLOT(on_interaction_length_changed(int)));
-    connect(m_countdown, SIGNAL(valueChanged(int)), &object, SLOT(on_interaction_countdown_changed(int)));
+    connect(m_length, SIGNAL(valueChanged(int)), this, SLOT(update(int)));
+    connect(m_countdown, SIGNAL(valueChanged(int)), this, SLOT(update(int)));
 
     connect( m_interaction, SIGNAL(mapping_added(quarre::mapping&)), this, SLOT(on_mapping_added(quarre::mapping&)));
     connect( this, SIGNAL(mappingDeleteRequest(quarre::mapping*)), m_interaction, SLOT(on_mapping_removed(quarre::mapping*)));
+
+    auto& itv = object.interval();
+    itv.duration.setRigid           ( false );
+    itv.duration.setMinNull         ( true );
+    itv.duration.setMaxInfinite     ( true );
+
+}
+
+void quarre::InspectorWidget::update(int)
+{
+    auto& interval      = m_quarre_process.interval();
+    auto length         = m_quarre_process.interaction()->length()*1000;
+    auto countdown      = m_quarre_process.interaction()->countdown()*1000;
+    auto start_date     = m_quarre_process.start_event().date().msec();
+
+    auto min_dur        = TimeVal::fromMsecs(countdown);
+    auto max_dur        = TimeVal::fromMsecs(length);
+    auto end_date       = TimeVal::fromMsecs(start_date+length+countdown);
+
+    auto cmd_min = new Scenario::Command::SetMinDuration(interval, min_dur, false);
+    auto cmd_max = new Scenario::Command::SetMaxDuration(interval, max_dur, false);
+
+    auto cmd_default = new Scenario::Command::MoveEventMeta(
+                m_quarre_process.parent_scenario(),
+                m_quarre_process.end_event().id(),
+                end_date,
+                interval.heightPercentage(),
+                ExpandMode::GrowShrink,
+                LockMode::Free );
+
+    m_dispatcher.submitCommand(cmd_default);
+    m_dispatcher.submitCommand(cmd_min);
+    m_dispatcher.submitCommand(cmd_max);
 
 }
 
