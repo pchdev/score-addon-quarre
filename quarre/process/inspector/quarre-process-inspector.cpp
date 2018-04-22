@@ -165,7 +165,8 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     form->addRow ( tr ("Module"), m_module );
     form->addRow ( tr ("Length"), m_length );
     form->addRow ( tr ("Countdown"), m_countdown);
-    form->addRow ( tr ("Ending"), m_end_expression );
+    form->addRow ( tr ("Ending source"), m_end_expression_source);
+    form->addRow ( tr ("Expression"), m_end_expression );
 
     auto plusb = new QPushButton("+");
 

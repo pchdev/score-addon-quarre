@@ -161,6 +161,7 @@ template <> void DataStreamReader::read(
     m_stream << e.description();
     m_stream << e.length();
     m_stream << e.countdown();
+    m_stream << e.end_expression_source();
     m_stream << e.end_expression();
 
     m_stream << (qint64) e.m_mappings.size();
@@ -175,7 +176,12 @@ template <> void DataStreamWriter::write(
 {
     int msz;
 
-    m_stream >> e.m_module >> e.m_title >> e.m_description >> e.m_length >> e.m_countdown >> e.m_end_expression;
+    m_stream    >> e.m_module >> e.m_title
+                >> e.m_description >> e.m_length
+                >> e.m_countdown
+                >> e.m_end_expression_source
+                >> e.m_end_expression;
+
     m_stream >> msz;
 
     for (; msz-- >0;)
@@ -196,19 +202,21 @@ template <> void JSONObjectReader::read(
     obj [ "Description" ]   = e.description();
     obj [ "Length" ]        = e.length();
     obj [ "Countdown" ]     = e.countdown();
-    obj [ "EndExpression" ] = e.end_expression();
+    obj [ "Expr" ]          = e.end_expression();
+    obj [ "ExprSrc" ]       = e.end_expression_source();
     obj [ "Mappings" ]      = toJsonArray(e.m_mappings);
 }
 
 template <> void JSONObjectWriter::write(
         quarre::interaction& e )
 {
-    e.m_module =         obj [ "Module" ].toString();
-    e.m_title =          obj [ "Title" ].toString();
-    e.m_description =    obj [ "Description"].toString();
-    e.m_length =         obj [ "Length"].toInt();
-    e.m_countdown =      obj [ "Countdown" ].toInt();
-    e.m_end_expression = obj [ "EndExpression" ].toString();
+    e.m_module                  = obj [ "Module" ].toString();
+    e.m_title                   = obj [ "Title" ].toString();
+    e.m_description             = obj [ "Description"].toString();
+    e.m_length                  = obj [ "Length"].toInt();
+    e.m_countdown               = obj [ "Countdown" ].toInt();
+    e.m_end_expression          = obj [ "Expr" ].toString();
+    e.m_end_expression_source   = obj [ "ExprSrc" ].toString();
 
     for ( const auto& json_vref : obj ["Mappings"].toArray())
     {
