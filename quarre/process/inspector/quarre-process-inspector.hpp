@@ -81,12 +81,13 @@ class InspectorWidget final :
 
     signals:
     void mappingDeleteRequest( quarre::mapping* );
+    void address_changed ( QString );
 
     public slots:
-    void update        ( int );
-
-    void on_mapping_added   ( quarre::mapping& mapping );
-    void on_mapping_removed ( quarre::mapping* mapping );
+    void update                 ( int );
+    void on_address_changed     ( Device::FullAddressAccessorSettings );
+    void on_mapping_added       ( quarre::mapping& mapping );
+    void on_mapping_removed     ( quarre::mapping* mapping );
 
     private: //---------------------------------------------------------
 

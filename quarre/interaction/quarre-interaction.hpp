@@ -32,11 +32,12 @@ class interaction final : public IdentifiedObject<interaction>
         vis.writeTo(*this);
     }
 
-    const QString module        () const;
-    const QString title         () const;
-    const QString description   () const;
-    int length                  () const;
-    int countdown               () const;
+    const QString module            () const;
+    const QString title             () const;
+    const QString description       () const;
+    const QString end_expression    () const;
+    int length                      () const;
+    int countdown                   () const;
 
     std::vector<ossia::value> to_list() const;
 
@@ -48,11 +49,12 @@ class interaction final : public IdentifiedObject<interaction>
     void mapping_removed    ( quarre::mapping& mapping );
 
     public slots: //-----------------------------------------------
-    void onModuleChanged            ( QString module );
-    void onTitleChanged             ( QString title );
-    void onDescriptionChanged       ( QString description );
-    void onLengthChanged            ( int length );
-    void onCountdownChanged         ( int countdown );
+    void on_module_changed            ( QString module );
+    void on_title_changed             ( QString title );
+    void on_description_changed       ( QString description );
+    void on_length_changed            ( int length );
+    void on_countdown_changed         ( int countdown );
+    void on_end_expression_changed    ( QString expression );
 
     void on_mapping_added          ( );
     void on_mapping_removed        ( quarre::mapping* mapping );
@@ -61,6 +63,7 @@ class interaction final : public IdentifiedObject<interaction>
     QString         m_module;
     QString         m_title;
     QString         m_description;
+    QString         m_end_expression;
     int             m_length;
     int             m_countdown;
 

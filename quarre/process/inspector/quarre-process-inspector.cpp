@@ -140,10 +140,14 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     m_dctx              ( ctx )
 {
 
+    m_interaction = object.interaction();
+
     auto& explorer      = ctx.plugin<Explorer::DeviceDocumentPlugin>().explorer();
     m_end_expression    = new Explorer::AddressAccessorEditWidget(explorer, this);
 
-    m_interaction = object.interaction();
+    State::AddressAccessor ahem;
+    auto addr = m_interaction->end_expression();
+    m_end_expression->setAddress(State::AddressAccessor::fromString(addr).value_or(ahem));
 
     m_length->setValue      ( m_interaction->length() );
     m_length->setRange      ( 0, 999 );
@@ -170,11 +174,13 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     for ( quarre::mapping* mapping : m_interaction->mappings() )
         on_mapping_added(*mapping);
 
-    connect(m_title, SIGNAL(textChanged(QString)), m_interaction, SLOT(onTitleChanged(QString)));
-    connect(m_description, SIGNAL(textChanged(QString)), m_interaction, SLOT(onDescriptionChanged(QString)));
-    connect(m_module, SIGNAL(textChanged(QString)), m_interaction, SLOT(onModuleChanged(QString)));
-    connect(m_length, SIGNAL(valueChanged(int)), m_interaction, SLOT(onLengthChanged(int)));
-    connect(m_countdown, SIGNAL(valueChanged(int)), m_interaction, SLOT(onCountdownChanged(int)));
+    connect(m_title, SIGNAL(textChanged(QString)), m_interaction, SLOT(on_title_changed(QString)));
+    connect(m_description, SIGNAL(textChanged(QString)), m_interaction, SLOT(on_description_changed(QString)));
+    connect(m_module, SIGNAL(textChanged(QString)), m_interaction, SLOT(on_module_changed(QString)));
+    connect(m_length, SIGNAL(valueChanged(int)), m_interaction, SLOT(on_length_changed(int)));
+    connect(m_countdown, SIGNAL(valueChanged(int)), m_interaction, SLOT(on_countdown_changed(int)));
+    connect(m_end_expression, SIGNAL(addressChanged(Device::FullAddressAccessorSettings)), this, SLOT (on_address_changed(Device::FullAddressAccessorSettings)));
+    connect(this, SIGNAL(address_changed(QString)), m_interaction, SLOT(on_end_expression_changed(QString)));
     connect(plusb, SIGNAL(released()), m_interaction, SLOT(on_mapping_added()));
 
     connect(m_length, SIGNAL(valueChanged(int)), this, SLOT(update(int)));
@@ -183,6 +189,11 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     connect( m_interaction, SIGNAL(mapping_added(quarre::mapping&)), this, SLOT(on_mapping_added(quarre::mapping&)));
     connect( this, SIGNAL(mappingDeleteRequest(quarre::mapping*)), m_interaction, SLOT(on_mapping_removed(quarre::mapping*)));
 
+}
+
+void quarre::InspectorWidget::on_address_changed(Device::FullAddressAccessorSettings address)
+{
+    emit address_changed(address.address.toString());
 }
 
 void quarre::InspectorWidget::update(int)

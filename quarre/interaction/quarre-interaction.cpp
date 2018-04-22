@@ -68,29 +68,39 @@ QStringList quarre::interaction::inputs() const
     return res;
 }
 
-void quarre::interaction::onModuleChanged(QString module)
+void quarre::interaction::on_module_changed(QString module)
 {
     m_module = module;
 }
 
-void quarre::interaction::onTitleChanged(QString title)
+void quarre::interaction::on_title_changed(QString title)
 {
     m_title = title;
 }
 
-void quarre::interaction::onDescriptionChanged(QString description)
+void quarre::interaction::on_description_changed(QString description)
 {
     m_description = description;
 }
 
-void quarre::interaction::onLengthChanged(int length)
+void quarre::interaction::on_length_changed(int length)
 {
     m_length = length;
 }
 
-void quarre::interaction::onCountdownChanged(int countdown)
+void quarre::interaction::on_countdown_changed(int countdown)
 {
     m_countdown = countdown;
+}
+
+void quarre::interaction::on_end_expression_changed(QString expression)
+{
+    m_end_expression = expression;
+}
+
+const QString quarre::interaction::end_expression() const
+{
+    return m_end_expression;
 }
 
 const QString quarre::interaction::module() const
@@ -126,6 +136,7 @@ template <> void DataStreamReader::read(
     m_stream << e.description();
     m_stream << e.length();
     m_stream << e.countdown();
+    m_stream << e.end_expression();
 
     m_stream << (qint64) e.m_mappings.size();
     for ( const auto& mapping : e.m_mappings )
@@ -139,7 +150,7 @@ template <> void DataStreamWriter::write(
 {
     int msz;
 
-    m_stream >> e.m_module >> e.m_title >> e.m_description >> e.m_length >> e.m_countdown;
+    m_stream >> e.m_module >> e.m_title >> e.m_description >> e.m_length >> e.m_countdown >> e.m_end_expression;
     m_stream >> msz;
 
     for (; msz-- >0;)
@@ -160,6 +171,7 @@ template <> void JSONObjectReader::read(
     obj [ "Description" ]   = e.description();
     obj [ "Length" ]        = e.length();
     obj [ "Countdown" ]     = e.countdown();
+    obj [ "EndExpression" ] = e.end_expression();
     obj [ "Mappings" ]      = toJsonArray(e.m_mappings);
 }
 
@@ -171,6 +183,7 @@ template <> void JSONObjectWriter::write(
     e.m_description =    obj [ "Description"].toString();
     e.m_length =         obj [ "Length"].toInt();
     e.m_countdown =      obj [ "Countdown" ].toInt();
+    e.m_end_expression = obj [ "EndExpression" ].toString();
 
     for ( const auto& json_vref : obj ["Mappings"].toArray())
     {
