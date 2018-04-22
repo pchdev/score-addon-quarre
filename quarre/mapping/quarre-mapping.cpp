@@ -13,7 +13,7 @@ quarre::mapping::mapping(
 
     IdentifiedObject    ( id, "quarrè-mapping", parent )
 {
-    m_expression = "( function(v, dest) { dest[\"value\"] = v; } )";
+    m_expression = "( function(v) \n{\n return v; \n} \n)";
 }
 
 const QString quarre::mapping::source() const

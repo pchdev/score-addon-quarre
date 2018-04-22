@@ -5,6 +5,7 @@
 #include <quarre/panel/quarre-panel-delegate.hpp>
 #include <Device/Protocol/DeviceSettings.hpp>
 #include <utility>
+#include <QJSEngine>
 
 using namespace score::addons;
 using namespace ossia::net;
@@ -43,6 +44,18 @@ static const std::vector<std::pair<std::string,std::vector<pdata_t>>> g_sensors 
           { "z", ossia::val_type::FLOAT }}},
     { "proximity", {
           { "close", ossia::val_type::BOOL }}}
+};
+
+// --------------------------------------------------------------------------------------------
+// USER_GRAPHIC_CONTROLLERS
+// --------------------------------------------------------------------------------------------
+
+static const std::vector<std::tuple<std::string,uint8_t,ossia::val_type>> g_controllers =
+{
+    { "pads", 16, ossia::val_type::BOOL },
+    { "sliders", 4, ossia::val_type::FLOAT },
+    { "xy", 1, ossia::val_type::VEC2F },
+    { "strings", 1, ossia::val_type::LIST }
 };
 
 // --------------------------------------------------------------------------------------------
@@ -372,8 +385,55 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
 
     auto p_act = get_parameter_from_string(m_user.m_address+"/interactions/next/begin");
     p_act->push_value(interaction->to_list());
-}
 
+    // now parsing mappings
+
+    for ( const auto& mapping : interaction->mappings())
+    {
+        QString source_fmt = mapping->source();
+        source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
+
+        QString dest = mapping->destination();
+        auto p_input = get_parameter_from_string(source_fmt.toStdString());
+        auto p_output = get_parameter_from_string(dest.toStdString());
+
+        p_input->add_callback([&](const ossia::value& v) {
+
+            QJSEngine engine;
+            QJSValueList arguments;
+            QJSValue fun = engine.evaluate(mapping->expression());
+
+            switch (v.getType())
+            {
+            case ossia::val_type::BOOL: arguments << v.get<bool>(); break;
+            case ossia::val_type::INT: arguments << v.get<int>(); break;
+            case ossia::val_type::FLOAT: arguments << v.get<float>(); break;
+            case ossia::val_type::STRING: arguments << v.get<std::string>() break;
+            case ossia::val_type::LIST: arguments << v.get<std::vector<ossia::value>>(); break;
+            case ossia::val_type::VEC2F: arguments << v.get<ossia::vec2f>(); break;
+            case ossia::val_type::VEC3F: arguments << v.get<ossia::vec3f>(); break;
+            case ossia::val_type::VEC4F: arguments << v.get<ossia::vec4f>(); break;
+            case ossia::val_type::CHAR: arguments << v.get<char>(); break;
+            }
+
+            QJSValue result = fun.call(arguments);
+
+            switch ( p_output->get_value_type())
+            {
+            case ossia::val_type::BOOL: p_output->push_value(result.toBool()); break;
+            case ossia::val_type::INT: p_output->push_value(result.toInt()); break;
+            case ossia::val_type::FLOAT: p_output->push_value(result.toNumber()); break;
+            case ossia::val_type::STRING: p_output->push_value(result.toString().toStdString()); break;
+            case ossia::val_type::LIST: break;
+            case ossia::val_type::VEC2F: break;
+            case ossia::val_type::VEC3F: break;
+            case ossia::val_type::VEC4F: break;
+            case ossia::val_type::IMPULSE: p_output->push_value(ossia::impulse{}); break;
+            case ossia::val_type::CHAR: p_output->push_value(result.toString().toStdString().c_str());
+            }
+        });
+    }
+}
 
 void quarre::user::interaction_hdl::set_incoming_interaction(quarre::interaction* interaction)
 {
@@ -390,7 +450,19 @@ void quarre::user::interaction_hdl::cancel_next_interaction(quarre::interaction*
 
 void quarre::user::interaction_hdl::stop_current_interaction(quarre::interaction* interaction)
 {
+    // TODO!
     m_active_interaction = 0;
+    auto p_end = get_parameter_from_string(m_user.m_address+"/interactions/current/end");
+    p_end->set_value ( ossia::impulse{} );
+
+    for ( const auto& mapping : interaction->mappings())
+    {
+        QString source_fmt = mapping->source();
+        source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
+
+        auto p_input = get_parameter_from_string(source_fmt.toStdString());
+        p_input->callbacks_clear();
+    }
 }
 
 void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction* interaction)
@@ -399,6 +471,15 @@ void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction*
 
     auto p_end = get_parameter_from_string(m_user.m_address+"/interactions/current/end");
     p_end->set_value ( ossia::impulse{} );
+
+    for ( const auto& mapping : interaction->mappings())
+    {
+        QString source_fmt = mapping->source();
+        source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
+
+        auto p_input = get_parameter_from_string(source_fmt.toStdString());
+        p_input->callbacks_clear();
+    }
 }
 
 void quarre::user::interaction_hdl::pause_current_interaction(quarre::interaction* interaction)
