@@ -25,6 +25,13 @@ quarre::ProcessModel::ProcessModel(
     m_end_event = &m_parent_scenario->event         ( end_state.eventId() );
     m_end_tsync = &m_parent_scenario->timeSync      ( m_end_event->timeSync() );
     m_start_event = &m_parent_scenario->event       ( start_state.eventId());
+
+    m_interval->duration.setRigid           ( false );
+    m_interval->duration.setMinNull         ( true );
+    m_interval->duration.setMaxInfinite     ( true );
+
+    m_end_tsync->setActive(true);
+    m_end_tsync->setExpression(State::defaultFalseExpression());
 }
 
 QString quarre::ProcessModel::prettyName() const

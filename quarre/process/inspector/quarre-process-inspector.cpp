@@ -183,11 +183,6 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     connect( m_interaction, SIGNAL(mapping_added(quarre::mapping&)), this, SLOT(on_mapping_added(quarre::mapping&)));
     connect( this, SIGNAL(mappingDeleteRequest(quarre::mapping*)), m_interaction, SLOT(on_mapping_removed(quarre::mapping*)));
 
-    auto& itv = object.interval();
-    itv.duration.setRigid           ( false );
-    itv.duration.setMinNull         ( true );
-    itv.duration.setMaxInfinite     ( true );
-
 }
 
 void quarre::InspectorWidget::update(int)
@@ -198,7 +193,7 @@ void quarre::InspectorWidget::update(int)
     auto start_date     = m_quarre_process.start_event().date().msec();
 
     auto min_dur        = TimeVal::fromMsecs(countdown);
-    auto max_dur        = TimeVal::fromMsecs(length);
+    auto max_dur        = TimeVal::fromMsecs(length+countdown);
     auto end_date       = TimeVal::fromMsecs(start_date+length+countdown);
 
     auto cmd_min = new Scenario::Command::SetMinDuration(interval, min_dur, false);
