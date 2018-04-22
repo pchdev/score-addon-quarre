@@ -100,7 +100,8 @@ class InspectorWidget final :
     QSpinBox*          m_countdown;
     QVBoxLayout*       m_layout;
 
-    Explorer::AddressAccessorEditWidget* m_end_expression;
+    QLineEdit* m_end_expression;
+    Explorer::AddressAccessorEditWidget* m_end_expression_source;
 
     QVector<quarre::mapping_view*> m_mapping_views;
     const score::DocumentContext& m_dctx;

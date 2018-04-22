@@ -34,6 +34,21 @@ quarre::ProcessModel::ProcessModel(
     m_end_tsync->setExpression(State::defaultFalseExpression());
 }
 
+
+ossia::time_sync& quarre::ProcessModel::get_ossia_tsync() const
+{
+    auto base = dynamic_cast<Engine::Execution::IntervalComponentBase*>(m_interval_component);
+    auto itv = base->OSSIAInterval();
+    auto& tsync = itv->get_end_event().get_time_sync();
+
+    return tsync;
+}
+
+void quarre::ProcessModel::set_interval_component(Engine::Execution::IntervalComponent &component)
+{
+    m_interval_component = &component;
+}
+
 QString quarre::ProcessModel::prettyName() const
 {
     return tr ( "quarre-process" );

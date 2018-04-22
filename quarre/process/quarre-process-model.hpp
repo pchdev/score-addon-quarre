@@ -10,6 +10,7 @@
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
+#include <Engine/Executor/IntervalComponent.hpp>
 
 namespace score     {
 namespace addons    {
@@ -21,8 +22,6 @@ class ProcessModel final : public Process::ProcessModel
 {
     SCORE_SERIALIZE_FRIENDS
     PROCESS_METADATA_IMPL       ( score::addons::quarre::ProcessModel )
-
-    //Q_PROPERTY      ( )
 
     Q_OBJECT
 
@@ -56,6 +55,9 @@ class ProcessModel final : public Process::ProcessModel
     Scenario::TimeSyncModel&    end_tsync           ( ) const;
     Scenario::ProcessModel&     parent_scenario     ( ) const;
 
+    void set_interval_component ( Engine::Execution::IntervalComponent& component );
+    ossia::time_sync& get_ossia_tsync() const;
+
     private: //-------------------------------------------------------------------
 
     std::vector<quarre::interaction*> m_interactions;
@@ -77,13 +79,12 @@ class ProcessModel final : public Process::ProcessModel
     virtual void setDurationAndGrow     ( const TimeVal &newDuration ) override;
     virtual void setDurationAndShrink   ( const TimeVal& newDuration ) override;
 
-
-
     Scenario::IntervalModel*    m_interval;
     Scenario::EventModel*       m_end_event;
     Scenario::TimeSyncModel*    m_end_tsync;
     Scenario::ProcessModel*     m_parent_scenario;
-    Scenario::EventModel*       m_start_event;
+    Scenario::EventModel*       m_start_event;    
+    Engine::Execution::IntervalComponent* m_interval_component;
 };
 
 }

@@ -16,10 +16,18 @@ quarre::interaction::interaction(
     m_module            ( "No selected module"),
     m_title             ( "Untitled"),
     m_description       ( "No description"),
+    m_end_expression    ( "return true;"),
     m_length            ( 0 ),
     m_countdown         ( 0 )
 {
 
+}
+
+
+ossia::time_sync& quarre::interaction::get_ossia_tsync() const
+{
+    auto model = qobject_cast<quarre::ProcessModel*>(parent());
+    return model->get_ossia_tsync();
 }
 
 void quarre::interaction::on_mapping_added()
@@ -96,6 +104,23 @@ void quarre::interaction::on_countdown_changed(int countdown)
 void quarre::interaction::on_end_expression_changed(QString expression)
 {
     m_end_expression = expression;
+}
+
+void quarre::interaction::on_end_expression_source_changed(QString source)
+{
+    m_end_expression_source = source;
+}
+
+const QString quarre::interaction::end_expression_source() const
+{
+    return m_end_expression_source;
+}
+
+const QString quarre::interaction::end_expression_js() const
+{
+    QString expr = m_end_expression;
+    expr.prepend("(function(v){").append("})");
+    return expr;
 }
 
 const QString quarre::interaction::end_expression() const

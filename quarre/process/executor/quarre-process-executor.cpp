@@ -15,7 +15,7 @@ quarre::ProcessExecutor::ProcessExecutor(const Device::DeviceList& list,
     m_interval(interval),
     m_model(model)
 {
-
+    model.set_interval_component(interval);
 }
 
 void quarre::ProcessExecutor::start(ossia::state &st)
@@ -31,10 +31,6 @@ void quarre::ProcessExecutor::start(ossia::state &st)
     }
 
     qrdevice->dispatch_incoming_interaction(inter);
-
-    //uto& bla = m_interval.scoreInterval().duration.setDefaultDuration();
-    //auto& bla = m_interval.scoreInterval().duration.setMinDuration();
-    //auto& bla = m_interval.scoreInterval().duration.setMaxDuration();
 
 }
 
@@ -67,15 +63,6 @@ ossia::state_element quarre::ProcessExecutor::state(ossia::time_value date, doub
         auto dev = quarre::quarre_device::instance();
         dev->dispatch_active_interaction(m_model.interaction());
     }
-
-    /*qDebug() << date;
-    if ( pos >= 0.5 && pos <= 0.51)
-    {
-        ossia::state st;
-        auto& end_event = m_interval.OSSIAInterval()->get_end_event();
-        auto& end_tsync = end_event.get_time_sync();
-        end_tsync.trigger_request = true;
-    }*/
 
     return {};
 }
