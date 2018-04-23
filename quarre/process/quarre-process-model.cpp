@@ -16,8 +16,18 @@ quarre::ProcessModel::ProcessModel(
     metadata().setInstanceName<quarre::ProcessModel>(*this);
     m_interactions.push_back(new quarre::interaction(getStrongId(m_interactions), this));
 
-    // get elements for inspector use
-    m_interval = qobject_cast<Scenario::IntervalModel*>(parent);
+    init();
+    m_interval->duration.setRigid           ( false );
+    m_interval->duration.setMinNull         ( true );
+    m_interval->duration.setMaxInfinite     ( true );
+
+    m_end_tsync->setActive                  ( true );
+    m_end_tsync->setExpression              ( State::defaultFalseExpression() );
+}
+
+void quarre::ProcessModel::init()
+{
+    m_interval = qobject_cast<Scenario::IntervalModel*>(parent());
     m_parent_scenario = qobject_cast<Scenario::ProcessModel*>(m_interval->parent());
 
     auto& start_state = m_parent_scenario->state    ( m_interval->startState());
@@ -25,13 +35,6 @@ quarre::ProcessModel::ProcessModel(
     m_end_event = &m_parent_scenario->event         ( end_state.eventId() );
     m_end_tsync = &m_parent_scenario->timeSync      ( m_end_event->timeSync() );
     m_start_event = &m_parent_scenario->event       ( start_state.eventId());
-
-    m_interval->duration.setRigid           ( false );
-    m_interval->duration.setMinNull         ( true );
-    m_interval->duration.setMaxInfinite     ( true );
-
-    m_end_tsync->setActive(true);
-    m_end_tsync->setExpression(State::defaultFalseExpression());
 }
 
 
@@ -151,6 +154,7 @@ template <> void DataStreamReader::read(
 template <> void DataStreamWriter::write(
         quarre::ProcessModel& process )
 {   
+    process.m_interactions.push_back(new quarre::interaction(getStrongId(process.m_interactions), &process));
     writeTo<quarre::interaction>(*process.interaction());
     checkDelimiter();
 }
@@ -165,8 +169,8 @@ template <> void JSONObjectWriter::write(
         quarre::ProcessModel& process )
 {        
     auto json_obj = obj [ "Interaction" ].toObject();
-
     JSONObject::Deserializer deserializer ( json_obj );
+
     process.m_interactions.push_back(new quarre::interaction(deserializer, &process));
 }
 

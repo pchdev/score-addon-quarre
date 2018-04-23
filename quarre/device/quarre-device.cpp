@@ -225,11 +225,11 @@ quarre::user::sensor::sensor(std::string addr, std::vector<pdata_t> data, generi
 {
     for ( const auto& d : data )
     {
-        auto& ndata     = ossia::net::create_node(device, m_addr + d.first + "/data/");
+        auto& ndata     = ossia::net::create_node(device, m_addr + "/" + d.first + "/data");
         auto pdata      = ndata.create_parameter(d.second);
 
-        auto& ndata     = ossia::net::create_node(device, m_addr + d.first + "/poll/");
-        auto pdata      = ndata.create_parameter(ossia::val_type::BOOL);
+        auto& n_active     = ossia::net::create_node(device, m_addr + "/" + d.first + "/poll");
+        auto p_active      = n_active.create_parameter(ossia::val_type::BOOL);
     }
 }
 

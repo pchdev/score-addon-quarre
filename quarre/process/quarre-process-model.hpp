@@ -34,6 +34,8 @@ class ProcessModel final : public Process::ProcessModel
     ProcessModel(impl& vis, QObject* parent) :
         Process::ProcessModel(vis, parent)
     {
+        // get elements for inspector use
+        init();
         vis.writeTo(*this);
     }
 
@@ -46,6 +48,8 @@ class ProcessModel final : public Process::ProcessModel
     {
 
     }
+
+    void init   ( );
 
     quarre::interaction* interaction() const;
 
