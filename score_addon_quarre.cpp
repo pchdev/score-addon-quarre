@@ -54,7 +54,6 @@ std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_quarre::factories
             FW<Engine::Execution::ProcessComponentFactory, quarre::ProcessExecutorComponentFactory>,
             FW<score::PanelDelegateFactory, quarre::PanelDelegateFactory>,
             FW<Device::ProtocolFactory, quarre::ProtocolFactory>
-
     >(ctx, key);
 }
 

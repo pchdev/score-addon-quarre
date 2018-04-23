@@ -11,30 +11,26 @@ using namespace score::addons;
 quarre::ProcessModel::ProcessModel(
         const TimeVal& duration,
         const Id<Process::ProcessModel>& id,
-        QObject* parent ) : Process::ProcessModel(duration, id, "quarre-process", parent)
+        QObject* parent ) :
+    Process::ProcessModel(duration, id, Metadata<ObjectKey_k, quarre::ProcessModel>::get(), parent)
 {
     metadata().setInstanceName<quarre::ProcessModel>(*this);
+
     m_interactions.push_back(new quarre::interaction(getStrongId(m_interactions), this));
 
-    init();
+    initialize_parent_pointers              ( );
     m_interval->duration.setRigid           ( false );
     m_interval->duration.setMinNull         ( true );
     m_interval->duration.setMaxInfinite     ( true );
 
-    m_end_tsync->setActive                  ( true );
-    m_end_tsync->setExpression              ( State::defaultFalseExpression() );
+    end_tsync().setActive       ( true );
+    end_tsync().setExpression   ( State::defaultFalseExpression() );
 }
 
-void quarre::ProcessModel::init()
+void quarre::ProcessModel::initialize_parent_pointers()
 {
-    m_interval = qobject_cast<Scenario::IntervalModel*>(parent());
-    m_parent_scenario = qobject_cast<Scenario::ProcessModel*>(m_interval->parent());
-
-    auto& start_state = m_parent_scenario->state    ( m_interval->startState());
-    auto& end_state = m_parent_scenario->state      ( m_interval->endState() );
-    m_end_event = &m_parent_scenario->event         ( end_state.eventId() );
-    m_end_tsync = &m_parent_scenario->timeSync      ( m_end_event->timeSync() );
-    m_start_event = &m_parent_scenario->event       ( start_state.eventId());
+    m_interval          = qobject_cast<Scenario::IntervalModel*>(parent());
+    m_parent_scenario   = qobject_cast<Scenario::ProcessModel*>(m_interval->parent());
 }
 
 
@@ -69,17 +65,23 @@ Scenario::IntervalModel& quarre::ProcessModel::interval() const
 
 Scenario::EventModel& quarre::ProcessModel::start_event() const
 {
-    return *m_start_event;
+    auto& start_state = m_parent_scenario->state(m_interval->startState());
+    return m_parent_scenario->event(start_state.eventId());
 }
 
 Scenario::EventModel& quarre::ProcessModel::end_event() const
 {
-    return *m_end_event;
+    auto& end_state = m_parent_scenario->state(m_interval->endState());
+    return m_parent_scenario->event(end_state.eventId());
 }
 
 Scenario::TimeSyncModel& quarre::ProcessModel::end_tsync() const
 {
-    return *m_end_tsync;
+    auto& end_state = m_parent_scenario->state(m_interval->endState());
+    auto& end_event = m_parent_scenario->event(end_state.eventId());
+    auto& end_tsync = m_parent_scenario->timeSync(end_event.timeSync() );
+
+    return end_tsync;
 }
 
 Scenario::ProcessModel& quarre::ProcessModel::parent_scenario() const

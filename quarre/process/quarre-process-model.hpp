@@ -26,33 +26,32 @@ class ProcessModel final : public Process::ProcessModel
     Q_OBJECT
 
     public: //--------------------------------------------
-    ProcessModel ( const TimeVal& duration,
+    explicit ProcessModel ( const TimeVal& duration,
                    const Id<Process::ProcessModel>& id,
                    QObject* parent);
 
     template<typename impl>
-    ProcessModel(impl& vis, QObject* parent) :
+    explicit ProcessModel(impl& vis, QObject* parent) :
         Process::ProcessModel(vis, parent)
     {
         // get elements for inspector use
-        init();
         vis.writeTo(*this);
+        initialize_parent_pointers();
     }
 
     // clone
-    ProcessModel(
+    explicit ProcessModel(
             const ProcessModel& other,
             const Id<Process::ProcessModel>& id,
             QObject* parent) :
         Process::ProcessModel (other, id, Metadata<ObjectKey_k,ProcessModel>::get(), parent )
     {
-
+        metadata().setInstanceName<quarre::ProcessModel>(*this);
     }
 
-    void init   ( );
+    void initialize_parent_pointers();
 
-    quarre::interaction* interaction() const;
-
+    quarre::interaction*        interaction         ( ) const;
     Scenario::IntervalModel&    interval            ( ) const;
     Scenario::EventModel&       start_event         ( ) const;
     Scenario::EventModel&       end_event           ( ) const;
@@ -64,7 +63,12 @@ class ProcessModel final : public Process::ProcessModel
 
     private: //-------------------------------------------------------------------
 
-    std::vector<quarre::interaction*> m_interactions;
+    std::vector<quarre::interaction*>       m_interactions;
+    Engine::Execution::IntervalComponent*   m_interval_component;
+
+    Scenario::IntervalModel*    m_interval;
+    Scenario::ProcessModel*     m_parent_scenario;
+
     virtual QString prettyName      ( ) const override;
 
     virtual void startExecution     ( ) override;
@@ -77,18 +81,11 @@ class ProcessModel final : public Process::ProcessModel
     virtual Selection selectableChildren    ( ) const override;
     virtual Selection selectedChildren      ( ) const override;
 
-    virtual void setSelection ( const Selection &s ) const override;
+    virtual void setSelection ( const Selection& s ) const override;
 
-    virtual void setDurationAndScale    ( const TimeVal &newDuration ) override;
-    virtual void setDurationAndGrow     ( const TimeVal &newDuration ) override;
+    virtual void setDurationAndScale    ( const TimeVal& newDuration ) override;
+    virtual void setDurationAndGrow     ( const TimeVal& newDuration ) override;
     virtual void setDurationAndShrink   ( const TimeVal& newDuration ) override;
-
-    Scenario::IntervalModel*    m_interval;
-    Scenario::EventModel*       m_end_event;
-    Scenario::TimeSyncModel*    m_end_tsync;
-    Scenario::ProcessModel*     m_parent_scenario;
-    Scenario::EventModel*       m_start_event;    
-    Engine::Execution::IntervalComponent* m_interval_component;
 };
 
 }

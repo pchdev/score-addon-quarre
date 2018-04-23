@@ -23,7 +23,6 @@ quarre::interaction::interaction(
 
 }
 
-
 ossia::time_sync& quarre::interaction::get_ossia_tsync() const
 {
     auto model = qobject_cast<quarre::ProcessModel*>(parent());
