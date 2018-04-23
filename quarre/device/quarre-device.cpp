@@ -34,10 +34,12 @@ static const std::vector<std::pair<std::string,std::vector<std::string>>> g_gest
 static const std::vector<std::pair<std::string,std::vector<pdata_t>>> g_sensors =
 {
     { "accelerometers", {
+          { "xyz", ossia::val_type::VEC3F },
           { "x", ossia::val_type::FLOAT },
           { "y", ossia::val_type::FLOAT },
           { "z", ossia::val_type::FLOAT }}},
     { "rotation", {
+          { "xyz", ossia::val_type::VEC3F },
           { "x", ossia::val_type::FLOAT },
           { "y", ossia::val_type::FLOAT },
           { "z", ossia::val_type::FLOAT }}},
@@ -149,6 +151,13 @@ static const std::vector<std::pair<std::string,ossia::val_type>> g_common_tree =
     //! displays the name of the current scene
 };
 
+inline parameter_base* get_parameter_from_string ( std::string address )
+{
+    auto& dev   = quarre::quarre_device::instance()->device();
+    auto node   = ossia::net::find_node(dev, address);
+    return node->get_parameter();
+}
+
 // ------------------------------------------------------------------------------
 // USER_INPUT
 // ------------------------------------------------------------------------------
@@ -157,9 +166,6 @@ quarre::user::input::input(std::string addr, generic_device& device) : m_addr ( 
 {
     auto& n_avail    = ossia::net::create_node(device, addr + "/available");
     m_available      = parptr_t(n_avail.create_parameter(ossia::val_type::BOOL));
-
-    auto& n_active   = ossia::net::create_node(device, addr + "/active");
-    m_active         = parptr_t(n_active.create_parameter(ossia::val_type::BOOL));
 }
 
 void quarre::user::input::assign(const std::string &id,
@@ -193,14 +199,17 @@ quarre::user::gesture::gesture(
     : quarre::user::input ( addr, device )
 {
     auto& n_trig    = ossia::net::create_node(device, m_addr + "/trigger");
-    auto p_trig     = n_trig.create_parameter(ossia::val_type::IMPULSE);
+    auto p_trig     = n_trig.create_parameter(ossia::val_type::BOOL);
+
+    auto& n_active   = ossia::net::create_node(device, addr + "/poll");
+    m_active         = parptr_t(n_active.create_parameter(ossia::val_type::BOOL));
 
     m_data.push_back(parptr_t (p_trig));
 
     for ( const auto& subgesture : subgestures )
     {
         auto& n_sub = ossia::net::create_node(device, m_addr + "/" + subgesture + "/trigger");
-        auto p_sub = n_sub.create_parameter(ossia::val_type::IMPULSE);
+        auto p_sub = n_sub.create_parameter(ossia::val_type::BOOL);
 
         m_data.push_back(parptr_t(p_sub));
     }
@@ -216,10 +225,11 @@ quarre::user::sensor::sensor(std::string addr, std::vector<pdata_t> data, generi
 {
     for ( const auto& d : data )
     {
-        auto& ndata     = ossia::net::create_node(device, m_addr + "/data/" + d.first);
+        auto& ndata     = ossia::net::create_node(device, m_addr + d.first + "/data/");
         auto pdata      = ndata.create_parameter(d.second);
 
-        m_data.push_back(parptr_t(pdata));
+        auto& ndata     = ossia::net::create_node(device, m_addr + d.first + "/poll/");
+        auto pdata      = ndata.create_parameter(ossia::val_type::BOOL);
     }
 }
 
@@ -275,18 +285,22 @@ std::string quarre::user::input::address()
 
 bool quarre::user::supports_input(const std::string& target) const
 {
+    // TODO, bad design...
+    auto target_qstr = QString::fromStdString(target);
+
+    if ( target_qstr.contains("/controllers")) return true;
+    target_qstr.replace("/user/0", QString::fromStdString(m_address));
+
     for ( auto& input : m_inputs )
     {
-        QString stripped_input = QString::fromStdString(input->address());
-        stripped_input.remove(0, 7);
+        QString user_input = QString::fromStdString(input->address());
+        user_input.remove(QString::fromStdString(m_address));
 
-        if ( stripped_input.startsWith("/controllers"))
-            return true;
-
-        qDebug() << stripped_input;
-
-        if ( stripped_input.toStdString() == target )
-            return input->m_available->value().get<bool>();
+        if ( target_qstr.contains(user_input))
+        {
+            auto p_input = get_parameter_from_string(m_address + user_input.toStdString() + "/available");
+            return p_input->value().get<bool>();
+        }
     }
 
     return false;
@@ -300,13 +314,6 @@ bool quarre::user::connected() const
 void quarre::user::set_connected(bool connected)
 {
     m_connected = connected;
-}
-
-inline parameter_base* get_parameter_from_string ( std::string address )
-{
-    auto& dev   = quarre::quarre_device::instance()->device();
-    auto node   = ossia::net::find_node(dev, address);
-    return node->get_parameter();
 }
 
 void quarre::user::set_address(const std::string &address)
@@ -345,20 +352,14 @@ uint8_t quarre::user::interaction_hdl::interaction_count() const
 
 void quarre::user::activate_input(const std::string& target)
 {
-    for ( const auto& input : m_inputs )
-    {
-        if ( input->m_id == target )
-             input->m_active->set_value(true);
-    }
+    auto p_input = get_parameter_from_string(target);
+    p_input->set_value(true);
 }
 
 void quarre::user::deactivate_input(const std::string& target)
 {
-    for ( const auto& input : m_inputs )
-    {
-        if ( input->m_id == target )
-             input->m_active->set_value(false);
-    }
+    auto p_input = get_parameter_from_string(target);
+    p_input->set_value(false);
 }
 
 
@@ -443,9 +444,17 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
         qDebug() << source_fmt;
 
         // if sensor or gesture, set it active
-        if ( source_fmt.contains("sensors") ||
-             source_fmt.contains("gestures") )
-                m_user.activate_input(source_fmt.toStdString());
+
+        if ( source_fmt.contains("sensors"))
+        {
+            source_fmt.replace("data", "poll");
+            m_user.activate_input(source_fmt.toStdString());
+        }
+        else if ( source_fmt.contains("gestures"))
+        {
+            source_fmt.replace("trigger", "poll");
+            m_user.activate_input(source_fmt.toStdString());
+        }
 
         auto map_expr = mapping->expression_js();
 
@@ -513,9 +522,16 @@ void quarre::user::interaction_hdl::stop_current_interaction(quarre::interaction
         source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
 
         // if sensor or gesture, set it inactive
-        if ( source_fmt.contains("sensors") ||
-             source_fmt.contains("gestures") )
-                m_user.deactivate_input(source_fmt.toStdString());
+        if ( source_fmt.contains("sensors"))
+        {
+            source_fmt.replace("data", "poll");
+            m_user.deactivate_input(source_fmt.toStdString());
+        }
+        else if ( source_fmt.contains("gestures"))
+        {
+            source_fmt.replace("trigger", "poll");
+            m_user.deactivate_input(source_fmt.toStdString());
+        }
 
         auto p_input = get_parameter_from_string(source_fmt.toStdString());
         p_input->callbacks_clear();
@@ -544,6 +560,19 @@ void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction*
     {
         QString source_fmt = mapping->source();
         source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
+
+        // if sensor or gesture, set it active
+
+        if ( source_fmt.contains("sensors"))
+        {
+            source_fmt.replace("data", "poll");
+            m_user.deactivate_input(source_fmt.toStdString());
+        }
+        else if ( source_fmt.contains("gestures"))
+        {
+            source_fmt.replace("trigger", "poll");
+            m_user.deactivate_input(source_fmt.toStdString());
+        }
 
         auto p_input = get_parameter_from_string(source_fmt.toStdString());
         p_input->callbacks_clear();
@@ -604,7 +633,13 @@ void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* i
 
         check_inputs:
         for ( const auto& input : interaction->inputs() )
-            if ( !user->supports_input(input.toStdString()) ) goto next;
+        {
+            bool support = user->supports_input(input.toStdString());
+            qDebug() << input;
+            qDebug() << support;
+            if ( !support )
+                goto next;
+        }
 
         select:
         candidate.priority += user->interactions()->interaction_count();

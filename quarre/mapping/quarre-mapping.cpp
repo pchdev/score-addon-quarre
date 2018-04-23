@@ -13,7 +13,7 @@ quarre::mapping::mapping(
 
     IdentifiedObject    ( id, "quarrè-mapping", parent )
 {
-    m_expression = "return v";
+    m_expression = "return v;";
 }
 
 const QString quarre::mapping::source() const

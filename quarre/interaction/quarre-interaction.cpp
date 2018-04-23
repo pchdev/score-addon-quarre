@@ -69,7 +69,7 @@ QStringList quarre::interaction::inputs() const
     for ( const auto& mapping : m_mappings )
     {
         QString source = mapping->source();
-        QString res_src = source.remove("/user/0");
+        QString res_src = source.remove("quarre-server:");
         res << res_src;
     }
 
