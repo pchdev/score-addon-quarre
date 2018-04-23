@@ -13,7 +13,7 @@ quarre::mapping::mapping(
 
     IdentifiedObject    ( id, "quarrè-mapping", parent )
 {
-    m_expression = "( function(v) \n{\n return v; \n} \n)";
+    m_expression = "return v";
 }
 
 const QString quarre::mapping::source() const
@@ -29,6 +29,13 @@ const QString quarre::mapping::destination() const
 const QString quarre::mapping::expression() const
 {
     return m_expression;
+}
+
+const QString quarre::mapping::expression_js() const
+{
+    QString expr = m_expression;
+    expr.prepend("(function(v){").append("})");
+    return expr;
 }
 
 void quarre::mapping::on_source_changed(const QString &source)

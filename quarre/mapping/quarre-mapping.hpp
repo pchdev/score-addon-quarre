@@ -31,10 +31,11 @@ class mapping final : public IdentifiedObject<score::addons::quarre::mapping>
         vis.writeTo(*this);
     }
 
-    QVBoxLayout* layout        () const;
-    const QString source       () const;
-    const QString destination  () const;
-    const QString expression   () const;
+    QVBoxLayout* layout             () const;
+    const QString source            () const;
+    const QString destination       () const;
+    const QString expression        () const;
+    const QString expression_js     () const;
 
     public slots:
     void on_source_changed         ( const QString& source );

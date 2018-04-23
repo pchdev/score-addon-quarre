@@ -262,7 +262,7 @@ quarre::user::user(uint8_t id, generic_device& device) :
         auto ctrl_name = std::get<0>(controller);
         for ( int i = 0; i < std::get<1>(controller); ++i )
         {
-            auto& node = ossia::net::create_node(device, ctrl_addr + std::to_string(i));
+            auto& node = ossia::net::create_node(device, ctrl_addr + ctrl_name + "/" + std::to_string(i) + "/value");
             auto param = node.create_parameter(std::get<2>(controller));
         }
     }
@@ -363,12 +363,9 @@ void quarre::user::deactivate_input(const std::string& target)
 
 
 quarre::user::interaction_hdl::interaction_hdl(quarre::user &parent)
-    : m_user(parent)
-{
+    : m_user(parent) {}
 
-}
-
-quarre::user::interaction_hdl *quarre::user::interactions()
+quarre::user::interaction_hdl* quarre::user::interactions()
 {
     return m_interaction_hdl;
 }
@@ -397,6 +394,8 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
 
     auto p_act = get_parameter_from_string(m_user.m_address+"/interactions/next/begin");
     p_act->push_value(interaction->to_list());
+
+    // get end expression source, set the expression as callback
 
     auto expr_source    = interaction->end_expression_source();
     auto expr           = interaction->end_expression_js();
@@ -441,15 +440,19 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
         auto p_input    = get_parameter_from_string(source_fmt.toStdString());
         auto p_output   = get_parameter_from_string(dest.toStdString());
 
+        qDebug() << source_fmt;
+
         // if sensor or gesture, set it active
         if ( source_fmt.contains("sensors") ||
              source_fmt.contains("gestures") )
                 m_user.activate_input(source_fmt.toStdString());
 
+        auto map_expr = mapping->expression_js();
+
         p_input->add_callback([&](const ossia::value& v) {
 
             QJSValueList arguments;
-            QJSValue fun = m_js_engine.evaluate(mapping->expression());
+            QJSValue fun = m_js_engine.evaluate(map_expr);
 
             switch (v.getType())
             {
@@ -493,6 +496,7 @@ void quarre::user::interaction_hdl::set_incoming_interaction(quarre::interaction
 
 void quarre::user::interaction_hdl::cancel_next_interaction(quarre::interaction* interaction)
 {
+    // TODO!
     m_incoming_interaction = 0;
 }
 

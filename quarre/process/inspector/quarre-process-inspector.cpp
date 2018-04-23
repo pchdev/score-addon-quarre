@@ -36,8 +36,6 @@ quarre::mapping_view::mapping_view(const score::DocumentContext &dctx, mapping &
     set_destination     ( map.destination() );
     set_expression      ( map.expression() );
 
-    m_expression        ->setPlainText("( function(v, dest) { dest[\"value\"] = v; } )");
-
     m_form    = new QFormLayout;
     m_form->addRow ( tr ( "delete" ), m_minus_button );
     m_form->addRow ( tr ( "source" ), m_source );
