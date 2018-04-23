@@ -362,7 +362,7 @@ void quarre::user::deactivate_input(const std::string& target)
 }
 
 
-quarre::user::interaction_hdl::interaction_hdl(const quarre::user &parent)
+quarre::user::interaction_hdl::interaction_hdl(quarre::user &parent)
     : m_user(parent)
 {
 
@@ -398,39 +398,39 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
     auto p_act = get_parameter_from_string(m_user.m_address+"/interactions/next/begin");
     p_act->push_value(interaction->to_list());
 
-    auto expr = interaction->end_expression_js();
-    auto expr_source = interaction->end_expression_source();
-    auto& tsync = interaction->get_ossia_tsync();
+    auto expr_source    = interaction->end_expression_source();
+    auto expr           = interaction->end_expression_js();
+    auto& tsync         = interaction->get_ossia_tsync();
 
-    expr_source.replace("/user/0", QString::fromStdString(m_user.m_address));
-    auto p_expr_src = get_parameter_from_string(expr.toStdString());
+    if ( expr_source != "" )
+    {
+        expr_source.replace("/user/0", QString::fromStdString(m_user.m_address));
+        auto p_expr_src = get_parameter_from_string(expr_source.toStdString());
 
-    p_expr_src->add_callback([&](const ossia::value&v) {
+        p_expr_src->add_callback([&](const ossia::value&v) {
 
-        QJSValueList arguments;
-        QJSValue fun = m_js_engine.evaluate(expr);
+            QJSValueList arguments;
+            QJSValue fun = m_js_engine.evaluate(expr);
 
-        switch (v.getType())
-        {
-        case ossia::val_type::BOOL: arguments << v.get<bool>(); break;
-        case ossia::val_type::INT: arguments << v.get<int>(); break;
-        case ossia::val_type::FLOAT: arguments << v.get<float>(); break;
-        case ossia::val_type::STRING: arguments << QString::fromStdString(v.get<std::string>()); break;
-        case ossia::val_type::LIST: /*arguments << v.get<std::vector<ossia::value>>();*/ break;
-        case ossia::val_type::VEC2F: /*arguments << v.get<ossia::vec2f>();*/break;
-        case ossia::val_type::VEC3F: /*arguments << v.get<ossia::vec3f>();*/break;
-        case ossia::val_type::VEC4F: /*arguments << v.get<ossia::vec4f>();*/ break;
-        case ossia::val_type::CHAR: arguments << v.get<char>(); break;
-        }
+            switch (v.getType())
+            {
+            case ossia::val_type::BOOL: arguments << v.get<bool>(); break;
+            case ossia::val_type::INT: arguments << v.get<int>(); break;
+            case ossia::val_type::FLOAT: arguments << v.get<float>(); break;
+            case ossia::val_type::STRING: arguments << QString::fromStdString(v.get<std::string>()); break;
+            case ossia::val_type::LIST: /*arguments << v.get<std::vector<ossia::value>>();*/ break;
+            case ossia::val_type::VEC2F: /*arguments << v.get<ossia::vec2f>();*/break;
+            case ossia::val_type::VEC3F: /*arguments << v.get<ossia::vec3f>();*/break;
+            case ossia::val_type::VEC4F: /*arguments << v.get<ossia::vec4f>();*/ break;
+            case ossia::val_type::CHAR: arguments << v.get<char>(); break;
+            }
 
-        QJSValue result = fun.call(arguments);
+            QJSValue result = fun.call(arguments);
 
-        if ( result.toBool() )
-            tsync.trigger_request = true;
-
-    });
-
-    // now parsing mappings
+            if ( result.toBool() )
+                tsync.trigger_request = true;
+        });
+    }
 
     for ( const auto& mapping : interaction->mappings())
     {
@@ -440,6 +440,11 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
         QString dest    = mapping->destination();
         auto p_input    = get_parameter_from_string(source_fmt.toStdString());
         auto p_output   = get_parameter_from_string(dest.toStdString());
+
+        // if sensor or gesture, set it active
+        if ( source_fmt.contains("sensors") ||
+             source_fmt.contains("gestures") )
+                m_user.activate_input(source_fmt.toStdString());
 
         p_input->add_callback([&](const ossia::value& v) {
 
@@ -503,6 +508,11 @@ void quarre::user::interaction_hdl::stop_current_interaction(quarre::interaction
         QString source_fmt = mapping->source();
         source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
 
+        // if sensor or gesture, set it inactive
+        if ( source_fmt.contains("sensors") ||
+             source_fmt.contains("gestures") )
+                m_user.deactivate_input(source_fmt.toStdString());
+
         auto p_input = get_parameter_from_string(source_fmt.toStdString());
         p_input->callbacks_clear();
     }
@@ -515,6 +525,17 @@ void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction*
     auto p_end = get_parameter_from_string(m_user.m_address+"/interactions/current/end");
     p_end->set_value ( ossia::impulse{} );
 
+    // clear ending callbacks
+    auto expr_source    = interaction->end_expression_source();
+
+    if ( expr_source != "" )
+    {
+        expr_source.replace("/user/0", QString::fromStdString(m_user.m_address));
+        auto p_expr_src = get_parameter_from_string(expr_source.toStdString());
+        p_expr_src->callbacks_clear();
+    }
+
+    // clear mapping callbacks
     for ( const auto& mapping : interaction->mappings())
     {
         QString source_fmt = mapping->source();

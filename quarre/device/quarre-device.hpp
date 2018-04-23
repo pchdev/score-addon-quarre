@@ -92,7 +92,7 @@ class user // ----------------------------------------------------------- USER
     {
         friend class quarre::user;
         public:
-        interaction_hdl( const quarre::user& parent );
+        interaction_hdl( quarre::user& parent );
         quarre::interaction* incoming_interaction   ( ) const;
         quarre::interaction* active_interaction     ( ) const;
 
@@ -113,7 +113,7 @@ class user // ----------------------------------------------------------- USER
         quarre::interaction* m_active_interaction;
         parptr_t m_active_countdown;
         uint8_t  m_interaction_count;
-        const quarre::user& m_user;
+        quarre::user& m_user;
 
     };
 
