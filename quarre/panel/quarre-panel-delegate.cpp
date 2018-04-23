@@ -2,7 +2,7 @@
 #include "quarre-panel-delegate.hpp"
 
 using namespace score::addons;
-quarre::PanelDelegate* quarre::PanelDelegate::m_singleton;
+quarre::PanelDelegate* quarre::PanelDelegate::m_singleton = 0;
 
 quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
     score::PanelDelegate(ctx),
@@ -10,6 +10,8 @@ quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
     m_layout(new QFormLayout)
 {
     m_singleton = this;
+    if ( auto device = quarre::quarre_device::instance() )
+        on_server_instantiated(*device);
 }
 
 quarre::PanelDelegate* quarre::PanelDelegate::instance()
@@ -39,8 +41,6 @@ void quarre::PanelDelegate::on_server_instantiated(const quarre::quarre_device &
         m_user_connection_displays.push_back(qle);
     }
 }
-
-
 
 QWidget* quarre::PanelDelegate::widget() { return m_widget; }
 

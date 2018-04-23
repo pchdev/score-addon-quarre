@@ -10,7 +10,7 @@ using namespace score::addons;
 using namespace ossia::net;
 using namespace ossia::oscquery;
 
-quarre::quarre_device* quarre::quarre_device::m_singleton;
+quarre::quarre_device* quarre::quarre_device::m_singleton = 0;
 #define QSD quarre::quarre_device::instance()->device()
 
 // --------------------------------------------------------------------------------------------
@@ -435,16 +435,17 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
     for ( const auto& mapping : interaction->mappings())
     {
         QString source_fmt = mapping->source();
-        source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
+        source_fmt.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
 
         QString dest    = mapping->destination();
-        auto p_input    = get_parameter_from_string(source_fmt.toStdString());
-        auto p_output   = get_parameter_from_string(dest.toStdString());
+        QString dest_wd = dest.split(':')[1]; // remove device header address
 
-        qDebug() << source_fmt;
+        auto p_input    = get_parameter_from_string(source_fmt.toStdString());
+
+        // todo:
+        auto p_output   = get_parameter_from_string(dest_wd.toStdString());
 
         // if sensor or gesture, set it active
-
         if ( source_fmt.contains("sensors"))
         {
             source_fmt.replace("data", "poll");
@@ -519,18 +520,20 @@ void quarre::user::interaction_hdl::stop_current_interaction(quarre::interaction
     for ( const auto& mapping : interaction->mappings())
     {
         QString source_fmt = mapping->source();
-        source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
+        source_fmt.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
 
         // if sensor or gesture, set it inactive
         if ( source_fmt.contains("sensors"))
         {
-            source_fmt.replace("data", "poll");
-            m_user.deactivate_input(source_fmt.toStdString());
+            QString copy = source_fmt;
+            copy.replace("data", "poll");
+            m_user.deactivate_input(copy.toStdString());
         }
         else if ( source_fmt.contains("gestures"))
         {
-            source_fmt.replace("trigger", "poll");
-            m_user.deactivate_input(source_fmt.toStdString());
+            QString copy = source_fmt;
+            copy.replace("trigger", "poll");
+            m_user.deactivate_input(copy.toStdString());
         }
 
         auto p_input = get_parameter_from_string(source_fmt.toStdString());
@@ -813,7 +816,8 @@ void quarre::quarre_device::on_client_connected(const std::string &ip)
             user->set_status     ( quarre::user::status::IDLE );
 
             // update panel
-            quarre::PanelDelegate::instance()->on_user_changed(*user);
+            if ( auto panel = quarre::PanelDelegate::instance() )
+                quarre::PanelDelegate::instance()->on_user_changed(*user);
 
             auto qstring_ip     = QString::fromStdString(ip);
             auto splitted_ip    = qstring_ip.split(':');
@@ -846,7 +850,8 @@ void quarre::quarre_device::on_client_disconnected(const std::string &ip)
             user->set_address    ( "" );
             user->set_status     ( quarre::user::status::DISCONNECTED );
 
-            quarre::PanelDelegate::instance()->on_user_changed(*user);
+            if ( auto panel = quarre::PanelDelegate::instance() )
+                quarre::PanelDelegate::instance()->on_user_changed(*user);
 
             auto qstring_ip = QString::fromStdString(ip);
             auto splitted_ip = qstring_ip.split(':');
