@@ -123,9 +123,7 @@ void quarre::interaction::on_end_expression_source_changed(QString source)
 
 const QString quarre::interaction::end_expression_source() const
 {
-    QString stripped_expr = m_end_expression_source;
-    stripped_expr.remove("quarre-server:");
-    return stripped_expr;
+    return m_end_expression_source;
 }
 
 const QString &quarre::interaction::end_expression_js() const

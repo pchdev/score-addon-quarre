@@ -406,8 +406,20 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
 
     if ( expr_source != "" )
     {
-        expr_source.replace("/user/0", QString::fromStdString(m_user.m_address));
+        expr_source.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
         auto p_expr_src = get_parameter_from_string(expr_source.toStdString());
+
+        // if sensor or gesture, set it active
+        if ( expr_source.contains("sensors"))
+        {
+            expr_source.replace("data", "poll");
+            m_user.activate_input(expr_source.toStdString());
+        }
+        else if ( expr_source.contains("gestures"))
+        {
+            expr_source.replace("trigger", "poll");
+            m_user.activate_input(expr_source.toStdString());
+        }
 
         p_expr_src->add_callback([&](const ossia::value&v) {
 
@@ -531,7 +543,20 @@ void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction*
 
     if ( expr_source != "" )
     {
-        expr_source.replace("/user/0", QString::fromStdString(m_user.m_address));
+        expr_source.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
+
+        // if sensor or gesture, set it inactive
+        if ( expr_source.contains("sensors"))
+        {
+            expr_source.replace("data", "poll");
+            m_user.deactivate_input(expr_source.toStdString());
+        }
+        else if ( expr_source.contains("gestures"))
+        {
+            expr_source.replace("trigger", "poll");
+            m_user.deactivate_input(expr_source.toStdString());
+        }
+
         auto p_expr_src = get_parameter_from_string(expr_source.toStdString());
         p_expr_src->callbacks_clear();
     }
