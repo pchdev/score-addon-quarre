@@ -130,7 +130,7 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
 
     m_quarre_process    ( object ),
     m_layout            ( new QVBoxLayout(this) ),
-    m_module            ( new QLineEdit ( object.interaction()->module())),
+    m_module            ( new QComboBox ),
     m_title             ( new QLineEdit ( object.interaction()->title())),
     m_description       ( new QLineEdit ( object.interaction()->description())),
     m_end_expression    ( new QLineEdit ( object.interaction()->end_expression())),
@@ -157,6 +157,17 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     setObjectName           ( "quarrè-process-inspector" );
     setParent               ( parent );
 
+    m_module->addItem           ( "Default" );
+    m_module->addItem           ( "Transition" );
+    m_module->addItem           ( "Gesture" );
+    m_module->addItem           ( "Pads" );
+    m_module->addItem           ( "Sliders" );
+    m_module->addItem           ( "Strings" );
+    m_module->addItem           ( "TouchSpatialization" );
+    m_module->addItem           ( "SensorSpatialization" );
+
+    m_module->setCurrentText    ( m_interaction->module() );
+
     auto form = new QFormLayout;
     form->addRow ( tr ("Title"), m_title );
     form->addRow ( tr ("Description"), m_description );
@@ -176,7 +187,7 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
 
     connect(m_title, SIGNAL(textChanged(QString)), m_interaction, SLOT(on_title_changed(QString)));
     connect(m_description, SIGNAL(textChanged(QString)), m_interaction, SLOT(on_description_changed(QString)));
-    connect(m_module, SIGNAL(textChanged(QString)), m_interaction, SLOT(on_module_changed(QString)));
+    connect(m_module, SIGNAL(currentIndexChanged(QString)), m_interaction, SLOT(on_module_changed(QString)));
     connect(m_length, SIGNAL(valueChanged(int)), m_interaction, SLOT(on_length_changed(int)));
     connect(m_countdown, SIGNAL(valueChanged(int)), m_interaction, SLOT(on_countdown_changed(int)));
     connect(m_end_expression_source, SIGNAL(addressChanged(Device::FullAddressAccessorSettings)), this, SLOT (on_address_changed(Device::FullAddressAccessorSettings)));

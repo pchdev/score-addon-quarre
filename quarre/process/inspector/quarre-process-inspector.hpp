@@ -91,7 +91,7 @@ class InspectorWidget final :
 
     private: //---------------------------------------------------------
     CommandDispatcher<> m_dispatcher;
-    QLineEdit*         m_module;
+    QComboBox*         m_module;
     QLineEdit*         m_title;
     QLineEdit*         m_description;
     QSpinBox*          m_length;
