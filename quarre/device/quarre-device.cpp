@@ -353,13 +353,13 @@ uint8_t quarre::user::interaction_hdl::interaction_count() const
 void quarre::user::activate_input(const std::string& target)
 {
     auto p_input = get_parameter_from_string(target);
-    p_input->set_value(true);
+    p_input->push_value(true);
 }
 
 void quarre::user::deactivate_input(const std::string& target)
 {
     auto p_input = get_parameter_from_string(target);
-    p_input->set_value(false);
+    p_input->push_value(false);
 }
 
 
@@ -399,7 +399,7 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
     // get end expression source, set the expression as callback
 
     auto expr_source    = interaction->end_expression_source();
-    auto expr           = interaction->end_expression_js();
+    auto& expr          = interaction->end_expression_js();
     auto& tsync         = interaction->get_ossia_tsync();
 
     if ( expr_source != "" )
@@ -443,7 +443,7 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
         auto p_input    = get_parameter_from_string(source_fmt.toStdString());
 
         // todo:
-        auto p_output   = get_parameter_from_string(dest_wd.toStdString());
+        auto& p_output   = *get_parameter_from_string(dest_wd.toStdString());
 
         // if sensor or gesture, set it active
         if ( source_fmt.contains("sensors"))
@@ -457,7 +457,7 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
             m_user.activate_input(source_fmt.toStdString());
         }
 
-        auto map_expr = mapping->expression_js();
+        auto& map_expr = mapping->expression_js();
 
         p_input->add_callback([&](const ossia::value& v) {
 
@@ -479,18 +479,20 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
 
             QJSValue result = fun.call(arguments);
 
-            switch ( p_output->get_value_type())
+            auto name = p_output.get_node().get_name();
+
+            switch ( p_output.get_value_type())
             {
-            case ossia::val_type::BOOL: p_output->push_value(result.toBool()); break;
-            case ossia::val_type::INT: p_output->push_value(result.toInt()); break;
-            case ossia::val_type::FLOAT: p_output->push_value(result.toNumber()); break;
-            case ossia::val_type::STRING: p_output->push_value(result.toString().toStdString()); break;
+            case ossia::val_type::BOOL: p_output.push_value(result.toBool()); break;
+            case ossia::val_type::INT: p_output.push_value(result.toInt()); break;
+            case ossia::val_type::FLOAT: p_output.push_value(result.toNumber()); break;
+            case ossia::val_type::STRING: p_output.push_value(result.toString().toStdString()); break;
             case ossia::val_type::LIST: break; // non-priority for Reaper
             case ossia::val_type::VEC2F: break;
             case ossia::val_type::VEC3F: break;
             case ossia::val_type::VEC4F: break;
-            case ossia::val_type::IMPULSE: p_output->push_value(ossia::impulse{}); break;
-            case ossia::val_type::CHAR: p_output->push_value(result.toString().toStdString().c_str());
+            case ossia::val_type::IMPULSE: p_output.push_value(ossia::impulse{}); break;
+            case ossia::val_type::CHAR: p_output.push_value(result.toString().toStdString().c_str());
             }
         });
     }

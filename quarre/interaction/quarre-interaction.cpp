@@ -102,7 +102,8 @@ void quarre::interaction::on_countdown_changed(int countdown)
 
 void quarre::interaction::on_end_expression_changed(QString expression)
 {
-    m_end_expression = expression;
+    m_end_expression    = expression;
+    m_end_expression_js = expression.prepend("(function(v){").append("})");
 }
 
 void quarre::interaction::on_end_expression_source_changed(QString source)
@@ -117,11 +118,9 @@ const QString quarre::interaction::end_expression_source() const
     return stripped_expr;
 }
 
-const QString quarre::interaction::end_expression_js() const
+const QString &quarre::interaction::end_expression_js() const
 {
-    QString expr = m_end_expression;
-    expr.prepend("(function(v){").append("})");
-    return expr;
+    return m_end_expression_js;
 }
 
 const QString quarre::interaction::end_expression() const

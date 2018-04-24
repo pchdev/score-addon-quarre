@@ -37,7 +37,7 @@ class interaction final : public IdentifiedObject<interaction>
     const QString module                    () const;
     const QString title                     () const;
     const QString description               () const;
-    const QString end_expression_js         () const;
+    const QString& end_expression_js         () const;
     const QString end_expression            () const;
     const QString end_expression_source     () const;
 
@@ -68,6 +68,7 @@ class interaction final : public IdentifiedObject<interaction>
     QString         m_title;
     QString         m_description;
     QString         m_end_expression;
+    QString         m_end_expression_js;
     QString         m_end_expression_source;
     int             m_length;
     int             m_countdown;

@@ -31,26 +31,27 @@ const QString quarre::mapping::expression() const
     return m_expression;
 }
 
-const QString quarre::mapping::expression_js() const
+const QString& quarre::mapping::expression_js() const
 {
-    QString expr = m_expression;
-    expr.prepend("(function(v){").append("})");
-    return expr;
+    return m_expression_js;
 }
 
-void quarre::mapping::on_source_changed(const QString &source)
+void quarre::mapping::on_source_changed(const QString& source)
 {
     m_source = source;
 }
 
-void quarre::mapping::on_destination_changed(const QString &destination)
+void quarre::mapping::on_destination_changed(const QString& destination)
 {
     m_destination = destination;
 }
 
-void quarre::mapping::on_expression_changed(const QString &expression)
+void quarre::mapping::on_expression_changed(const QString& expression)
 {
     m_expression = expression;
+    QString expr_js = m_expression;
+    expr_js.prepend("(function(v){").append("})");
+    m_expression_js = expr_js;
 }
 
 template <> void DataStreamReader::read(
