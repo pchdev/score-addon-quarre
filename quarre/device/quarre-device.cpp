@@ -514,33 +514,6 @@ void quarre::user::interaction_hdl::cancel_next_interaction(quarre::interaction*
 
 void quarre::user::interaction_hdl::stop_current_interaction(quarre::interaction* interaction)
 {
-    // TODO!
-    m_active_interaction = 0;
-    auto p_end = get_parameter_from_string(m_user.m_address+"/interactions/current/end");
-    p_end->set_value ( ossia::impulse{} );
-
-    for ( const auto& mapping : interaction->mappings())
-    {
-        QString source_fmt = mapping->source();
-        source_fmt.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
-
-        // if sensor or gesture, set it inactive
-        if ( source_fmt.contains("sensors"))
-        {
-            QString copy = source_fmt;
-            copy.replace("data", "poll");
-            m_user.deactivate_input(copy.toStdString());
-        }
-        else if ( source_fmt.contains("gestures"))
-        {
-            QString copy = source_fmt;
-            copy.replace("trigger", "poll");
-            m_user.deactivate_input(copy.toStdString());
-        }
-
-        auto p_input = get_parameter_from_string(source_fmt.toStdString());
-        p_input->callbacks_clear();
-    }
 }
 
 void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction* interaction)
@@ -548,7 +521,7 @@ void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction*
     m_active_interaction = 0;
 
     auto p_end = get_parameter_from_string(m_user.m_address+"/interactions/current/end");
-    p_end->set_value ( ossia::impulse{} );
+    p_end->push_value ( ossia::impulse{} );
 
     // clear ending callbacks
     auto expr_source    = interaction->end_expression_source();
@@ -564,7 +537,7 @@ void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction*
     for ( const auto& mapping : interaction->mappings())
     {
         QString source_fmt = mapping->source();
-        source_fmt.replace("/user/0", QString::fromStdString(m_user.m_address));
+        source_fmt.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
 
         // if sensor or gesture, set it active
 
