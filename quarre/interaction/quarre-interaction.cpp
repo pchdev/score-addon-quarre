@@ -16,11 +16,10 @@ quarre::interaction::interaction(
     m_module            ( "No selected module"),
     m_title             ( "Untitled"),
     m_description       ( "No description"),
-    m_end_expression    ( "return true;"),
     m_length            ( 0 ),
     m_countdown         ( 0 )
 {
-
+    on_end_expression_changed("return true;");
 }
 
 void quarre::interaction::set_device_document_plugin(Explorer::DeviceDocumentPlugin& ddp)
@@ -183,13 +182,15 @@ template <> void DataStreamWriter::write(
         quarre::interaction& e )
 {
     int msz;
+    QString eex;
 
     m_stream    >> e.m_module >> e.m_title
                 >> e.m_description >> e.m_length
                 >> e.m_countdown
                 >> e.m_end_expression_source
-                >> e.m_end_expression;
+                >> eex;
 
+    e.on_end_expression_changed(eex);
     m_stream >> msz;
 
     for (; msz-- >0;)
@@ -222,9 +223,9 @@ template <> void JSONObjectWriter::write(
     e.m_title                   = obj [ "Title" ].toString();
     e.m_description             = obj [ "Description"].toString();
     e.m_length                  = obj [ "Length"].toInt();
-    e.m_countdown               = obj [ "Countdown" ].toInt();
-    e.m_end_expression          = obj [ "Expr" ].toString();
+    e.m_countdown               = obj [ "Countdown" ].toInt();    
     e.m_end_expression_source   = obj [ "ExprSrc" ].toString();
+    e.on_end_expression_changed ( obj [ "Expr" ].toString());
 
     for ( const auto& json_vref : obj ["Mappings"].toArray())
     {
