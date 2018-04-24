@@ -7,6 +7,7 @@
 #include <QVBoxLayout>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 
 namespace score     {
 namespace addons    {
@@ -37,7 +38,7 @@ class interaction final : public IdentifiedObject<interaction>
     const QString module                    () const;
     const QString title                     () const;
     const QString description               () const;
-    const QString& end_expression_js         () const;
+    const QString& end_expression_js        () const;
     const QString end_expression            () const;
     const QString end_expression_source     () const;
 
@@ -46,6 +47,9 @@ class interaction final : public IdentifiedObject<interaction>
     QStringList inputs()    const;
     const std::vector<quarre::mapping*>& mappings();
     ossia::time_sync& get_ossia_tsync() const;
+
+    void set_device_document_plugin (Explorer::DeviceDocumentPlugin &ddp);
+    Device::DeviceList& get_device_list() const;
 
     signals:
     void mapping_added      ( quarre::mapping& mapping );
@@ -74,6 +78,7 @@ class interaction final : public IdentifiedObject<interaction>
     int             m_countdown;
 
     quarre::InspectorWidget* m_inspector;
+    Explorer::DeviceDocumentPlugin* m_devdoc_plugin;
 
     std::shared_ptr<quarre::user> m_host;
     std::vector<quarre::mapping*> m_mappings;

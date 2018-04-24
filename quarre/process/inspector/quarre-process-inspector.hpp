@@ -90,8 +90,6 @@ class InspectorWidget final :
     void on_mapping_removed     ( quarre::mapping* mapping );
 
     private: //---------------------------------------------------------
-
-
     CommandDispatcher<> m_dispatcher;
     QLineEdit*         m_module;
     QLineEdit*         m_title;

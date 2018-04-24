@@ -137,12 +137,12 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     m_length            ( new QSpinBox ),
     m_countdown         ( new QSpinBox ),
     m_dctx              ( ctx )
-{
+{   
+    auto& explorer              = ctx.plugin<Explorer::DeviceDocumentPlugin>().explorer();
+    m_end_expression_source     = new Explorer::AddressAccessorEditWidget(explorer, this);
 
     m_interaction = object.interaction();
-
-    auto& explorer      = ctx.plugin<Explorer::DeviceDocumentPlugin>().explorer();
-    m_end_expression_source    = new Explorer::AddressAccessorEditWidget(explorer, this);
+    m_interaction->set_device_document_plugin(ctx.plugin<Explorer::DeviceDocumentPlugin>());
 
     State::AddressAccessor ahem;
     auto addr = m_interaction->end_expression_source();

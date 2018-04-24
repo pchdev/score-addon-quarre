@@ -5,6 +5,8 @@
 #include <quarre/panel/quarre-panel-delegate.hpp>
 #include <Device/Protocol/DeviceSettings.hpp>
 #include <utility>
+#include <Engine/OSSIA2score.hpp>
+#include <Engine/score2OSSIA.hpp>
 
 using namespace score::addons;
 using namespace ossia::net;
@@ -438,12 +440,13 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
         source_fmt.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
 
         QString dest    = mapping->destination();
-        QString dest_wd = dest.split(':')[1]; // remove device header address
+        auto state_addr = State::Address::fromString(dest).value_or(State::Address{});
+        auto& dlist = interaction->get_device_list();
 
+        auto& p_output  = *Engine::score_to_ossia::address(state_addr, dlist);
         auto p_input    = get_parameter_from_string(source_fmt.toStdString());
 
         // todo:
-        auto& p_output   = *get_parameter_from_string(dest_wd.toStdString());
 
         // if sensor or gesture, set it active
         if ( source_fmt.contains("sensors"))
