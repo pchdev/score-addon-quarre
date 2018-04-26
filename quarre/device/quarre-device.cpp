@@ -12,12 +12,9 @@ using namespace score::addons;
 using namespace ossia::net;
 using namespace ossia::oscquery;
 
-quarre::quarre_device* quarre::quarre_device::m_singleton = 0;
-#define QSD quarre::quarre_device::instance()->device()
-
-// --------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
 // USER_GESTURES
-// --------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
 static const std::vector<std::pair<std::string,std::vector<std::string>>> g_gestures =
 {
     { "whip"        , {}},
@@ -30,9 +27,9 @@ static const std::vector<std::pair<std::string,std::vector<std::string>>> g_gest
     { "twist",      { "left", "right" }}
 };
 
-// --------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
 // USER_SENSORS
-// --------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
 static const std::vector<std::pair<std::string,std::vector<pdata_t>>> g_sensors =
 {
     { "accelerometers", {
@@ -49,9 +46,9 @@ static const std::vector<std::pair<std::string,std::vector<pdata_t>>> g_sensors 
           { "close", ossia::val_type::BOOL }}}
 };
 
-// --------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
 // USER_GRAPHIC_CONTROLLERS
-// --------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
 
 static const std::vector<std::tuple<std::string,uint8_t,ossia::val_type>> g_controllers =
 {
@@ -61,10 +58,10 @@ static const std::vector<std::tuple<std::string,uint8_t,ossia::val_type>> g_cont
     { "strings", 1, ossia::val_type::LIST }
 };
 
-// --------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
 // USER_TREE
-// --------------------------------------------------------------------------------------------
-static const std::vector<std::pair<std::string,ossia::val_type>> g_user_tree =
+// ---------------------------------------------------------------------------------------------------------
+static const std::vector<pdata_t> g_user_tree =
 {
     { "/address", ossia::val_type::STRING },
 
@@ -119,13 +116,23 @@ static const std::vector<std::pair<std::string,ossia::val_type>> g_user_tree =
     //! the arguments are the same as /interactions/next/begin
 };
 
-// --------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
 // COMMON_TREE
-// --------------------------------------------------------------------------------------------
-static const std::vector<std::pair<std::string,ossia::val_type>> g_common_tree =
+// ---------------------------------------------------------------------------------------------------------
+static const std::vector<pdata_t> g_common_tree =
 {
     { "/connections/ids", ossia::val_type::LIST },
     //! binding user id by ipv4 address
+
+    { "/common/interactions/next/incoming", ossia::val_type::LIST },
+    { "/common/interactions/next/cancel", ossia::val_type::IMPULSE },
+    { "/common/interactions/next/begin", ossia::val_type::LIST },
+    { "/common/interactions/current/end", ossia::val_type::IMPULSE },
+    { "/common/interactions/current/stop", ossia::val_type::INT },
+    { "/common/interactions/current/pause", ossia::val_type::IMPULSE },
+    { "/common/interactions/current/resume", ossia::val_type::IMPULSE },
+    { "/common/interactions/current/force", ossia::val_type::LIST },
+    //! when we want to send an interaction to ALL users
 
     { "/common/scenario/start", ossia::val_type::IMPULSE },
     //! starts the scenario, activating global counter
@@ -153,278 +160,215 @@ static const std::vector<std::pair<std::string,ossia::val_type>> g_common_tree =
     //! displays the name of the current scene
 };
 
-inline parameter_base* get_parameter_from_string ( std::string address )
+//---------------------------------------------------------------------------------------------------------
+// UTILITY
+//---------------------------------------------------------------------------------------------------------
+
+inline parameter_base& quarre::server::get_parameter_from_string ( std::string& address )
 {
-    auto& dev   = quarre::quarre_device::instance()->device();
-    auto node   = ossia::net::find_node(dev, address);
-    return node->get_parameter();
+    auto node   = ossia::net::find_node(server::get_device(), address);
+    return      node->get_parameter();
 }
 
-// ------------------------------------------------------------------------------
-// USER_INPUT
-// ------------------------------------------------------------------------------
-
-quarre::user::input::input(std::string addr, generic_device& device) : m_addr ( addr )
+inline parameter_base& quarre::server::get_parameter_from_string ( QString& address )
 {
-    auto& n_avail    = ossia::net::create_node(device, addr + "/available");
-    m_available      = parptr_t(n_avail.create_parameter(ossia::val_type::BOOL));
+    return get_parameter_from_string(address.toStdString());
 }
 
-void quarre::user::input::assign(const std::string &id,
-        std::function<void(const ossia::value&)> function)
+inline parameter_base& quarre::server::get_user_parameter_from_string
+( const quarre::user::data& u, std::string& address )
 {
-    for ( const auto& data : m_data )
-    {
-        auto addr = ossia::net::osc_parameter_string(*data);
-        if ( addr.find(id) == std::string::npos )
-            data->add_callback(function);
-    }
+    std::string res = u.base_address + address;
+    return server::get_parameter_from_string(res);
 }
 
-void quarre::user::input::unassign(const std::string &id)
-{
-    for ( const auto& data : m_data )
-    {
-        auto addr = ossia::net::osc_parameter_string(*data);
-        if ( addr.find(id) == std::string::npos )
-            data->callbacks_clear();
-    }
-}
-
-// ------------------------------------------------------------------------------
-// USER_GESTURE
-// ------------------------------------------------------------------------------
-
-quarre::user::gesture::gesture(
-        std::string addr, std::vector<std::string> subgestures,
-        generic_device& device)
-    : quarre::user::input ( addr, device )
-{
-    auto& n_trig    = ossia::net::create_node(device, m_addr + "/trigger");
-    auto p_trig     = n_trig.create_parameter(ossia::val_type::BOOL);
-
-    auto& n_active   = ossia::net::create_node(device, addr + "/poll");
-    m_active         = parptr_t(n_active.create_parameter(ossia::val_type::BOOL));
-
-    m_data.push_back(parptr_t (p_trig));
-
-    for ( const auto& subgesture : subgestures )
-    {
-        auto& n_sub = ossia::net::create_node(device, m_addr + "/" + subgesture + "/trigger");
-        auto p_sub = n_sub.create_parameter(ossia::val_type::BOOL);
-
-        m_data.push_back(parptr_t(p_sub));
-    }
-}
-
-// ------------------------------------------------------------------------------
-// USER_SENSOR
-// ------------------------------------------------------------------------------
-
-quarre::user::sensor::sensor(std::string addr, std::vector<pdata_t> data, generic_device& device) :
-
-    quarre::user::input ( addr, device)
-{
-    for ( const auto& d : data )
-    {
-        auto& ndata     = ossia::net::create_node(device, m_addr + "/" + d.first + "/data");
-        auto pdata      = ndata.create_parameter(d.second);
-
-        auto& n_active     = ossia::net::create_node(device, m_addr + "/" + d.first + "/poll");
-        auto p_active      = n_active.create_parameter(ossia::val_type::BOOL);
-    }
-}
-
-// ------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------
 // USER
-// ------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------
 
-quarre::user::user(uint8_t id, generic_device& device) :
-    m_id ( id ), m_status ( quarre::user::status::DISCONNECTED ),
-    m_interaction_hdl(new quarre::user::interaction_hdl(*this))
+quarre::user::data& quarre::user::instantiate_user(uint8_t index)
 {
-    m_address = "/user/";
-    m_address += std::to_string(m_id);
+    auto _data = new quarre::user::data;
 
-    auto gest_addr = m_address + "/gestures/";
-    auto sens_addr = m_address + "/sensors/";
-    auto ctrl_addr = m_address + "/controllers/";
+    _data->active_interaction       = 0;
+    _data->incoming_interaction     = 0;
+    _data->connected                = false;
+    _data->index                    = index;
+    _data->status                   = user::status_t::DISCONNECTED;
+    _data->base_address             = "/user/";
+    _data->base_address             += std::to_string(index);
 
-    // make user tree
+    return *_data;
+}
+
+void quarre::user::initialize_user_node_tree(const quarre::user::data& u)
+{
     for ( const auto& parameter : g_user_tree )
     {
-        auto& node = ossia::net::create_node(device, m_address + parameter.first);
+        auto node = ossia::net::create_node(server::get_device(), u.base_address + parameter.first);
         node.create_parameter(parameter.second);
     }
 
-    for ( const auto& input : g_gestures )
+    for ( const auto& gesture : g_gestures )
     {
-        auto gest = new quarre::user::gesture(gest_addr + input.first, input.second, device);
-        m_inputs.push_back(gest);
+        auto node = ossia::net::create_node(
+                    server::get_device(),
+                    u.base_address + "/gestures/" + gesture.first);
+
+        auto available_node = node.create_child("available");
+        available_node->create_parameter(ossia::val_type::BOOL);
+
+        auto poll_node = node.create_child("poll");
+        poll_node->create_parameter(ossia::val_type::BOOL);
+
+        auto trigger_node = node.create_child("trigger");
+        trigger_node->create_parameter(ossia::val_type::IMPULSE);
+
+        // create gesture's subnodes
+
+        for ( const auto& subgesture : gesture.second )
+        {
+            auto subnode = node.create_child(subgesture);
+            auto subtrigger = subnode.create_child("trigger");
+            subtrigger->create_parameter(ossia::val_type::IMPULSE);
+        }
     }
 
     for ( const auto& sensor : g_sensors )
     {
-        auto sens = new quarre::user::sensor(sens_addr + sensor.first, sensor.second, device);
-        m_inputs.push_back(sens);
+        auto sensor_node = ossia::net::create_node(
+                    server::get_device(),
+                    u.base_address + "/sensors/" + sensor.first );
+
+        auto available_node = sensor_node.create_child("available");
+        available_node->create_parameter(ossia::val_type::BOOL);
+
+        // create sensor data nodes
+        for ( const auto& axis : sensor.second )
+        {
+            auto subnode    = sensor_node.create_child(axis.first);
+            auto poll_node  = subnode.create_child("poll");
+            poll_node       ->create_parameter(ossia::val_type::BOOL);
+
+            auto data_node  = subnode.create_child("data");
+            data_node       ->create_parameter(axis.second);
+        }
     }
 
     for ( const auto& controller : g_controllers )
     {
-        auto ctrl_name = std::get<0>(controller);
+        auto controller_node = ossia::net::create_node(
+                    server::get_device(),
+                    u.base_address + "/controllers/" + std::get<0>(controller) );
+
         for ( int i = 0; i < std::get<1>(controller); ++i )
         {
-            auto& node = ossia::net::create_node(device, ctrl_addr + ctrl_name + "/" + std::to_string(i) + "/value");
-            auto param = node.create_parameter(std::get<2>(controller));
+            auto subnode        = controller_node.create_child(std::to_string(i));
+            auto subnode_data   = subnode->create_child("data");
+            subnode_data        ->create_parameter(std::get<2>(controller));
         }
     }
 }
 
-std::string quarre::user::input::address()
+inline void replace_user_wildcard(const quarre::user::data& u, QString& target)
 {
-    return m_addr;
+    target.replace("0", QString::number(u.index));
 }
 
-bool quarre::user::supports_input(const std::string& target) const
+inline void get_input_base_address(QString& target)
 {
-    // TODO, bad design...
-    auto target_qstr = QString::fromStdString(target);
+    if ( target.contains("gestures"))
+        target.remove("/trigger");
 
-    if ( target_qstr.contains("/controllers")) return true;
-    target_qstr.replace("/user/0", QString::fromStdString(m_address));
+    else if ( target.contains("sensors"))
+        target.remove("/data");
 
-    for ( auto& input : m_inputs )
-    {
-        QString user_input = QString::fromStdString(input->address());
-        user_input.remove(QString::fromStdString(m_address));
-
-        if ( target_qstr.contains(user_input))
-        {
-            auto p_input = get_parameter_from_string(m_address + user_input.toStdString() + "/available");
-            return p_input->value().get<bool>();
-        }
-    }
-
-    return false;
+    else return;
 }
 
-bool quarre::user::connected() const
+inline void sanitize_input_name(const quarre::user::data& u, QString& input_name)
 {
-    return m_connected;
+    if ( input_name.startsWith("quarre-server:"))
+        input_name.replace("quarre-server:/user/0", u.base_address);
+
+    else replace_user_wildcard(u, input_name);
 }
 
-void quarre::user::set_connected(bool connected)
+inline parameter_base& get_input_parameter(const quarre::user::data& u, QString input, QString replacement)
 {
-    m_connected = connected;
+    sanitize_input_name         ( u, input );
+    get_input_base_address      ( input );
+    input.append                ( replacement );
+
+    return quarre::server::get_parameter_from_string(input);
 }
 
-void quarre::user::set_address(const std::string &address)
+inline bool quarre::user::supports_input(const quarre::user::data& u, QString input)
 {
-    auto param = get_parameter_from_string(m_address+"/address");
-    auto& addr = param->set_value(address);
+    auto parameter = get_input_parameter(u, input, "/available");
+    return parameter.value().get<bool>();
 }
 
-std::string const& quarre::user::address() const
+inline void quarre::user::activate_input(const quarre::user::data &u, QString input)
 {
-    auto param = get_parameter_from_string(m_address+"/address");
-    auto& addr = param->value().get<std::string>();
-
-    return addr;
+    auto parameter = server::get_input_parameter(u, input, "/poll");
+    parameter.push_value(true);
 }
 
-enum quarre::user::status quarre::user::status() const
+inline void quarre::user::deactivate_input(const quarre::user::data &u, QString input)
 {
-    return m_status;
+    auto parameter = server::get_input_parameter(u, input, "/poll");
+    parameter.push_value(false);
 }
 
-void quarre::user::set_status(const enum status &st)
+inline void quarre::user::update_net_address(quarre::user::data &u, const std::string &net_address)
 {
-    m_status = st;
+    u.net_address   = net_address;
+    auto& parameter = server::get_user_parameter_from_string(u, "/address");
+
+    parameter.push_value(net_address);
 }
 
-uint8_t quarre::user::index() const
+//---------------------------------------------------------------------------------------------------------
+// INTERACTIONS
+//---------------------------------------------------------------------------------------------------------
+
+void quarre::user::set_incoming_interaction(quarre::user::data& u, const quarre::interaction& i)
 {
-    return m_id;
+    u.incoming_interaction = &i;
+
+    if ( u.status == user::status_t::ACTIVE )
+         u.status = user::status_t::INCOMING_ACTIVE;
+    else u.status = user::status_t::INCOMING;
+
+    auto& parameter = server::get_user_parameter_from_string(u, "/interactions/next/incoming");
+    parameter.push_value(i.to_list());
 }
 
-uint8_t quarre::user::interaction_hdl::interaction_count() const
+void quarre::user::set_active_interaction(quarre::user::data &u, const quarre::interaction& i)
 {
-    return m_interaction_count;
-}
+    u.incoming_interaction  = 0;
+    u.active_interaction    = &i;
+    u.status                = user::status_t::ACTIVE;
 
-void quarre::user::activate_input(const std::string& target)
-{
-    auto p_input = get_parameter_from_string(target);
-    p_input->push_value(true);
-}
+    // push interaction to remote
+    auto p_active = server::get_user_parameter_from_string(u, "/interactions/next/begin");
+    p_active->push_value(i.to_list());
 
-void quarre::user::deactivate_input(const std::string& target)
-{
-    auto p_input = get_parameter_from_string(target);
-    p_input->push_value(false);
-}
-
-
-quarre::user::interaction_hdl::interaction_hdl(quarre::user &parent)
-    : m_user(parent) {}
-
-quarre::user::interaction_hdl* quarre::user::interactions()
-{
-    return m_interaction_hdl;
-}
-
-int quarre::user::interaction_hdl::active_countdown() const
-{
-    return m_active_countdown->value().get<int>();
-}
-
-quarre::interaction* quarre::user::interaction_hdl::incoming_interaction() const
-{
-    return m_incoming_interaction;
-}
-
-quarre::interaction* quarre::user::interaction_hdl::active_interaction() const
-{
-    return m_active_interaction;
-}
-
-void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* interaction)
-{
-    if ( interaction == m_incoming_interaction )
-        m_incoming_interaction = 0;
-
-    m_active_interaction = interaction;
-
-    auto p_act = get_parameter_from_string(m_user.m_address+"/interactions/next/begin");
-    p_act->push_value(interaction->to_list());
-
-    // get end expression source, set the expression as callback
-
-    auto expr_source    = interaction->end_expression_source();
-    auto& expr          = interaction->end_expression_js();
-    auto& tsync         = interaction->get_ossia_tsync();
+    // set end expression
+    auto expr_source    = i.end_expression_source();
+    auto& expr          = i.end_expression_js();
+    auto& tsync         = i.get_ossia_tsync();
 
     if ( expr_source != "" )
     {
-        expr_source.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
-        auto p_expr_src = get_parameter_from_string(expr_source.toStdString());
+        activate_input(u, expr_source);
+        auto p_expr_source = server::get_user_parameter_from_string(u, expr_source);
 
-        // if sensor or gesture, set it active
-        if ( expr_source.contains("sensors"))
-        {
-            expr_source.replace("data", "poll");
-            m_user.activate_input(expr_source.toStdString());
-        }
-        else if ( expr_source.contains("gestures"))
-        {
-            expr_source.replace("trigger", "poll");
-            m_user.activate_input(expr_source.toStdString());
-        }
-
-        p_expr_src->add_callback([&](const ossia::value&v) {
+        p_expr_source->add_callback([&](const ossia::value&v) {
 
             QJSValueList arguments;
-            QJSValue fun = m_js_engine.evaluate(expr);
+            QJSValue fun = u.js_engine.evaluate(expr);
 
             switch (v.getType())
             {
@@ -444,40 +388,23 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
             if ( result.toBool() )
                 tsync.trigger_request = true;
         });
+
     }
 
     for ( const auto& mapping : interaction->mappings())
     {
-        QString source_fmt = mapping->source();
-        source_fmt.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
+        auto map_dest       = mapping->destination();
+        auto& map_expr      = mapping->expression_js();
+        auto& p_input       = server::get_user_parameter_from_string(u, mapping->source());
 
-        QString dest    = mapping->destination();
-        auto state_addr = State::Address::fromString(dest).value_or(State::Address{});
-        auto& dlist = interaction->get_device_list();
-
-        auto& p_output  = *Engine::score_to_ossia::address(state_addr, dlist);
-        auto p_input    = get_parameter_from_string(source_fmt.toStdString());
-
-        // todo:
-
-        // if sensor or gesture, set it active
-        if ( source_fmt.contains("sensors"))
-        {
-            source_fmt.replace("data", "poll");
-            m_user.activate_input(source_fmt.toStdString());
-        }
-        else if ( source_fmt.contains("gestures"))
-        {
-            source_fmt.replace("trigger", "poll");
-            m_user.activate_input(source_fmt.toStdString());
-        }
-
-        auto& map_expr = mapping->expression_js();
+        auto state_addr     = State::Address::fromString(map_dest).value_or(State::Address{});
+        auto& dlist         = i.get_device_list();
+        auto& p_output      = *Engine::score_to_ossia::address(state_addr, dlist);
 
         p_input->add_callback([&](const ossia::value& v) {
 
             QJSValueList arguments;
-            QJSValue fun = m_js_engine.evaluate(map_expr);
+            QJSValue fun = u.js_engine.evaluate(map_expr);
 
             switch (v.getType())
             {
@@ -493,8 +420,6 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
             }
 
             QJSValue result = fun.call(arguments);
-
-            auto name = p_output.get_node().get_name();
 
             switch ( p_output.get_value_type())
             {
@@ -513,123 +438,77 @@ void quarre::user::interaction_hdl::set_active_interaction(quarre::interaction* 
     }
 }
 
-void quarre::user::interaction_hdl::set_incoming_interaction(quarre::interaction* interaction)
+void quarre::user::end_interaction(quarre::user::data &u, const quarre::interaction &i)
 {
-    m_incoming_interaction = interaction;    
-    auto p_inc = get_parameter_from_string(m_user.m_address+"/interactions/next/incoming");
+    u.active_interaction = 0;
 
-    p_inc->push_value(interaction->to_list());
-}
+    if ( u.status == user::status_t::INCOMING_ACTIVE )
+         u.status = user::status_t::INCOMING;
+    else u.status = user::status_t::IDLE;
 
-void quarre::user::interaction_hdl::cancel_next_interaction(quarre::interaction* interaction)
-{
-    // TODO!
-    m_incoming_interaction = 0;
-}
-
-void quarre::user::interaction_hdl::stop_current_interaction(quarre::interaction* interaction)
-{
-}
-
-void quarre::user::interaction_hdl::end_current_interaction(quarre::interaction* interaction)
-{
-    m_active_interaction = 0;
-
-    auto p_end = get_parameter_from_string(m_user.m_address+"/interactions/current/end");
+    p_end = server::get_user_parameter_from_string(u, "/interactions/current/end");
     p_end->push_value ( ossia::impulse{} );
 
-    // clear ending callbacks
-    auto expr_source    = interaction->end_expression_source();
+    auto expr_source = i.end_expression_source();
 
-    if ( expr_source != "" )
-    {
-        expr_source.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
+    if ( expr_source != "")
+        quarre::user::deactivate_input(u, expr_source);
 
-        // if sensor or gesture, set it inactive
-        if ( expr_source.contains("sensors"))
-        {
-            expr_source.replace("data", "poll");
-            m_user.deactivate_input(expr_source.toStdString());
-        }
-        else if ( expr_source.contains("gestures"))
-        {
-            expr_source.replace("trigger", "poll");
-            m_user.deactivate_input(expr_source.toStdString());
-        }
+    auto p_expr_source = server::get_user_parameter_from_string(u, expr_source);
+    p_expr_source.callbacks_clear();
 
-        auto p_expr_src = get_parameter_from_string(expr_source.toStdString());
-        p_expr_src->callbacks_clear();
-    }
-
-    // clear mapping callbacks
     for ( const auto& mapping : interaction->mappings())
     {
-        QString source_fmt = mapping->source();
-        source_fmt.replace("quarre-server:/user/0", QString::fromStdString(m_user.m_address));
-
-        // if sensor or gesture, set it active
-
-        if ( source_fmt.contains("sensors"))
-        {
-            source_fmt.replace("data", "poll");
-            m_user.deactivate_input(source_fmt.toStdString());
-        }
-        else if ( source_fmt.contains("gestures"))
-        {
-            source_fmt.replace("trigger", "poll");
-            m_user.deactivate_input(source_fmt.toStdString());
-        }
-
-        auto p_input = get_parameter_from_string(source_fmt.toStdString());
+        user::deactivate_input(u, mapping->source());
+        auto p_input = server::get_user_parameter_from_string(u, mapping->source());
         p_input->callbacks_clear();
     }
 }
 
-void quarre::user::interaction_hdl::pause_current_interaction(quarre::interaction* interaction)
+inline void quarre::user::pause_current_interaction(quarre::user::data &u, const quarre::interaction &i)
 {
-    auto p_pause = get_parameter_from_string(m_user.m_address+"/interactions/current/pause");
-    p_pause->set_value ( ossia::impulse{} );
+    auto p_pause = server::get_user_parameter_from_string(u, "/interactions/current/pause");
+    p_pause.push_value ( ossia::impulse{} );
 }
 
-void quarre::user::interaction_hdl::resume_current_interaction(quarre::interaction* interaction)
+inline void quarre::user::resume_current_interaction(quarre::user::data &u, const quarre::interaction &i)
 {
-    auto p_pause = get_parameter_from_string(m_user.m_address+"/interactions/current/resume");
-    p_pause->set_value ( ossia::impulse{} );
-
+    auto p_resume = server::get_user_parameter_from_string(u, "/interactions/current/resume");
+    p_resume.push_value ( ossia::impulse{} );
 }
 
-// ------------------------------------------------------------------------------
-// USER_DISPATCHER
-// ------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------
+// DISPATCH INTERACTION
+//---------------------------------------------------------------------------------------------------------
 
-void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* interaction)
+void quarre::dispatching::dispatch_incoming_interaction(const quarre::server::data& server, const quarre::interaction &i)
 {
     // candidate algorithm
     // eliminate non-connected clients
     // eliminate clients that cannot support the requested inputs
     // eliminate clients that already have an incoming interaction
 
-    std::vector<quarre_device::candidate> candidates;
+    std::vector<quarre::dispatching::candidate> candidates;
 
-    for ( const auto& user : m_users )
+    for ( const auto& user : server.users )
     {
-        quarre_device::candidate candidate;
+        quarre::dispatching::candidate candidate;
 
-        candidate.user      = user;
+        candidate.target    = user;
         candidate.priority  = 0;
 
-        switch ( user->status() )
+        switch ( user->status )
         {
-        case user::status::DISCONNECTED:        goto next;
-        case user::status::INCOMING:            goto next;
-        case user::status::INCOMING_ACTIVE:     goto next;
+        case user::status_t::DISCONNECTED:        goto next;
+        case user::status_t::INCOMING:            goto next;
+        case user::status_t::INCOMING_ACTIVE:     goto next;
 
-        case user::status::IDLE:
+        case user::status_t::IDLE:
             goto check_inputs; // priority stays at 0
 
-        case user::status::ACTIVE:
+        case user::status_t::ACTIVE:
         {
-            if ( interaction->countdown() <
+            if ( i.countdown() <
                  candidate.user->interactions()->active_countdown() + 5) goto next;
 
             candidate.priority = 1;
@@ -638,17 +517,15 @@ void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* i
         }
 
         check_inputs:
-        for ( const auto& input : interaction->inputs() )
+        for ( const auto& input : i.inputs() )
         {
-            bool support = user->supports_input(input.toStdString());
-            qDebug() << input;
-            qDebug() << support;
+            bool support = user->supports_input(input);
             if ( !support )
                 goto next;
         }
 
         select:
-        candidate.priority += user->interactions()->interaction_count();
+        candidate.priority += user->interaction_count;
         candidates.push_back(candidate);
 
         next:
@@ -659,7 +536,7 @@ void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* i
     // if there is no candidate, interaction will not be dispatched
     if ( candidates.size() == 0 ) return;
 
-    quarre_device::candidate* winner = 0;
+    quarre::dispatching::candidate* winner = 0;
 
     for ( auto& candidate : candidates )
     {
@@ -683,43 +560,43 @@ void quarre::quarre_device::dispatch_incoming_interaction(quarre::interaction* i
             winner = &candidate;
     }
 
-    if ( winner->user )
-        winner->user->interactions()->set_incoming_interaction(interaction);
+    if ( winner->target )
+        user::set_incoming_interaction(*winner->target, i);
 }
 
-void quarre::quarre_device::dispatch_active_interaction(quarre::interaction* interaction)
+void quarre::dispatching::dispatch_active_interaction(const quarre::server::data &server, const quarre::interaction &i)
 {
-    for ( const auto& user : m_users )
+    for ( const auto& user : server.users )
     {
-        if ( user->interactions()->incoming_interaction() == interaction )
-            user->interactions()->set_active_interaction ( interaction );
+        if ( user->incoming_interaction == &i )
+            user::set_active_interaction(*user, i);
     }
 }
 
-void quarre::quarre_device::dispatch_ending_interaction(quarre::interaction* interaction)
+void quarre::dispatching::dispatch_ending_interaction(const quarre::server::data &server, const quarre::interaction &i)
 {
-    for ( const auto& user : m_users )
+    for ( const auto& user : server.users )
     {
-        if ( user->interactions()->active_interaction() == interaction )
-            user->interactions()->end_current_interaction ( interaction );
+        if ( user->active_interaction == &i )
+            user::end_interaction(*user, i);
     }
 }
 
-void quarre::quarre_device::dispatch_paused_interaction(quarre::interaction* interaction)
+void quarre::dispatching::dispatch_paused_interaction(const quarre::server::data &server, const quarre::interaction &i)
 {
-    for ( const auto& user : m_users )
+    for ( const auto& user : server.users )
     {
-        if ( user->interactions()->active_interaction() == interaction )
-            user->interactions()->pause_current_interaction( interaction );
+        if ( user->active_interaction == &i )
+            user::pause_interaction(*user, i);
     }
 }
 
-void quarre::quarre_device::dispatch_resumed_interaction(quarre::interaction* interaction)
+void quarre::dispatching::dispatch_resumed_interaction(const quarre::server::data &server, const quarre::interaction &i)
 {
-    for ( const auto& user : m_users )
+    for ( const auto& user : server.users )
     {
-        if ( user->interactions()->active_interaction() == interaction )
-            user->interactions()->resume_current_interaction( interaction );
+        if ( user->active_interaction == &i )
+            user::resume_interaction(*user, i);
     }
 }
 
@@ -743,7 +620,7 @@ generic_device& quarre::quarre_device::device()
     return *dynamic_cast<generic_device*>(m_dev.get());
 }
 
-quarre::quarre_device::quarre_device(const Device::DeviceSettings &settings) :
+quarre::server::data::data(const Device::DeviceSettings &settings) :
     OwningOSSIADevice ( settings )
 {
     m_capas.canRefreshTree      = true;
@@ -751,15 +628,12 @@ quarre::quarre_device::quarre_device(const Device::DeviceSettings &settings) :
     m_capas.canSetProperties    = false;
     m_capas.canRemoveNode       = false;
 
-    connect(this, &quarre_device::sig_command,
-            this, &quarre_device::slot_command, Qt::QueuedConnection);
-
     reconnect();
 }
 
-quarre::quarre_device::~quarre_device() {}
+quarre::server::data::~data() {}
 
-bool quarre::quarre_device::reconnect()
+bool quarre::server::data::reconnect()
 {
     disconnect();
     quarre::SpecificSettings qsettings;
@@ -789,12 +663,12 @@ bool quarre::quarre_device::reconnect()
     // it will select the best candidate to receive the interaction
     auto& gendev = *dynamic_cast<generic_device*>(m_dev.get());
 
-    m_user_zero = new quarre::user(0, gendev);
+    user_zero = new quarre::user(0, gendev);
 
-    for ( int i = 1; i <= m_n_max_users; ++i )
-        m_users.push_back(new quarre::user(i, gendev));
+    for ( int i = 1; i <= n_max_users; ++i )
+        users.push_back(new quarre::user(i, gendev));
 
-    make_common_tree();
+    server::make_server_common_tree(*this);
 
     auto panel = quarre::PanelDelegate::instance();
     panel->on_server_instantiated(*this);
@@ -802,21 +676,21 @@ bool quarre::quarre_device::reconnect()
     return connected();
 }
 
-void quarre::quarre_device::recreate(const Device::Node &n)
+void quarre::server::data::recreate(const Device::Node &n)
 {
     for ( auto& child : n )
         addNode(child);
 }
 
-void quarre::quarre_device::on_client_connected(const std::string &ip)
+void quarre::server::on_client_connected(const std::string &ip)
 {
-    for ( const auto& user : m_users )
+    for ( const auto& user : g_server->users )
     {
-        if ( !user->connected() )
+        if ( !user->connected )
         {
-            user->set_connected  ( true );
-            user->set_address    ( ip );
-            user->set_status     ( quarre::user::status::IDLE );
+            user->connected = true;
+            user::update_net_address ( *user, ip );
+            user->status = quarre::user::status_t::IDLE;
 
             // update panel
             if ( auto panel = quarre::PanelDelegate::instance() )
@@ -827,7 +701,7 @@ void quarre::quarre_device::on_client_connected(const std::string &ip)
             auto ip_bis         = splitted_ip[0].toStdString();
 
             // update id bindings
-            auto ids_p = get_parameter_from_string("/connections/ids");
+            auto ids_p = server::get_parameter_from_string("/connections/ids");
             auto ids_v = ids_p->value().get<std::vector<ossia::value>>();
 
             // in case address already exists ( disconnection failed )
@@ -844,14 +718,15 @@ void quarre::quarre_device::on_client_connected(const std::string &ip)
     }
 }
 
-void quarre::quarre_device::on_client_disconnected(const std::string &ip)
+void quarre::server::on_client_disconnected(const std::string &ip)
 {
-    for ( const auto& user : m_users )
-        if ( user->address() == ip )
+    for ( const auto& user : g_server->users )
+
+        if ( user->net_address == ip )
         {
-            user->set_connected  ( false );
-            user->set_address    ( "" );
-            user->set_status     ( quarre::user::status::DISCONNECTED );
+            user->connected     = false;
+            user->net_address   = "";
+            user->status        = quarre::user::status_t::DISCONNECTED;
 
             if ( auto panel = quarre::PanelDelegate::instance() )
                 quarre::PanelDelegate::instance()->on_user_changed(*user);
@@ -873,23 +748,13 @@ void quarre::quarre_device::on_client_disconnected(const std::string &ip)
         }
 }
 
-uint8_t quarre::quarre_device::max_users() const
-{
-    return m_n_max_users;
-}
-
-void quarre::quarre_device::make_common_tree()
+void quarre::server::make_server_common_tree(quarre::server::data& server)
 {        
     for ( const auto& parameter : g_common_tree )
     {
-        auto& gendev = *dynamic_cast<generic_device*>(m_dev.get());
-        auto& node = ossia::net::create_node(gendev, parameter.first);
+        auto& dev = server::get_device(server);
+        auto& node = ossia::net::create_node(dev, parameter.first);
         node.create_parameter(parameter.second);
     }
-}
-
-void quarre::quarre_device::slot_command()
-{
-
 }
 
