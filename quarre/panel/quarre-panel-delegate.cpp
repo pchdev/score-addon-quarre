@@ -10,8 +10,8 @@ quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
     m_layout(new QFormLayout)
 {
     m_singleton = this;
-    if ( g_server )
-        on_server_instantiated( *g_server );
+    if ( &quarre::server::instance() )
+        on_server_instantiated( quarre::server::instance());
 }
 
 quarre::PanelDelegate* quarre::PanelDelegate::instance()

@@ -4,6 +4,8 @@
 #include <ossia/ossia.hpp>
 #include <Engine/Protocols/OSSIADevice.hpp>
 #include <quarre/interaction/quarre-interaction.hpp>
+#include <quarre/panel/quarre-panel-delegate.hpp>
+
 #include <QJSEngine>
 
 using namespace ossia::net;
@@ -16,9 +18,56 @@ namespace addons    {
 namespace quarre    {
 
 class interaction;
-class server;
+class user;
 class PanelDelegate;
-class dispatcher;
+
+class dispatcher
+{
+    public:
+    static bool dispatch_incoming_interaction   ( quarre::interaction& i );
+    static void dispatch_active_interaction     ( quarre::interaction& i );
+    static void dispatch_ending_interaction     ( quarre::interaction& i );
+    static void dispatch_paused_interaction     ( quarre::interaction& i );
+    static void dispatch_resumed_interaction    ( quarre::interaction& i );
+
+    private:
+    struct candidate
+    {
+        quarre::user* target;
+        uint8_t priority;
+    };
+
+};
+
+class server : public Engine::Network::OwningOSSIADevice
+{
+    Q_OBJECT
+
+    friend class dispatcher;
+    friend class PanelDelegate;
+
+    public:
+    server (::Device::DeviceSettings const& settings );
+    static quarre::server& instance();
+    virtual bool reconnect ( ) override;
+    virtual void recreate ( const Device::Node& ) override;
+
+    parameter_base& get_parameter_from_string       ( std::string& address );
+    parameter_base& get_parameter_from_string       ( QString& address );
+    parameter_base& get_user_parameter_from_string  ( const quarre::user& usr, std::string address );
+
+    void on_client_connected        ( std::string const& ip_address );
+    void on_client_disconnected     ( std::string const& ip_address );
+    generic_device& get_device      ( );
+
+    private:
+    static quarre::server* m_singleton;
+    void make_common_tree ( );
+
+    quarre::user* m_user_zero;
+    std::vector<quarre::user*> m_users;
+    uint8_t m_n_max_users;
+};
 
 enum class user_status
 {
@@ -70,53 +119,6 @@ class user
     quarre::server&         m_server;
     QJSEngine               m_js_engine;
 };
-
-class dispatcher
-{
-    public:
-    static bool dispatch_incoming_interaction   ( quarre::interaction& i );
-    static void dispatch_active_interaction     ( quarre::interaction& i );
-    static void dispatch_ending_interaction     ( quarre::interaction& i );
-    static void dispatch_paused_interaction     ( quarre::interaction& i );
-    static void dispatch_resumed_interaction    ( quarre::interaction& i );
-
-    private:
-    struct candidate
-    {
-        quarre::user* target;
-        uint8_t priority;
-    };
-};
-
-class server : public Engine::Network::OwningOSSIADevice
-{
-    Q_OBJECT
-
-    friend class dispatcher;
-    friend class PanelDelegate;
-
-    public:
-    server (::Device::DeviceSettings const& settings );
-    virtual bool reconnect ( ) override;
-    virtual void recreate ( const Device::Node& ) override;
-
-    parameter_base& get_parameter_from_string       ( std::string& address );
-    parameter_base& get_parameter_from_string       ( QString& address );
-    parameter_base& get_user_parameter_from_string  ( const quarre::user& usr, std::string address );
-
-    void on_client_connected        ( std::string const& ip_address );
-    void on_client_disconnected     ( std::string const& ip_address );
-    generic_device& get_device      ( );
-
-    private:
-    void make_common_tree ( );
-
-    quarre::user* m_user_zero;
-    std::vector<quarre::user*> m_users;
-    uint8_t m_n_max_users;
-};
-
-quarre::server* g_server = 0;
 
 }
 }

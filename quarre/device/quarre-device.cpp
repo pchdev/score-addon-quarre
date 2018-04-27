@@ -12,6 +12,8 @@ using namespace score::addons;
 using namespace ossia::net;
 using namespace ossia::oscquery;
 
+quarre::server* quarre::server::m_singleton = 0;
+
 // ---------------------------------------------------------------------------------------------------------
 // USER_GESTURES
 // ---------------------------------------------------------------------------------------------------------
@@ -164,19 +166,19 @@ static const std::vector<pdata_t> g_common_tree =
 // UTILITY
 //---------------------------------------------------------------------------------------------------------
 
-inline parameter_base& quarre::server::get_parameter_from_string ( std::string& address )
+parameter_base& quarre::server::get_parameter_from_string ( std::string& address )
 {
     auto node   = ossia::net::find_node(get_device(), address);
     return      *node->get_parameter();
 }
 
-inline parameter_base& quarre::server::get_parameter_from_string ( QString& address )
+parameter_base& quarre::server::get_parameter_from_string ( QString& address )
 {
     auto node   = ossia::net::find_node(get_device(), address.toStdString());
     return      *node->get_parameter();
 }
 
-inline parameter_base& quarre::server::get_user_parameter_from_string(
+parameter_base& quarre::server::get_user_parameter_from_string(
         const quarre::user &usr, std::string address )
 {
     std::string res = usr.m_base_address + address;
@@ -267,12 +269,12 @@ void quarre::user::make_user_tree()
     }
 }
 
-inline void quarre::user::replace_user_wildcard(QString& target)
+void quarre::user::replace_user_wildcard(QString& target)
 {
     target.replace("0", QString::number(m_index));
 }
 
-inline void quarre::user::get_input_base_address(QString& target)
+void quarre::user::get_input_base_address(QString& target)
 {
     if ( target.contains("gestures"))
         target.remove("/trigger");
@@ -283,7 +285,7 @@ inline void quarre::user::get_input_base_address(QString& target)
     else return;
 }
 
-inline void quarre::user::sanitize_input_name(QString& input_name)
+void quarre::user::sanitize_input_name(QString& input_name)
 {
     if ( input_name.startsWith("quarre-server:"))
         input_name.replace("quarre-server:/user/0", QString::fromStdString(m_base_address));
@@ -291,7 +293,7 @@ inline void quarre::user::sanitize_input_name(QString& input_name)
     else replace_user_wildcard(input_name);
 }
 
-inline parameter_base& quarre::user::get_input_parameter(QString input, QString replacement)
+parameter_base& quarre::user::get_input_parameter(QString input, QString replacement)
 {
     sanitize_input_name         ( input );
     get_input_base_address      ( input );
@@ -300,25 +302,25 @@ inline parameter_base& quarre::user::get_input_parameter(QString input, QString 
     return m_server.get_parameter_from_string(input);
 }
 
-inline bool quarre::user::supports_input(QString input)
+bool quarre::user::supports_input(QString input)
 {
     auto& parameter = get_input_parameter(input, "/available");
     return parameter.value().get<bool>();
 }
 
-inline void quarre::user::activate_input(QString input)
+void quarre::user::activate_input(QString input)
 {
     auto& parameter = get_input_parameter(input, "/poll");
     parameter.push_value(true);
 }
 
-inline void quarre::user::deactivate_input(QString input)
+void quarre::user::deactivate_input(QString input)
 {
     auto& parameter = get_input_parameter(input, "/poll");
     parameter.push_value(false);
 }
 
-inline void quarre::user::update_net_address(const std::string &net_address)
+void quarre::user::update_net_address(const std::string &net_address)
 {
     m_net_address   = net_address;
     auto& parameter = m_server.get_user_parameter_from_string(*this, "/address");
@@ -470,13 +472,13 @@ void quarre::user::end_interaction(quarre::interaction &i)
     }
 }
 
-inline void quarre::user::pause_current_interaction(quarre::interaction &i)
+void quarre::user::pause_current_interaction(quarre::interaction &i)
 {
     auto& p_pause = m_server.get_user_parameter_from_string(*this, "/interactions/current/pause");
     p_pause.push_value ( ossia::impulse{} );
 }
 
-inline void quarre::user::resume_current_interaction(quarre::interaction &i)
+void quarre::user::resume_current_interaction(quarre::interaction &i)
 {
     auto& p_resume = m_server.get_user_parameter_from_string(*this, "/interactions/current/resume");
     p_resume.push_value ( ossia::impulse{} );
@@ -492,8 +494,7 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
     // eliminate non-connected clients
     // eliminate clients that cannot support the requested inputs
     // eliminate clients that already have an incoming interaction
-    auto& srv = *g_server;
-
+    auto& srv = quarre::server::instance();
     std::vector<dispatcher::candidate> candidates;
 
     for ( const auto& user : srv.m_users )
@@ -577,7 +578,7 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
 
 void quarre::dispatcher::dispatch_active_interaction(quarre::interaction& i)
 {
-    for ( const auto& user : g_server->m_users )
+    for ( const auto& user : quarre::server::instance().m_users )
     {
         if ( user->m_incoming_interaction == &i )
             user->set_active_interaction(i);
@@ -586,7 +587,7 @@ void quarre::dispatcher::dispatch_active_interaction(quarre::interaction& i)
 
 void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
 {
-    for ( const auto& user : g_server->m_users )
+    for ( const auto& user : quarre::server::instance().m_users )
     {
         if ( user->m_active_interaction == &i )
             user->end_interaction(i);
@@ -595,7 +596,7 @@ void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
 
 void quarre::dispatcher::dispatch_paused_interaction(quarre::interaction &i)
 {
-    for ( const auto& user : g_server->m_users )
+    for ( const auto& user : quarre::server::instance().m_users )
     {
         if ( user->m_active_interaction == &i )
              user->pause_current_interaction(i);
@@ -604,7 +605,7 @@ void quarre::dispatcher::dispatch_paused_interaction(quarre::interaction &i)
 
 void quarre::dispatcher::dispatch_resumed_interaction(interaction &i)
 {
-    for ( const auto& user : g_server->m_users )
+    for ( const auto& user : quarre::server::instance().m_users )
     {
         if ( user->m_active_interaction == &i )
             user->resume_current_interaction(i);
@@ -614,6 +615,11 @@ void quarre::dispatcher::dispatch_resumed_interaction(interaction &i)
 //---------------------------------------------------------------------------------------------------------
 // DEVICE
 //---------------------------------------------------------------------------------------------------------
+
+quarre::server& quarre::server::instance()
+{
+    return *m_singleton;
+}
 
 generic_device& quarre::server::get_device()
 {
@@ -628,8 +634,7 @@ quarre::server::server(const Device::DeviceSettings &settings) :
     m_capas.canSetProperties    = false;
     m_capas.canRemoveNode       = false;
 
-    g_server = this;
-
+    m_singleton = this;
     reconnect();
 }
 

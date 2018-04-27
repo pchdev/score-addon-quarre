@@ -2,7 +2,6 @@
 #include <score/plugins/customfactory/FactorySetup.hpp>
 
 #include <quarre/application-plugin/quarre-application-plugin.hpp>
-
 #include <quarre/process/executor/quarre-process-executor.hpp>
 #include <quarre/process/quarre-process-factory.hpp>
 #include <quarre/process/quarre-process-model.hpp>
@@ -11,6 +10,7 @@
 #include <quarre/panel/quarre-panel-delegate-factory.hpp>
 #include <quarre/device/quarre-protocol-factory.hpp>
 #include <quarre/commands/quarre-command-factory.hpp>
+#include <quarre/device/quarre-device.hpp>
 
 using namespace score::addons;
 
