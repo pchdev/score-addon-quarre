@@ -58,6 +58,9 @@ class ProcessModel final : public Process::ProcessModel
     Scenario::TimeSyncModel&    end_tsync           ( ) const;
     Scenario::ProcessModel&     parent_scenario     ( ) const;
 
+    void set_local_tree_root_node ( ossia::net::node_base& root );
+    ossia::net::node_base& get_local_tree_root_node ( );
+
     void set_interval_component ( Engine::Execution::IntervalComponent& component );
     ossia::time_sync& get_ossia_tsync() const;
 
@@ -68,6 +71,8 @@ class ProcessModel final : public Process::ProcessModel
 
     Scenario::IntervalModel*    m_interval;
     Scenario::ProcessModel*     m_parent_scenario;
+
+    ossia::net::node_base*      m_root_node;
 
     virtual QString prettyName      ( ) const override;
 

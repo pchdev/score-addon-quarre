@@ -19,8 +19,17 @@ quarre::ProcessExecutor::ProcessExecutor(const Device::DeviceList& list,
 }
 
 void quarre::ProcessExecutor::start(ossia::state &st)
-{
-    quarre::dispatcher::dispatch_incoming_interaction(*m_model.interaction());
+{    
+    // update the local node tree
+    // if interaction has not been dispatched due to its requirements
+    // this allows to make an automated parallel process in such cases
+
+    if (quarre::dispatcher::dispatch_incoming_interaction(*m_model.interaction()))
+    {
+        auto& root_node = m_model.get_local_tree_root_node();
+        auto& dispatched = *root_node.find_child("dispatched")->get_parameter();
+        dispatched.push_value ( true );
+    }
 }
 
 void quarre::ProcessExecutor::stop()

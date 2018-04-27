@@ -33,6 +33,15 @@ void quarre::ProcessModel::initialize_parent_pointers()
     m_parent_scenario   = qobject_cast<Scenario::ProcessModel*>(m_interval->parent());
 }
 
+void quarre::ProcessModel::set_local_tree_root_node(ossia::net::node_base &root)
+{
+    m_root_node = &root;
+}
+
+ossia::net::node_base& quarre::ProcessModel::get_local_tree_root_node()
+{
+    return *m_root_node;
+}
 
 ossia::time_sync& quarre::ProcessModel::get_ossia_tsync() const
 {

@@ -11,6 +11,7 @@
 #include <quarre/device/quarre-protocol-factory.hpp>
 #include <quarre/commands/quarre-command-factory.hpp>
 #include <quarre/device/quarre-device.hpp>
+#include <quarre/process/local-tree/quarre-process-local-tree.hpp>
 
 using namespace score::addons;
 
@@ -53,7 +54,8 @@ std::vector<std::unique_ptr<score::InterfaceBase>> score_addon_quarre::factories
             FW<Process::InspectorWidgetDelegateFactory, quarre::InspectorFactory>,
             FW<Engine::Execution::ProcessComponentFactory, quarre::ProcessExecutorComponentFactory>,
             FW<score::PanelDelegateFactory, quarre::PanelDelegateFactory>,
-            FW<Device::ProtocolFactory, quarre::ProtocolFactory>
+            FW<Device::ProtocolFactory, quarre::ProtocolFactory>,
+            FW<Engine::LocalTree::ProcessComponentFactory, quarre::LocalTreeProcessComponentFactory>
     >(ctx, key);
 }
 

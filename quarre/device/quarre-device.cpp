@@ -198,6 +198,8 @@ quarre::user::user  ( uint8_t index, quarre::server& server) : m_server(server)
     m_status                   = user_status::DISCONNECTED;
     m_base_address             = "/user/";
     m_base_address             += std::to_string(index);
+
+    make_user_tree();
 }
 
 void quarre::user::make_user_tree()
@@ -495,6 +497,15 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
     // eliminate clients that cannot support the requested inputs
     // eliminate clients that already have an incoming interaction
     auto& srv = quarre::server::instance();
+
+    if ( i.module() == "Vote")
+    {
+        for ( const auto& user : srv.m_users)
+            user->set_incoming_interaction(i);
+
+        return true;
+    }
+
     std::vector<dispatcher::candidate> candidates;
 
     for ( const auto& user : srv.m_users )

@@ -12,7 +12,8 @@ quarre::LocalTreeProcessComponent::LocalTreeProcessComponent(const Id<score::Com
     Engine::LocalTree::ProcessComponent_T<quarre::ProcessModel>(
         parent_node, scenario, doc, id, "quarrè-component", parent)
 {
-
+    auto n_dispatched = parent_node.create_child("dispatched");
+    n_dispatched->create_parameter(ossia::val_type::BOOL);
 }
 
 quarre::LocalTreeProcessComponent::~LocalTreeProcessComponent()
