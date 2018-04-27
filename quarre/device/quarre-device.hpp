@@ -16,10 +16,11 @@ namespace addons    {
 namespace quarre    {
 
 class interaction;
+class server;
+class PanelDelegate;
+class dispatcher;
 
-namespace user
-{
-enum class status_t
+enum class user_status
 {
     DISCONNECTED        = 0,
     IDLE                = 1,
@@ -28,79 +29,95 @@ enum class status_t
     INCOMING_ACTIVE     = 4
 };
 
-struct data
+class user
 {
-    uint8_t                 index;
-    uint8_t                 interaction_count;
-    bool                    connected;
-    status_t                status;
-    std::string             base_address;
-    std::string             net_address;
-    quarre::interaction*    incoming_interaction;
-    quarre::interaction*    active_interaction;
-    QJSEngine               js_engine;
+    friend class quarre::PanelDelegate;
+    friend class quarre::dispatcher;
+    friend class quarre::server;
+
+    public: //-------------------------------------------------------------
+    user (uint8_t index, quarre::server& server);
+
+    void update_net_address             ( const std::string& net_address );
+    uint8_t get_active_countdown        ( ) const;
+
+    void set_incoming_interaction      ( quarre::interaction &i );
+    void set_active_interaction        ( quarre::interaction& i );
+    void end_interaction               ( quarre::interaction& i );
+    void pause_current_interaction     ( quarre::interaction& i );
+    void resume_current_interaction    ( quarre::interaction& i );
+
+    bool supports_input                ( QString input );
+    void activate_input                ( QString input );
+    void deactivate_input              ( QString input );
+
+    protected: //----------------------------------------------------------
+    void replace_user_wildcard              ( QString& target );
+    void get_input_base_address             ( QString& target );
+    void sanitize_input_name                ( QString& input_name );
+    parameter_base& get_input_parameter     ( QString input, QString replacement );
+
+    void make_user_tree     ( );
+
+    uint8_t                 m_index;
+    uint8_t                 m_interaction_count;
+    bool                    m_connected;
+    user_status             m_status;
+    std::string             m_base_address;
+    std::string             m_net_address;
+    quarre::interaction*    m_incoming_interaction;
+    quarre::interaction*    m_active_interaction;
+    quarre::server&         m_server;
+    QJSEngine               m_js_engine;
 };
 
-data& instantiate_user             ( uint8_t index );
-void initialize_user_node_tree     ( const quarre::user::data& u );
-
-void update_net_address             ( quarre::user::data& u, const std::string& net_address );
-
-void set_incoming_interaction      ( quarre::user::data& u, const quarre::interaction& i );
-void set_active_interaction        ( quarre::user::data& u, const quarre::interaction& i );
-void end_interaction               ( quarre::user::data& u, const quarre::interaction& i );
-void pause_current_interaction     ( quarre::user::data& u, const quarre::interaction& i );
-void resume_current_interaction    ( quarre::user::data& u, const quarre::interaction& i );
-
-bool supports_input                ( const quarre::user::data& u, QString input );
-void activate_input                ( const quarre::user::data& u, QString input );
-void deactivate_input              ( const quarre::user::data& u, QString input );
-}
-
-namespace dispatching
+class dispatcher
 {
-struct candidate
-{
-    user::data* target;
-    uint8_t priority;
+    public:
+    static bool dispatch_incoming_interaction   ( quarre::interaction& i );
+    static void dispatch_active_interaction     ( quarre::interaction& i );
+    static void dispatch_ending_interaction     ( quarre::interaction& i );
+    static void dispatch_paused_interaction     ( quarre::interaction& i );
+    static void dispatch_resumed_interaction    ( quarre::interaction& i );
+
+    private:
+    struct candidate
+    {
+        quarre::user* target;
+        uint8_t priority;
+    };
 };
 
-bool dispatch_incoming_interaction      ( const quarre::server::data& server, const quarre::interaction& i );
-void dispatch_active_interaction        ( const quarre::server::data& server, const quarre::interaction& i );
-void dispatch_ending_interaction        ( const quarre::server::data& server, const quarre::interaction& i );
-void dispatch_paused_interaction        ( const quarre::server::data& server, const quarre::interaction& i );
-void dispatch_resumed_interaction       ( const quarre::server::data& server, const quarre::interaction& i );
-}
-
-namespace server
-{
-parameter_base& get_parameter_from_string ( std::string& address );
-parameter_base& get_parameter_from_string ( QString& address );
-parameter_base& get_user_parameter_from_string ( const quarre::user::data& u, std::string& address );
-
-class data : public Engine::Network::OwningOSSIADevice
+class server : public Engine::Network::OwningOSSIADevice
 {
     Q_OBJECT
 
-    public:
-    data (::Device::DeviceSettings const& settings );
-    virtual bool reconnect ( ) override;
-    virtual void recreate ( ) override;
+    friend class dispatcher;
+    friend class PanelDelegate;
 
-    user::data* user_zero;
-    std::vector<user::data*> users;
-    uint8_t n_max_users;
+    public:
+    server (::Device::DeviceSettings const& settings );
+    virtual bool reconnect ( ) override;
+    virtual void recreate ( const Device::Node& ) override;
+
+    parameter_base& get_parameter_from_string       ( std::string& address );
+    parameter_base& get_parameter_from_string       ( QString& address );
+    parameter_base& get_user_parameter_from_string  ( const quarre::user& usr, std::string address );
+
+    void on_client_connected        ( std::string const& ip_address );
+    void on_client_disconnected     ( std::string const& ip_address );
+    generic_device& get_device      ( );
+
+    private:
+    void make_common_tree ( );
+
+    quarre::user* m_user_zero;
+    std::vector<quarre::user*> m_users;
+    uint8_t m_n_max_users;
 };
 
-data* g_server;
+quarre::server* g_server = 0;
 
-void make_server_common_tree ( quarre::server::data& server );
-generic_device& get_device   ( quarre::server::data const& server );
-
-void on_client_connected        ( std::string const& ip_address );
-void on_client_disconnected     ( std::string const& ip_address );
-
-}
 }
 }
 }

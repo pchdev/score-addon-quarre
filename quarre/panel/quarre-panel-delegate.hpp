@@ -19,8 +19,8 @@ class PanelDelegate final : public QObject, public score::PanelDelegate
 
     static PanelDelegate* instance  ( );
 
-    void on_user_changed            (const user &user );
-    void on_server_instantiated     ( const quarre::quarre_device &device );
+    void on_user_changed            ( const quarre::user& usr );
+    void on_server_instantiated     ( const quarre::server& srv );
 
     private: //-----------------------------------------------
     static PanelDelegate* m_singleton;

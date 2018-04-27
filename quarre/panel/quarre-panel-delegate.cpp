@@ -10,8 +10,8 @@ quarre::PanelDelegate::PanelDelegate(const score::GUIApplicationContext &ctx) :
     m_layout(new QFormLayout)
 {
     m_singleton = this;
-    if ( auto device = quarre::quarre_device::instance() )
-        on_server_instantiated(*device);
+    if ( g_server )
+        on_server_instantiated( *g_server );
 }
 
 quarre::PanelDelegate* quarre::PanelDelegate::instance()
@@ -19,16 +19,16 @@ quarre::PanelDelegate* quarre::PanelDelegate::instance()
     return m_singleton;
 }
 
-void quarre::PanelDelegate::on_user_changed(const quarre::user& user)
+void quarre::PanelDelegate::on_user_changed(const quarre::user& usr)
 {
-    auto target_label = m_user_connection_displays[user.index()-1];
-    target_label->setText(QString::fromStdString(user.address()));
+    auto target_label = m_user_connection_displays[usr.m_index-1];
+    target_label->setText(QString::fromStdString(usr.m_net_address));
 }
 
-void quarre::PanelDelegate::on_server_instantiated(const quarre::quarre_device &device)
+void quarre::PanelDelegate::on_server_instantiated(const server &srv)
 {
     m_layout = new QFormLayout ( m_widget );
-    auto max_u = device.max_users();
+    auto max_u = srv.m_n_max_users;
 
     for ( int i = 0; i < max_u; ++i )
     {

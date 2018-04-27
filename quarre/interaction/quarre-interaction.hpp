@@ -13,7 +13,6 @@ namespace score     {
 namespace addons    {
 namespace quarre    {
 
-class user;
 class InspectorWidget;
 
 class interaction final : public IdentifiedObject<interaction>
@@ -80,7 +79,6 @@ class interaction final : public IdentifiedObject<interaction>
     quarre::InspectorWidget* m_inspector;
     Explorer::DeviceDocumentPlugin* m_devdoc_plugin;
 
-    std::shared_ptr<quarre::user> m_host;
     std::vector<quarre::mapping*> m_mappings;
 };
 

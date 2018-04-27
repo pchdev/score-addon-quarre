@@ -24,7 +24,6 @@ class LocalTreeProcessComponent : public Engine::LocalTree::ProcessComponent_T<P
     ~LocalTreeProcessComponent();
 
     private: // ---------------------------------------------------
-
     std::unique_ptr<Engine::LocalTree::BaseProperty> m_property;
 
 };

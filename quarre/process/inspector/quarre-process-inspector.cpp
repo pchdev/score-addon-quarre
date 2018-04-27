@@ -158,6 +158,7 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     setParent               ( parent );
 
     m_module->addItem           ( "Default" );
+    m_module->addItem           ( "Vote" );
     m_module->addItem           ( "Transition" );
     m_module->addItem           ( "Gesture" );
     m_module->addItem           ( "Pads" );

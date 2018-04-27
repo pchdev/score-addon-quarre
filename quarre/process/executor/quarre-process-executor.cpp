@@ -20,34 +20,22 @@ quarre::ProcessExecutor::ProcessExecutor(const Device::DeviceList& list,
 
 void quarre::ProcessExecutor::start(ossia::state &st)
 {
-    // parse the interaction
-    auto inter            = m_model.interaction();
-    auto qrdevice         = quarre::quarre_device::instance();
-
-    if ( !qrdevice )
-    {
-        qDebug() << "quarrè-server is not instantiated.. aborting";
-        return;
-    }
-
-    qrdevice->dispatch_incoming_interaction(inter);
-
+    quarre::dispatcher::dispatch_incoming_interaction(*m_model.interaction());
 }
 
 void quarre::ProcessExecutor::stop()
 {
-    auto dev = quarre::quarre_device::instance();
-    dev->dispatch_ending_interaction(m_model.interaction());
+    quarre::dispatcher::dispatch_ending_interaction(*m_model.interaction());
 }
 
 void quarre::ProcessExecutor::pause()
 {
-
+    quarre::dispatcher::dispatch_paused_interaction(*m_model.interaction());
 }
 
 void quarre::ProcessExecutor::resume()
 {
-
+    quarre::dispatcher::dispatch_resumed_interaction(*m_model.interaction());
 }
 
 ossia::state_element quarre::ProcessExecutor::state(ossia::time_value date, double pos)
@@ -60,8 +48,7 @@ ossia::state_element quarre::ProcessExecutor::state(ossia::time_value date, doub
     if ( date >= cd && date < cd+5000 )
     {
         qDebug() << "trigger interacton";
-        auto dev = quarre::quarre_device::instance();
-        dev->dispatch_active_interaction(m_model.interaction());
+        quarre::dispatcher::dispatch_active_interaction(*m_model.interaction());
     }
 
     return {};
