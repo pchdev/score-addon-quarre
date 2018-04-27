@@ -24,7 +24,7 @@ quarre::mapping_view::mapping_view(const score::DocumentContext &dctx, mapping &
     m_source            ( 0 ),
     m_destination       ( 0 ),
     m_expression        ( new QTextEdit ),
-    m_minus_button      ( new QPushButton ("-") ),
+    m_minus_button      ( new QPushButton ("remove mapping") ),
     m_layout            ( new QVBoxLayout ),
     m_mapmodel          ( &map )
 {
@@ -36,7 +36,8 @@ quarre::mapping_view::mapping_view(const score::DocumentContext &dctx, mapping &
     set_destination     ( map.destination() );
     set_expression      ( map.expression() );
 
-    m_form    = new QFormLayout;
+    m_form              = new QFormLayout;
+
     m_form->addRow ( tr ( "delete" ), m_minus_button );
     m_form->addRow ( tr ( "source" ), m_source );
     m_form->addRow ( tr ( "destination" ), m_destination );
@@ -136,6 +137,7 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     m_end_expression    ( new QLineEdit ( object.interaction()->end_expression())),
     m_length            ( new QSpinBox ),
     m_countdown         ( new QSpinBox ),
+    m_dispatch_all      ( new QCheckBox ),
     m_dctx              ( ctx )
 {   
     auto& explorer              = ctx.plugin<Explorer::DeviceDocumentPlugin>().explorer();
@@ -157,15 +159,15 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     setObjectName           ( "quarrè-process-inspector" );
     setParent               ( parent );
 
-    m_module->addItem           ( "Default" );
-    m_module->addItem           ( "Vote" );
-    m_module->addItem           ( "Transition" );
-    m_module->addItem           ( "Gesture" );
-    m_module->addItem           ( "Pads" );
-    m_module->addItem           ( "Sliders" );
-    m_module->addItem           ( "Strings" );
-    m_module->addItem           ( "TouchSpatialization" );
-    m_module->addItem           ( "SensorSpatialization" );
+    m_module->addItem   ( "Default" );
+    m_module->addItem   ( "Vote" );
+    m_module->addItem   ( "Transition" );
+    m_module->addItem   ( "Gesture" );
+    m_module->addItem   ( "Pads" );
+    m_module->addItem   ( "Sliders" );
+    m_module->addItem   ( "Strings" );
+    m_module->addItem   ( "TouchSpatialization" );
+    m_module->addItem   ( "SensorSpatialization" );
 
     m_module->setCurrentText    ( m_interaction->module() );
 
@@ -173,12 +175,13 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     form->addRow ( tr ("Title"), m_title );
     form->addRow ( tr ("Description"), m_description );
     form->addRow ( tr ("Module"), m_module );
+    form->addRow ( tr ("Dispatch to all users"), m_dispatch_all );
     form->addRow ( tr ("Length"), m_length );
     form->addRow ( tr ("Countdown"), m_countdown);
     form->addRow ( tr ("Ending source"), m_end_expression_source);
     form->addRow ( tr ("Expression"), m_end_expression );
 
-    auto plusb = new QPushButton("+");
+    auto plusb = new QPushButton("add mapping");
 
     m_layout->addLayout( form );
     m_layout->addWidget( plusb );
@@ -186,6 +189,7 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     for ( quarre::mapping* mapping : m_interaction->mappings() )
         on_mapping_added(*mapping);
 
+    connect(m_dispatch_all, SIGNAL(clicked(bool)), m_interaction, SLOT(on_dispatch_all_changed(bool)));
     connect(m_title, SIGNAL(textChanged(QString)), m_interaction, SLOT(on_title_changed(QString)));
     connect(m_description, SIGNAL(textChanged(QString)), m_interaction, SLOT(on_description_changed(QString)));
     connect(m_module, SIGNAL(currentIndexChanged(QString)), m_interaction, SLOT(on_module_changed(QString)));

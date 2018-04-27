@@ -498,10 +498,11 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
     // eliminate clients that already have an incoming interaction
     auto& srv = quarre::server::instance();
 
-    if ( i.module() == "Vote")
+    if ( i.dispatch_all() )
     {
         for ( const auto& user : srv.m_users)
-            user->set_incoming_interaction(i);
+            if ( user->m_connected )
+                user->set_incoming_interaction(i);
 
         return true;
     }

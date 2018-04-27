@@ -17,7 +17,8 @@ quarre::interaction::interaction(
     m_title             ( "Untitled"),
     m_description       ( "No description"),
     m_length            ( 0 ),
-    m_countdown         ( 0 )
+    m_countdown         ( 0 ),
+    m_dispatch_all      ( false )
 {
     on_end_expression_changed("return true;");
 }
@@ -82,6 +83,11 @@ QStringList quarre::interaction::inputs() const
     }
 
     return res;
+}
+
+void quarre::interaction::on_dispatch_all_changed(bool dispatch_all)
+{
+    m_dispatch_all = dispatch_all;
 }
 
 void quarre::interaction::on_module_changed(QString module)
@@ -150,6 +156,11 @@ const QString quarre::interaction::description() const
     return m_description;
 }
 
+bool quarre::interaction::dispatch_all() const
+{
+    return m_dispatch_all;
+}
+
 int quarre::interaction::length() const
 {
     return m_length;
@@ -164,6 +175,7 @@ template <> void DataStreamReader::read(
         const quarre::interaction& e )
 {
     m_stream << e.module();
+    m_stream << e.dispatch_all();
     m_stream << e.title();
     m_stream << e.description();
     m_stream << e.length();
@@ -184,7 +196,7 @@ template <> void DataStreamWriter::write(
     int msz;
     QString eex;
 
-    m_stream    >> e.m_module >> e.m_title
+    m_stream    >> e.m_module >> e.m_dispatch_all >> e.m_title
                 >> e.m_description >> e.m_length
                 >> e.m_countdown
                 >> e.m_end_expression_source
@@ -207,6 +219,7 @@ template <> void JSONObjectReader::read(
         const quarre::interaction& e )
 {
     obj [ "Module" ]        = e.module();
+    obj [ "DispatchAll" ]   = e.dispatch_all();
     obj [ "Title"  ]        = e.title();
     obj [ "Description" ]   = e.description();
     obj [ "Length" ]        = e.length();
@@ -220,6 +233,7 @@ template <> void JSONObjectWriter::write(
         quarre::interaction& e )
 {
     e.m_module                  = obj [ "Module" ].toString();
+    e.m_dispatch_all            = obj [ "DispatchAll" ].toBool();
     e.m_title                   = obj [ "Title" ].toString();
     e.m_description             = obj [ "Description"].toString();
     e.m_length                  = obj [ "Length"].toInt();

@@ -27,7 +27,8 @@ void quarre::ProcessExecutor::start(ossia::state &st)
     if (quarre::dispatcher::dispatch_incoming_interaction(*m_model.interaction()))
     {
         auto& root_node = m_model.get_local_tree_root_node();
-        auto& dispatched = *root_node.find_child("dispatched")->get_parameter();
+        std::string dispstr = "dispatched";
+        auto& dispatched = *root_node.find_child(dispstr)->get_parameter();
         dispatched.push_value ( true );
     }
 }

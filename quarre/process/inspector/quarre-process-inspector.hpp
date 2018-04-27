@@ -15,6 +15,7 @@
 #include <QSpinBox>
 #include <QComboBox>
 #include <QListWidget>
+#include <QCheckBox>
 
 namespace score     {
 namespace addons    {
@@ -50,6 +51,7 @@ class mapping_view : public QObject
     void destinationChanged     ( QString );
     void expressionChanged      ( QString );
     void mappingDeleteRequest   ( quarre::mapping* );
+    void dispatchAllChanged     ( bool );
 
     private: // ---------------------------------------------------
     Explorer::AddressAccessorEditWidget* m_source;
@@ -92,6 +94,7 @@ class InspectorWidget final :
     private: //---------------------------------------------------------
     CommandDispatcher<> m_dispatcher;
     QComboBox*         m_module;
+    QCheckBox*         m_dispatch_all;
     QLineEdit*         m_title;
     QLineEdit*         m_description;
     QSpinBox*          m_length;
