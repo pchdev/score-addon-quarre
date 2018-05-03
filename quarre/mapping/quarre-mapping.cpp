@@ -16,17 +16,17 @@ quarre::mapping::mapping(
     m_expression = "return v;";
 }
 
-const QString quarre::mapping::source() const
+QString quarre::mapping::source() const
 {
     return m_source;
 }
 
-const QString quarre::mapping::destination() const
+QString quarre::mapping::destination() const
 {
     return m_destination;
 }
 
-const QString quarre::mapping::expression() const
+QString quarre::mapping::expression() const
 {
     return m_expression;
 }

@@ -16,6 +16,7 @@
 #include <QComboBox>
 #include <QListWidget>
 #include <QCheckBox>
+#include <QScrollArea>
 
 namespace score     {
 namespace addons    {
@@ -41,10 +42,10 @@ class mapping_view : public QObject
     void set_expression         ( const QString &source );
 
     protected slots:
-    void on_source_address_changed ( const Device::FullAddressAccessorSettings );
-    void on_destination_address_changed ( const Device::FullAddressAccessorSettings );
-    void on_expression_changed          ( );
-    void on_minus_button_pressed        ( );
+    void on_source_address_changed          ( const Device::FullAddressAccessorSettings );
+    void on_destination_address_changed     ( const Device::FullAddressAccessorSettings );
+    void on_expression_changed              ( );
+    void on_minus_button_pressed            ( );
 
     signals: // ---------------------------------------------------
     void sourceChanged          ( QString );
@@ -100,6 +101,8 @@ class InspectorWidget final :
     QSpinBox*          m_length;
     QSpinBox*          m_countdown;
     QVBoxLayout*       m_layout;
+    QScrollArea*       m_mapping_area;
+    QVBoxLayout*       m_mapping_layout;
 
     QLineEdit* m_end_expression;
     Explorer::AddressAccessorEditWidget* m_end_expression_source;

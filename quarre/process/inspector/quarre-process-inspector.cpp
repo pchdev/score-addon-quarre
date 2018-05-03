@@ -29,8 +29,8 @@ quarre::mapping_view::mapping_view(const score::DocumentContext &dctx, mapping &
     m_mapmodel          ( &map )
 {
     auto& explorer      = dctx.plugin<Explorer::DeviceDocumentPlugin>().explorer();
-    m_source            = new Explorer::AddressAccessorEditWidget(explorer, parent);
-    m_destination       = new Explorer::AddressAccessorEditWidget(explorer, parent);
+    m_source            = new Explorer::AddressAccessorEditWidget(explorer, 0);
+    m_destination       = new Explorer::AddressAccessorEditWidget(explorer, 0);
 
     set_source          ( map.source() );
     set_destination     ( map.destination() );
@@ -44,6 +44,8 @@ quarre::mapping_view::mapping_view(const score::DocumentContext &dctx, mapping &
 
     m_layout->addLayout ( m_form );
     m_layout->addWidget ( m_expression );
+
+    m_layout->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
     QObject::connect(m_source, SIGNAL(addressChanged(Device::FullAddressAccessorSettings)), this, SLOT(on_source_address_changed(Device::FullAddressAccessorSettings)));
     QObject::connect(m_destination, SIGNAL(addressChanged(Device::FullAddressAccessorSettings)), this, SLOT(on_destination_address_changed(Device::FullAddressAccessorSettings)));
@@ -138,6 +140,7 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     m_length            ( new QSpinBox ),
     m_countdown         ( new QSpinBox ),
     m_dispatch_all      ( new QCheckBox ),
+    m_mapping_area      ( new QScrollArea ),
     m_dctx              ( ctx )
 {   
     auto& explorer              = ctx.plugin<Explorer::DeviceDocumentPlugin>().explorer();
@@ -185,6 +188,11 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
 
     m_layout->addLayout( form );
     m_layout->addWidget( plusb );
+    m_layout->addWidget( m_mapping_area );
+
+    m_mapping_layout = new QVBoxLayout(m_mapping_area);
+    m_mapping_area->setWidgetResizable(true);
+    m_mapping_layout->setSizeConstraint(QLayout::SetNoConstraint);
 
     for ( quarre::mapping* mapping : m_interaction->mappings() )
         on_mapping_added(*mapping);
@@ -246,7 +254,7 @@ void quarre::InspectorWidget::on_mapping_added(quarre::mapping &mapping)
     auto mapview = new quarre::mapping_view ( m_dctx, mapping, this );
     QObject::connect(mapview, SIGNAL(mappingDeleteRequest(quarre::mapping*)), this, SLOT(on_mapping_removed(quarre::mapping*)));
 
-    m_layout->addLayout(mapview->layout());
+    m_mapping_layout->addLayout(mapview->layout());
     m_mapping_views.push_back( mapview );
 }
 

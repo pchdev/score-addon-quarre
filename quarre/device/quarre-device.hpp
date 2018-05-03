@@ -103,7 +103,7 @@ class user
     protected: //----------------------------------------------------------
     void replace_user_wildcard              ( QString& target );
     void get_input_base_address             ( QString& target );
-    void sanitize_input_name                ( QString& input_name );
+    void sanitize_input_name                ( QString &input_name );
     parameter_base& get_input_parameter     ( QString input, QString replacement );
 
     void make_user_tree     ( );

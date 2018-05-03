@@ -32,15 +32,15 @@ class interaction final : public IdentifiedObject<interaction>
         vis.writeTo(*this);
     }
 
-    int length                              () const;
-    int countdown                           () const;
-    bool dispatch_all                       () const;
-    const QString module                    () const;
-    const QString title                     () const;
-    const QString description               () const;
-    const QString& end_expression_js        () const;
-    const QString end_expression            () const;
-    const QString end_expression_source     () const;
+    int length                        ( ) const;
+    int countdown                     ( ) const;
+    bool dispatch_all                 ( ) const;
+    QString module                    ( ) const;
+    QString title                     ( ) const;
+    QString description               ( ) const;
+    QString end_expression            ( ) const;
+    QString end_expression_source     ( ) const;
+    const QString& end_expression_js  ( ) const;
 
     std::vector<ossia::value> to_list() const;
 

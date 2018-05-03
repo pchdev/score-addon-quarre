@@ -32,9 +32,9 @@ class mapping final : public IdentifiedObject<score::addons::quarre::mapping>
     }
 
     QVBoxLayout*    layout              () const;
-    const QString   source              () const;
-    const QString   destination         () const;
-    const QString   expression          () const;
+    QString         source              () const;
+    QString         destination         () const;
+    QString         expression          () const;
     const QString&  expression_js       () const;
 
     public slots:

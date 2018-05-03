@@ -369,9 +369,10 @@ void quarre::user::set_active_interaction(quarre::interaction& i)
 
     if ( expr_source != "" )
     {
-        activate_input(expr_source);
-        auto& p_expr_source = m_server.get_user_parameter_from_string(*this, expr_source.toStdString());
+        activate_input ( expr_source );
+        sanitize_input_name ( expr_source );
 
+        auto& p_expr_source = m_server.get_parameter_from_string(expr_source);
         p_expr_source.add_callback([&](const ossia::value&v) {
 
             QJSValueList arguments;
@@ -404,7 +405,10 @@ void quarre::user::set_active_interaction(quarre::interaction& i)
     {
         auto map_dest       = mapping->destination();
         auto& map_expr      = mapping->expression_js();
-        auto& p_input       = m_server.get_user_parameter_from_string(*this, mapping->source().toStdString());
+        auto map_source     = mapping->source();
+
+        sanitize_input_name ( map_source );
+        auto& p_input       = m_server.get_parameter_from_string(map_source);
 
         auto state_addr     = State::Address::fromString(map_dest).value_or(State::Address{});
         auto& dlist         = i.get_device_list();

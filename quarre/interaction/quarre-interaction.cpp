@@ -126,7 +126,7 @@ void quarre::interaction::on_end_expression_source_changed(QString source)
     m_end_expression_source = source;
 }
 
-const QString quarre::interaction::end_expression_source() const
+QString quarre::interaction::end_expression_source() const
 {
     return m_end_expression_source;
 }
@@ -136,22 +136,22 @@ const QString &quarre::interaction::end_expression_js() const
     return m_end_expression_js;
 }
 
-const QString quarre::interaction::end_expression() const
+QString quarre::interaction::end_expression() const
 {
     return m_end_expression;
 }
 
-const QString quarre::interaction::module() const
+QString quarre::interaction::module() const
 {
     return m_module;
 }
 
-const QString quarre::interaction::title() const
+QString quarre::interaction::title() const
 {
     return m_title;
 }
 
-const QString quarre::interaction::description() const
+QString quarre::interaction::description() const
 {
     return m_description;
 }
