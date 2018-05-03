@@ -24,11 +24,9 @@ void quarre::ProcessExecutor::start(ossia::state &st)
     // if interaction has not been dispatched due to its requirements
     // this allows to make an automated parallel process in such cases
 
-    if (quarre::dispatcher::dispatch_incoming_interaction(*m_model.interaction()))
+    if ( quarre::dispatcher::dispatch_incoming_interaction(*m_model.interaction()))
     {
-        auto& root_node = m_model.get_local_tree_root_node();
-        std::string dispstr = "dispatched";
-        auto& dispatched = *root_node.find_child(dispstr)->get_parameter();
+        auto& dispatched = m_model.get_dispatched_parameter();
         dispatched.push_value ( true );
     }
 }
