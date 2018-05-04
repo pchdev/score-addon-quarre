@@ -465,15 +465,22 @@ void quarre::user::end_interaction(quarre::interaction &i)
     auto expr_source = i.end_expression_source();
 
     if ( expr_source != "" )
-        deactivate_input(expr_source);
+    {
+        deactivate_input    ( expr_source );
+        sanitize_input_name ( expr_source );
+    }
 
-    auto& p_expr_source = m_server.get_user_parameter_from_string(*this, expr_source.toStdString());
+    auto& p_expr_source = m_server.get_parameter_from_string(expr_source);
     p_expr_source.callbacks_clear();
 
     for ( const auto& mapping : i.mappings())
     {
-        deactivate_input(mapping->source());
-        auto& p_input = m_server.get_user_parameter_from_string(*this, mapping->source().toStdString());
+        auto map_source = mapping->source();
+
+        deactivate_input    ( map_source );
+        sanitize_input_name ( map_source );
+
+        auto& p_input = m_server.get_parameter_from_string(map_source);
         p_input.callbacks_clear();
     }
 }
