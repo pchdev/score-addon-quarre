@@ -166,19 +166,19 @@ static const std::vector<pdata_t> g_common_tree =
 // UTILITY
 //---------------------------------------------------------------------------------------------------------
 
-parameter_base& quarre::server::get_parameter_from_string ( std::string& address )
+inline parameter_base& quarre::server::get_parameter_from_string ( std::string& address )
 {
     auto node   = ossia::net::find_node(get_device(), address);
     return      *node->get_parameter();
 }
 
-parameter_base& quarre::server::get_parameter_from_string ( QString& address )
+inline parameter_base& quarre::server::get_parameter_from_string ( QString& address )
 {
     auto node   = ossia::net::find_node(get_device(), address.toStdString());
     return      *node->get_parameter();
 }
 
-parameter_base& quarre::server::get_user_parameter_from_string(
+inline parameter_base& quarre::server::get_user_parameter_from_string(
         const quarre::user &usr, std::string address )
 {
     std::string res = usr.m_base_address + address;
@@ -271,12 +271,12 @@ void quarre::user::make_user_tree()
     }
 }
 
-void quarre::user::replace_user_wildcard(QString& target)
+inline void quarre::user::replace_user_wildcard(QString& target)
 {
     target.replace("0", QString::number(m_index));
 }
 
-void quarre::user::get_input_base_address(QString& target)
+inline void quarre::user::get_input_base_address(QString& target)
 {
     if ( target.contains("gestures"))
         target.remove("/trigger");
@@ -287,7 +287,7 @@ void quarre::user::get_input_base_address(QString& target)
     else return;
 }
 
-void quarre::user::sanitize_input_name(QString& input_name)
+inline void quarre::user::sanitize_input_name(QString& input_name)
 {
     if ( input_name.startsWith("quarre-server:"))
         input_name.replace("quarre-server:/user/0", QString::fromStdString(m_base_address));
@@ -295,7 +295,7 @@ void quarre::user::sanitize_input_name(QString& input_name)
     else replace_user_wildcard(input_name);
 }
 
-parameter_base& quarre::user::get_input_parameter(QString input, QString replacement)
+inline parameter_base& quarre::user::get_input_parameter(QString input, QString replacement)
 {
     sanitize_input_name         ( input );
     get_input_base_address      ( input );
@@ -304,19 +304,19 @@ parameter_base& quarre::user::get_input_parameter(QString input, QString replace
     return m_server.get_parameter_from_string(input);
 }
 
-bool quarre::user::supports_input(QString input)
+inline bool quarre::user::supports_input(QString input)
 {
     auto& parameter = get_input_parameter(input, "/available");
     return parameter.value().get<bool>();
 }
 
-void quarre::user::activate_input(QString input)
+inline void quarre::user::activate_input(QString input)
 {
     auto& parameter = get_input_parameter(input, "/poll");
     parameter.push_value(true);
 }
 
-void quarre::user::deactivate_input(QString input)
+inline void quarre::user::deactivate_input(QString input)
 {
     auto& parameter = get_input_parameter(input, "/poll");
     parameter.push_value(false);
@@ -369,7 +369,9 @@ void quarre::user::set_active_interaction(quarre::interaction& i)
 
     if ( expr_source != "" )
     {
-        activate_input ( expr_source );
+        if ( !expr_source.contains("controllers") )
+            activate_input ( expr_source );
+
         sanitize_input_name ( expr_source );
 
         auto& p_expr_source = m_server.get_parameter_from_string(expr_source);
@@ -406,6 +408,11 @@ void quarre::user::set_active_interaction(quarre::interaction& i)
         auto map_dest       = mapping->destination();
         auto& map_expr      = mapping->expression_js();
         auto map_source     = mapping->source();
+
+        if ( map_source == "" || map_dest == "" ) continue;
+
+        if ( !map_source.contains("controllers") )
+            activate_input ( map_source );
 
         sanitize_input_name ( map_source );
         auto& p_input       = m_server.get_parameter_from_string(map_source);
@@ -466,18 +473,24 @@ void quarre::user::end_interaction(quarre::interaction &i)
 
     if ( expr_source != "" )
     {
-        deactivate_input    ( expr_source );
-        sanitize_input_name ( expr_source );
-    }
+        if ( !expr_source.contains("controllers") )
+             deactivate_input ( expr_source );
 
-    auto& p_expr_source = m_server.get_parameter_from_string(expr_source);
-    p_expr_source.callbacks_clear();
+        sanitize_input_name ( expr_source );
+        auto& p_expr_source = m_server.get_parameter_from_string(expr_source);
+        p_expr_source.callbacks_clear();
+    }
 
     for ( const auto& mapping : i.mappings())
     {
         auto map_source = mapping->source();
 
-        deactivate_input    ( map_source );
+        if ( map_source == "" )
+            continue;
+
+        else if ( !map_source.contains("controllers"))
+             deactivate_input ( map_source );
+
         sanitize_input_name ( map_source );
 
         auto& p_input = m_server.get_parameter_from_string(map_source);
@@ -549,6 +562,7 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
         check_inputs:
         for ( const auto& input : i.inputs() )
         {
+            if ( input == "" || input.contains("controllers") ) continue;
             bool support = user->supports_input(input);
             if ( !support )
                 goto next;
