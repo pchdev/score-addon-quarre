@@ -25,6 +25,7 @@ quarre::ProcessModel::ProcessModel(
 
     end_tsync().setActive       ( true );
     end_tsync().setExpression   ( State::defaultFalseExpression() );
+
 }
 
 void quarre::ProcessModel::initialize_parent_pointers()

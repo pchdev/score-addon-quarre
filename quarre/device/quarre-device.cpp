@@ -352,7 +352,8 @@ void quarre::user::set_incoming_interaction(quarre::interaction& i)
     parameter.push_value(i.to_list());
 }
 
-void quarre::user::set_active_interaction(quarre::interaction& i)
+void quarre::user::set_active_interaction(
+        quarre::interaction& i, const Device::DeviceList &devlist)
 {
     m_incoming_interaction  = 0;
     m_active_interaction    = &i;
@@ -418,8 +419,7 @@ void quarre::user::set_active_interaction(quarre::interaction& i)
         auto& p_input       = m_server.get_parameter_from_string(map_source);
 
         auto state_addr     = State::Address::fromString(map_dest).value_or(State::Address{});
-        auto& dlist         = i.get_device_list();
-        auto& p_output      = *Engine::score_to_ossia::address(state_addr, dlist);
+        auto& p_output      = *Engine::score_to_ossia::address(state_addr, devlist);
 
         p_input.add_callback([&](const ossia::value& v) {
 
@@ -613,13 +613,14 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
     else return false;
 }
 
-void quarre::dispatcher::dispatch_active_interaction(quarre::interaction& i)
+void quarre::dispatcher::dispatch_active_interaction(
+        quarre::interaction& i, const Device::DeviceList& devlist )
 {
     for ( const auto& user : quarre::server::instance().m_users )
     {
         if ( user->m_incoming_interaction == &i )
         {
-            user->set_active_interaction(i);
+            user->set_active_interaction(i, devlist);
             return;
         }
     }

@@ -42,14 +42,11 @@ class interaction final : public IdentifiedObject<interaction>
     QString end_expression_source     ( ) const;
     const QString& end_expression_js  ( ) const;
 
-    std::vector<ossia::value> to_list() const;
+    std::vector<ossia::value> to_list ( ) const;
 
     QStringList inputs()    const;
     const std::vector<quarre::mapping*>& mappings();
     ossia::time_sync& get_ossia_tsync() const;
-
-    void set_device_document_plugin (Explorer::DeviceDocumentPlugin &ddp);
-    Device::DeviceList& get_device_list() const;
 
     signals:
     void mapping_added      ( quarre::mapping& mapping );

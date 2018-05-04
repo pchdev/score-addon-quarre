@@ -23,16 +23,6 @@ quarre::interaction::interaction(
     on_end_expression_changed("return true;");
 }
 
-void quarre::interaction::set_device_document_plugin(Explorer::DeviceDocumentPlugin& ddp)
-{
-    m_devdoc_plugin = &ddp;
-}
-
-Device::DeviceList& quarre::interaction::get_device_list() const
-{
-    return m_devdoc_plugin->list();
-}
-
 ossia::time_sync& quarre::interaction::get_ossia_tsync() const
 {
     auto model = qobject_cast<quarre::ProcessModel*>(parent());

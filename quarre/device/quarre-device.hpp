@@ -5,6 +5,7 @@
 #include <Engine/Protocols/OSSIADevice.hpp>
 #include <quarre/interaction/quarre-interaction.hpp>
 #include <quarre/panel/quarre-panel-delegate.hpp>
+#include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 
 #include <QJSEngine>
 
@@ -25,7 +26,7 @@ class dispatcher
 {
     public:
     static bool dispatch_incoming_interaction   ( quarre::interaction& i );
-    static void dispatch_active_interaction     ( quarre::interaction& i );
+    static void dispatch_active_interaction     ( quarre::interaction& i , const Device::DeviceList &devlist );
     static void dispatch_ending_interaction     ( quarre::interaction& i );
     static void dispatch_paused_interaction     ( quarre::interaction& i );
     static void dispatch_resumed_interaction    ( quarre::interaction& i );
@@ -90,8 +91,8 @@ class user
     void update_net_address             ( const std::string& net_address );
     uint8_t get_active_countdown        ( ) const;
 
-    void set_incoming_interaction      ( quarre::interaction &i );
-    void set_active_interaction        ( quarre::interaction& i );
+    void set_incoming_interaction      ( quarre::interaction& i );
+    void set_active_interaction        ( quarre::interaction& i, const Device::DeviceList& devlist );
     void end_interaction               ( quarre::interaction& i );
     void pause_current_interaction     ( quarre::interaction& i );
     void resume_current_interaction    ( quarre::interaction& i );
