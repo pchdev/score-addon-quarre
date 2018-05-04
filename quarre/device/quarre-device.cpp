@@ -618,7 +618,10 @@ void quarre::dispatcher::dispatch_active_interaction(quarre::interaction& i)
     for ( const auto& user : quarre::server::instance().m_users )
     {
         if ( user->m_incoming_interaction == &i )
+        {
             user->set_active_interaction(i);
+            return;
+        }
     }
 }
 
@@ -627,7 +630,10 @@ void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
     for ( const auto& user : quarre::server::instance().m_users )
     {
         if ( user->m_active_interaction == &i )
+        {
             user->end_interaction(i);
+            return;
+        }
     }
 }
 
@@ -636,7 +642,10 @@ void quarre::dispatcher::dispatch_paused_interaction(quarre::interaction &i)
     for ( const auto& user : quarre::server::instance().m_users )
     {
         if ( user->m_active_interaction == &i )
+        {
              user->pause_current_interaction(i);
+             return;
+        }
     }
 }
 
@@ -645,7 +654,10 @@ void quarre::dispatcher::dispatch_resumed_interaction(interaction &i)
     for ( const auto& user : quarre::server::instance().m_users )
     {
         if ( user->m_active_interaction == &i )
+        {
             user->resume_current_interaction(i);
+            return;
+        }
     }
 }
 
