@@ -208,6 +208,7 @@ void quarre::user::make_user_tree()
     {
         auto& node = ossia::net::create_node(m_server.get_device(), m_base_address + parameter.first);
         node.create_parameter(parameter.second);
+        ossia::net::set_critical(node, true);
     }
 
     for ( const auto& gesture : g_gestures )
@@ -218,12 +219,15 @@ void quarre::user::make_user_tree()
 
         auto available_node = node.create_child("available");
         available_node->create_parameter(ossia::val_type::BOOL);
+        ossia::net::set_critical(*available_node, true);
 
         auto poll_node = node.create_child("poll");
         poll_node->create_parameter(ossia::val_type::BOOL);
+        ossia::net::set_critical(*poll_node, true);
 
         auto trigger_node = node.create_child("trigger");
         trigger_node->create_parameter(ossia::val_type::IMPULSE);
+        ossia::net::set_critical(*trigger_node, true);
 
         // create gesture's subnodes
 
@@ -232,6 +236,7 @@ void quarre::user::make_user_tree()
             auto subnode = node.create_child(subgesture);
             auto subtrigger = subnode->create_child("trigger");
             subtrigger->create_parameter(ossia::val_type::IMPULSE);
+            ossia::net::set_critical(*subtrigger, true);
         }
     }
 
@@ -250,6 +255,7 @@ void quarre::user::make_user_tree()
             auto subnode    = sensor_node.create_child(axis.first);
             auto poll_node  = subnode->create_child("poll");
             poll_node       ->create_parameter(ossia::val_type::BOOL);
+            ossia::net::set_critical(*poll_node, true);
 
             auto data_node  = subnode->create_child("data");
             data_node       ->create_parameter(axis.second);
@@ -811,6 +817,7 @@ void quarre::server::make_common_tree()
     {
         auto& node = ossia::net::create_node(get_device(), parameter.first);
         node.create_parameter(parameter.second);
+        ossia::net::set_critical(node, true);
     }
 }
 
