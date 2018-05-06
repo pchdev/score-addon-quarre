@@ -317,8 +317,21 @@ inline parameter_base& quarre::user::get_input_parameter(QString input, QString 
 
 inline bool quarre::user::supports_input(QString input)
 {
-    auto& parameter = get_input_parameter(input, "/available");
-    return parameter.value().get<bool>();
+    sanitize_input_name ( input );
+
+    parameter_base* parameter = 0;
+
+    if ( input.contains("sensors") )
+    {
+        // /user/0/sensors/accelerometers/x/data
+        QStringList split = input.split("sensors/");
+        input = split[0] + "sensors/" + split[1].split("/")[0] + "/available";
+        parameter = &m_server.get_parameter_from_string(input);
+
+    }
+    else parameter = &get_input_parameter(input, "/available");
+
+    return parameter->value().get<bool>();
 }
 
 inline void quarre::user::activate_input(QString input)
@@ -873,7 +886,7 @@ void quarre::server::parse_vote_result()
     else if ( res_one > res_zero && res_one > res_two )
         total = 0;
 
-    else if ( res_two > res_zero && res_two < res_one )
+    else if ( res_two > res_zero && res_two > res_one )
         total = 1;
 
     std::string res_str = "/common/vote/result";
