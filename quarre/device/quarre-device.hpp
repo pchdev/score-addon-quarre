@@ -47,7 +47,8 @@ class server : public Engine::Network::OwningOSSIADevice
     friend class dispatcher;
     friend class PanelDelegate;
 
-    public:
+    public: //---------------------------------------------------------------------------------------
+
     server (::Device::DeviceSettings const& settings );
     static quarre::server& instance();
     virtual bool reconnect ( ) override;
@@ -57,11 +58,14 @@ class server : public Engine::Network::OwningOSSIADevice
     parameter_base& get_parameter_from_string       ( QString& address );
     parameter_base& get_user_parameter_from_string  ( const quarre::user& usr, std::string address );
 
+    void parse_vote_result ( );
+
     void on_client_connected        ( std::string const& ip_address );
     void on_client_disconnected     ( std::string const& ip_address );
     generic_device& get_device      ( );
 
-    private:
+    private: //--------------------------------------------------------------------------------------
+
     static quarre::server* m_singleton;
     void make_common_tree ( );
 

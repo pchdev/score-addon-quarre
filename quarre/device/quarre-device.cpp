@@ -66,6 +66,7 @@ static const std::vector<std::tuple<std::string,uint8_t,ossia::val_type>> g_cont
 static const std::vector<pdata_t> g_user_tree =
 {
     { "/address", ossia::val_type::STRING },
+    { "/vote/choice", ossia::val_type::INT },
 
     { "/interactions/next/incoming", ossia::val_type::LIST },
     //! notifies user of an incoming interaction with following information:
@@ -126,6 +127,7 @@ static const std::vector<pdata_t> g_common_tree =
     { "/connections/ids", ossia::val_type::LIST },
     //! binding user id by ipv4 address
 
+    { "/common/sensors/rotation/offset", ossia::val_type::FLOAT },
     { "/common/interactions/next/incoming", ossia::val_type::LIST },
     { "/common/interactions/next/cancel", ossia::val_type::IMPULSE },
     { "/common/interactions/next/begin", ossia::val_type::LIST },
@@ -136,6 +138,7 @@ static const std::vector<pdata_t> g_common_tree =
     { "/common/interactions/current/force", ossia::val_type::LIST },
     //! when we want to send an interaction to ALL users
 
+    { "/common/vote/result", ossia::val_type::INT },
     { "/common/scenario/start", ossia::val_type::IMPULSE },
     //! starts the scenario, activating global counter
 
@@ -157,6 +160,8 @@ static const std::vector<pdata_t> g_common_tree =
 
     { "/common/scenario/name", ossia::val_type::STRING },
     //! displays the name of the current scenario
+
+    { "/common/transitions/name", ossia::val_type::STRING },
 
     { "/common/scenario/scene/name", ossia::val_type::STRING }
     //! displays the name of the current scene
@@ -358,6 +363,13 @@ void quarre::user::set_incoming_interaction(quarre::interaction& i)
     parameter.push_value(i.to_list());
 }
 
+#define JS_GET_VECF(t, n)                                   \
+    auto arr = m_js_engine.newArray(n);                     \
+    for ( int i = 0; i < n; ++i )                           \
+        arr.setProperty(i, v.get<t>()[i]);                  \
+    arguments << arr;
+
+
 void quarre::user::set_active_interaction(
         quarre::interaction& i, const Device::DeviceList &devlist)
 {
@@ -380,8 +392,8 @@ void quarre::user::set_active_interaction(
             activate_input ( expr_source );
 
         sanitize_input_name ( expr_source );
-
         auto& p_expr_source = m_server.get_parameter_from_string(expr_source);
+
         p_expr_source.add_callback([&](const ossia::value&v) {
 
             QJSValueList arguments;
@@ -392,12 +404,14 @@ void quarre::user::set_active_interaction(
             case ossia::val_type::BOOL: arguments << v.get<bool>(); break;
             case ossia::val_type::INT: arguments << v.get<int>(); break;
             case ossia::val_type::FLOAT: arguments << v.get<float>(); break;
-            case ossia::val_type::STRING: arguments << QString::fromStdString(v.get<std::string>()); break;
-            case ossia::val_type::LIST: /*arguments << v.get<std::vector<ossia::value>>();*/ break;
-            case ossia::val_type::VEC2F: /*arguments << v.get<ossia::vec2f>();*/break;
-            case ossia::val_type::VEC3F: /*arguments << v.get<ossia::vec3f>();*/break;
-            case ossia::val_type::VEC4F: /*arguments << v.get<ossia::vec4f>();*/ break;
             case ossia::val_type::CHAR: arguments << v.get<char>(); break;
+            case ossia::val_type::STRING: arguments << QString::fromStdString(v.get<std::string>()); break;
+
+            //case ossia::val_type::LIST:  arguments << list_to_js(v.get<std::vector<ossia::value>>()); break;
+            case ossia::val_type::VEC2F: { JS_GET_VECF(ossia::vec2f, 2); break; }
+            case ossia::val_type::VEC3F: { JS_GET_VECF(ossia::vec3f, 3); break; }
+            case ossia::val_type::VEC4F: { JS_GET_VECF(ossia::vec4f, 4); break; }
+
             }
 
             QJSValue result = fun.call(arguments);
@@ -437,12 +451,14 @@ void quarre::user::set_active_interaction(
             case ossia::val_type::BOOL: arguments << v.get<bool>(); break;
             case ossia::val_type::INT: arguments << v.get<int>(); break;
             case ossia::val_type::FLOAT: arguments << v.get<float>(); break;
-            case ossia::val_type::STRING: arguments << QString::fromStdString(v.get<std::string>()); break;
-            case ossia::val_type::LIST: /*arguments << v.get<std::vector<ossia::value>>();*/ break;
-            case ossia::val_type::VEC2F: /*arguments << v.get<ossia::vec2f>();*/break;
-            case ossia::val_type::VEC3F: /*arguments << v.get<ossia::vec3f>();*/break;
-            case ossia::val_type::VEC4F: /*arguments << v.get<ossia::vec4f>();*/ break;
             case ossia::val_type::CHAR: arguments << v.get<char>(); break;
+            case ossia::val_type::STRING: arguments << QString::fromStdString(v.get<std::string>()); break;
+
+            case ossia::val_type::LIST: /*arguments << v.get<std::vector<ossia::value>>();*/ break;
+            case ossia::val_type::VEC2F: { JS_GET_VECF(ossia::vec2f, 2); break; }
+            case ossia::val_type::VEC3F: { JS_GET_VECF(ossia::vec3f, 3); break; }
+            case ossia::val_type::VEC4F: { JS_GET_VECF(ossia::vec4f, 4); break; }
+
             }
 
             QJSValue result = fun.call(arguments);
@@ -474,6 +490,12 @@ void quarre::user::end_interaction(quarre::interaction &i)
 
     auto& p_end = m_server.get_user_parameter_from_string(*this, "/interactions/current/end");
     p_end.push_value ( ossia::impulse{} );
+
+    if ( i.module() == "Vote" )
+    {
+        m_server.parse_vote_result();
+        return;
+    }
 
     auto expr_source = i.end_expression_source();
 
@@ -627,19 +649,21 @@ void quarre::dispatcher::dispatch_active_interaction(
         if ( user->m_incoming_interaction == &i )
         {
             user->set_active_interaction(i, devlist);
-            return;
+            if ( !i.dispatch_all() ) return;
         }
     }
 }
 
 void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
 {
-    for ( const auto& user : quarre::server::instance().m_users )
+    auto& srv = quarre::server::instance();
+
+    for ( const auto& user : srv.m_users )
     {
         if ( user->m_active_interaction == &i )
         {
             user->end_interaction(i);
-            return;
+            if ( !i.dispatch_all() ) return;
         }
     }
 }
@@ -651,7 +675,7 @@ void quarre::dispatcher::dispatch_paused_interaction(quarre::interaction &i)
         if ( user->m_active_interaction == &i )
         {
              user->pause_current_interaction(i);
-             return;
+             if ( !i.dispatch_all() ) return;
         }
     }
 }
@@ -663,7 +687,7 @@ void quarre::dispatcher::dispatch_resumed_interaction(interaction &i)
         if ( user->m_active_interaction == &i )
         {
             user->resume_current_interaction(i);
-            return;
+            if ( !i.dispatch_all() ) return;
         }
     }
 }
@@ -819,5 +843,41 @@ void quarre::server::make_common_tree()
         node.create_parameter(parameter.second);
         ossia::net::set_critical(node, true);
     }
+}
+
+void quarre::server::parse_vote_result()
+{
+    uint8_t res_zero    = 0;
+    uint8_t res_one     = 0;
+    uint8_t res_two     = 0;
+    uint8_t total       = 0;
+
+    for ( const auto& user : m_users )
+    {
+        if ( user->m_status != user_status::DISCONNECTED )
+        {
+            auto& choice = get_user_parameter_from_string(*user, "/vote/choice");
+            if ( choice.value().get<int>() == 0 ) res_zero++;
+            else if ( choice.value().get<int>() == 1 ) res_one++;
+            else if ( choice.value().get<int>() == 2 ) res_two++;
+        }
+    }
+
+    if ( res_zero > res_one && res_zero > res_two )
+    {
+        std::srand ( std::time(nullptr) );
+        total = std::rand();
+        total %= 2;
+    }
+
+    else if ( res_one > res_zero && res_one > res_two )
+        total = 0;
+
+    else if ( res_two > res_zero && res_two < res_one )
+        total = 1;
+
+    std::string res_str = "/common/vote/result";
+    auto& res_p = get_parameter_from_string(res_str);
+    res_p.push_value(total);
 }
 
