@@ -127,7 +127,9 @@ static const std::vector<pdata_t> g_common_tree =
     { "/connections/ids", ossia::val_type::LIST },
     //! binding user id by ipv4 address
 
+    { "/common/num_users", ossia::val_type::INT },
     { "/common/sensors/rotation/offset", ossia::val_type::FLOAT },
+
     { "/common/interactions/next/incoming", ossia::val_type::LIST },
     { "/common/interactions/next/cancel", ossia::val_type::IMPULSE },
     { "/common/interactions/next/begin", ossia::val_type::LIST },

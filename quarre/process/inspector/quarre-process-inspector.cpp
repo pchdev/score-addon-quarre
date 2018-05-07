@@ -161,7 +161,8 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     setObjectName           ( "quarrè-process-inspector" );
     setParent               ( parent );
 
-    m_module->addItem   ( "Default" );
+    m_module->addItem   ( "Default"  );
+    m_module->addItem   ( "Tutorial" );
     m_module->addItem   ( "Vote" );
     m_module->addItem   ( "Transition" );
     m_module->addItem   ( "Gesture" );
@@ -172,6 +173,7 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     m_module->addItem   ( "SensorSpatialization" );
 
     m_module->setCurrentText    ( m_interaction->module() );
+    m_dispatch_all->setChecked  ( m_interaction->dispatch_all() );
 
     auto form = new QFormLayout;
     form->addRow ( tr ("Title"), m_title );
