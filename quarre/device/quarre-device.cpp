@@ -68,6 +68,8 @@ static const std::vector<pdata_t> g_user_tree =
     { "/address", ossia::val_type::STRING },
     { "/vote/choice", ossia::val_type::INT },
 
+    { "/controllers/trajectories/trigger", ossia::val_type::BOOL },
+
     { "/interactions/next/incoming", ossia::val_type::LIST },
     //! notifies user of an incoming interaction with following information:
     //! 0 [string] the title of the interaction
