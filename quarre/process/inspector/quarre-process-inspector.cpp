@@ -172,6 +172,7 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     m_module->addItem   ( "TouchSpatialization" );
     m_module->addItem   ( "SensorSpatialization" );
     m_module->addItem   ( "TouchTrajectories" );
+    m_module->addItem   ( "TouchBirds" );
 
     m_module->setCurrentText    ( m_interaction->module() );
     m_dispatch_all->setChecked  ( m_interaction->dispatch_all() );

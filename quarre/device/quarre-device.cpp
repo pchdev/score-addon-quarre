@@ -69,6 +69,8 @@ static const std::vector<pdata_t> g_user_tree =
     { "/vote/choice", ossia::val_type::INT },
 
     { "/controllers/trajectories/trigger", ossia::val_type::BOOL },
+    { "/controllers/birds/trigger", ossia::val_type::INT },
+    { "/controllers/birds/position", ossia::val_type::VEC2F },
 
     { "/interactions/next/incoming", ossia::val_type::LIST },
     //! notifies user of an incoming interaction with following information:
