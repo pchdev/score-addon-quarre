@@ -67,8 +67,8 @@ static const std::vector<std::tuple<std::string,uint8_t,ossia::val_type>> g_cont
 static const std::vector<pdata_t> g_user_tree =
 {
     { "/address", ossia::val_type::STRING },
-    { "/vote/choice", ossia::val_type::INT },
 
+    { "/vote/choice", ossia::val_type::INT },
     { "/controllers/trajectories/trigger", ossia::val_type::BOOL },
     { "/controllers/birds/trigger", ossia::val_type::VEC3F },
 
@@ -177,7 +177,6 @@ static const std::vector<pdata_t> g_common_tree =
 // UTILITY
 //---------------------------------------------------------------------------------------------------------
 
-
 inline parameter_base& quarre::server::make_parameter ( std::string name, ossia::val_type type, bool critical )
 {
     auto& node = ossia::net::create_node(get_device(), name);
@@ -203,6 +202,13 @@ inline parameter_base* quarre::server::get_user_parameter_from_string(
     std::string res = usr.m_base_address + address;
     return server::get_parameter_from_string(res);
 }
+
+#define GET_USER_PARAMETER(p) \
+    *m_server.get_user_parameter_from_string(*this, p)
+
+//---------------------------------------------------------------------------------------------------------
+// UTILITY_JS
+//---------------------------------------------------------------------------------------------------------
 
 #define JS_GET_VECF(t, n)                                   \
     auto arr = engine.newArray(n);                          \
@@ -261,7 +267,9 @@ inline void quarre::js::parse_and_push ( const QJSValue& jsv, const Device::Devi
     QString address_property    = "address";
     QString value_property      = "value";
 
-    auto target_str     = jsv.property(address_property).toString();
+    auto target_str = jsv.property(address_property).toString();
+    if ( target_str == "undefined" ) return;
+
     auto state_addr     = State::Address::fromString(target_str).value_or(State::Address{});
     auto& output_p      = *Engine::score_to_ossia::address(state_addr, devlist);
 
@@ -418,14 +426,14 @@ inline void quarre::user::deactivate_input(QString input)
 void quarre::user::update_net_address(const std::string &net_address)
 {
     m_net_address   = net_address;
-    auto& parameter = *m_server.get_user_parameter_from_string(*this, "/address");
+    auto& parameter = GET_USER_PARAMETER("/address");
 
     parameter.push_value(net_address);
 }
 
 uint8_t quarre::user::get_active_countdown() const
 {
-    auto& parameter = *m_server.get_user_parameter_from_string(*this, "/interactions/current/countdown");
+    auto& parameter = GET_USER_PARAMETER("/interactions/current/countdown");
     return parameter.value().get<int>();
 }
 
@@ -441,7 +449,7 @@ void quarre::user::set_incoming_interaction(quarre::interaction& i)
          m_status = user_status::INCOMING_ACTIVE;
     else m_status = user_status::INCOMING;
 
-    auto& parameter = *m_server.get_user_parameter_from_string(*this, "/interactions/next/incoming");
+    auto& parameter = GET_USER_PARAMETER("/interactions/next/incoming");
     parameter.push_value(i.to_list());
 }
 
@@ -451,6 +459,7 @@ void quarre::user::set_incoming_interaction(quarre::interaction& i)
     quarre::js::append(arguments, v, m_js_engine);  \
     QJSValue result = fun.call(arguments);
 
+
 void quarre::user::set_active_interaction(
         quarre::interaction& i, const Device::DeviceList &devlist)
 {
@@ -459,21 +468,25 @@ void quarre::user::set_active_interaction(
     m_active_interaction    = &i;
 
     // push interaction to remote
-    auto& p_active = *m_server.get_user_parameter_from_string(*this, "/interactions/next/begin");
+    auto& p_active =  GET_USER_PARAMETER ( "/interactions/next/begin" );
     p_active.push_value(i.to_list());
 
     // set end expression to trigger timesync
+
     auto end_expression_source    = i.end_expression_source();
-    auto& end_expression_js       = i.end_expression_js();
-    auto& tsync                   = i.get_ossia_tsync();
-
-    auto& end_expression_p = *get_and_activate_input_parameter(end_expression_source);
-
-    end_expression_p.add_callback([&](const ossia::value& v)
+    if ( !end_expression_source.isEmpty() )
     {
-        GET_JS_RESULT_FROM_EXPRESSION   ( end_expression_source );
-        if ( result.toBool() ) tsync.trigger_request = true;
-    });
+        auto& end_expression_js  = i.end_expression_js();
+        auto& tsync = i.get_ossia_tsync();
+
+        auto& end_expression_p = *get_and_activate_input_parameter(end_expression_source);
+
+        end_expression_p.add_callback([&](const ossia::value& v)
+        {
+            GET_JS_RESULT_FROM_EXPRESSION   ( end_expression_source );
+            if ( result.toBool() ) tsync.trigger_request = true;
+        });
+    }
 
     // MAPPINGS
 
@@ -481,15 +494,39 @@ void quarre::user::set_active_interaction(
     {
         auto& mapping_expression    = mapping->expression_js();
         auto& mapping_input_p       = *get_and_activate_input_parameter(mapping->source());
+        auto mapping_destination    = mapping->destination();
 
-        mapping_input_p.add_callback([&](const ossia::value& v)
+        if ( mapping_destination.isEmpty() )
         {
-            GET_JS_RESULT_FROM_EXPRESSION ( mapping_expression );
-            QJSValueIterator it ( result );
+            mapping_input_p.add_callback([&](const ossia::value& v)
+            {
+                GET_JS_RESULT_FROM_EXPRESSION ( mapping_expression );
+                QJSValueIterator it ( result );
 
-            while ( it.hasNext() )
-                quarre::js::parse_and_push(it.value(), devlist);
-        });
+                while ( it.hasNext() )
+                {
+                    it.next();
+                    quarre::js::parse_and_push(it.value(), devlist);
+                }
+            });
+        }
+
+        else
+            // an unique parameter destination has been selected in the form
+            // this will optimize evaluation, as we don't have to parse destination
+        {
+            auto state_addr = State::Address::fromString(mapping_destination)
+                    .value_or(State::Address{});
+
+            auto& output_p = *Engine::score_to_ossia::address(state_addr, devlist);
+
+            mapping_input_p.add_callback([&](const ossia::value& v)
+            {
+                GET_JS_RESULT_FROM_EXPRESSION ( mapping_expression );
+                auto ov = quarre::js::parse_atom ( result );
+                output_p.push_value(ov);
+            });
+        }
     }
 }
 
@@ -502,13 +539,13 @@ void quarre::user::end_interaction(quarre::interaction &i)
     else m_status = user_status::IDLE;
 
     // send interaction end + reset begin & incoming for qml
-    auto& p_end     = *m_server.get_user_parameter_from_string(*this, "/interactions/current/end");
-    auto& p_inc     = *m_server.get_user_parameter_from_string(*this, "/interactions/next/incoming");
-    auto& p_begin   = *m_server.get_user_parameter_from_string(*this, "/interactions/next/begin");
+    auto& p_end     = GET_USER_PARAMETER    ( "/interactions/current/end" );
+    auto& p_inc     = GET_USER_PARAMETER    ( "/interactions/next/incoming" );
+    auto& p_begin   = GET_USER_PARAMETER    ( "/interactions/next/begin" );
 
     p_end.push_value    ( ossia::impulse{} );
-    p_inc.push_value    ( ossia::value{} );
-    p_begin.push_value  ( ossia::value{} );
+    p_inc.push_value    ( std::vector<ossia::value> { ossia::value {} } );
+    p_begin.push_value  ( std::vector<ossia::value> { ossia::value {} } );
 
     // special ending for vote
     if ( i.module() == "Vote" )
@@ -526,13 +563,13 @@ void quarre::user::end_interaction(quarre::interaction &i)
 
 void quarre::user::pause_current_interaction(quarre::interaction &i)
 {
-    auto& p_pause = *m_server.get_user_parameter_from_string(*this, "/interactions/current/pause");
+    auto& p_pause = GET_USER_PARAMETER("/interactions/current/pause");
     p_pause.push_value ( ossia::impulse{} );
 }
 
 void quarre::user::resume_current_interaction(quarre::interaction &i)
 {
-    auto& p_resume = *m_server.get_user_parameter_from_string(*this, "/interactions/current/resume");
+    auto& p_resume = GET_USER_PARAMETER("/interactions/current/resume");
     p_resume.push_value ( ossia::impulse{} );
 }
 
