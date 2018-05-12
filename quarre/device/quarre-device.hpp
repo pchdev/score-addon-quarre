@@ -24,8 +24,8 @@ class PanelDelegate;
 
 namespace js
 {
-void append                 ( QJSValueList& arguments, const ossia::value& v );
-void parse_and_send         ( const QJSValue& jsv, const Device::DeviceList& devlist );
+void append                 ( QJSValueList& arguments, const ossia::value& v , QJSEngine& engine );
+void parse_and_push         ( const QJSValue& jsv, const Device::DeviceList& devlist );
 ossia::value parse_atom     ( const QJSValue& jsv );
 }
 
@@ -61,9 +61,10 @@ class server : public Engine::Network::OwningOSSIADevice
     virtual bool reconnect ( ) override;
     virtual void recreate ( const Device::Node& ) override;
 
-    parameter_base& get_parameter_from_string       ( std::string& address );
-    parameter_base& get_parameter_from_string       ( QString& address );
-    parameter_base& get_user_parameter_from_string  ( const quarre::user& usr, std::string address );
+    parameter_base& make_parameter (std::string name, ossia::val_type type, bool critical );
+    parameter_base* get_parameter_from_string       ( std::string& address );
+    parameter_base* get_parameter_from_string       ( QString& address );
+    parameter_base* get_user_parameter_from_string  ( const quarre::user& usr, std::string address );
 
     void parse_vote_result ( );
 
@@ -118,9 +119,9 @@ class user
     void get_input_base_address             ( QString& target );
     void sanitize_input_name                ( QString &input_name );
     parameter_base& get_input_parameter     ( QString input, QString replacement );
-    parameter_base& get_and_activate_input_parameter ( QString input );
+    parameter_base *get_and_activate_input_parameter( QString input );
 
-    void make_user_tree     ( );
+    void make_user_parameter_tree ( );
 
     uint8_t                 m_index;
     uint8_t                 m_interaction_count;

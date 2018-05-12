@@ -177,19 +177,27 @@ static const std::vector<pdata_t> g_common_tree =
 // UTILITY
 //---------------------------------------------------------------------------------------------------------
 
-inline parameter_base& quarre::server::get_parameter_from_string ( std::string& address )
+
+inline parameter_base& quarre::server::make_parameter ( std::string name, ossia::val_type type, bool critical )
+{
+    auto& node = ossia::net::create_node(get_device(), name);
+    ossia::net::set_critical(node, critical);
+    return *node.create_parameter(type);
+}
+
+inline parameter_base* quarre::server::get_parameter_from_string ( std::string& address )
 {
     auto node   = ossia::net::find_node(get_device(), address);
-    return      *node->get_parameter();
+    return      node->get_parameter();
 }
 
-inline parameter_base& quarre::server::get_parameter_from_string ( QString& address )
+inline parameter_base* quarre::server::get_parameter_from_string ( QString& address )
 {
     auto node   = ossia::net::find_node(get_device(), address.toStdString());
-    return      *node->get_parameter();
+    return      node->get_parameter();
 }
 
-inline parameter_base& quarre::server::get_user_parameter_from_string(
+inline parameter_base* quarre::server::get_user_parameter_from_string(
         const quarre::user &usr, std::string address )
 {
     std::string res = usr.m_base_address + address;
@@ -197,7 +205,7 @@ inline parameter_base& quarre::server::get_user_parameter_from_string(
 }
 
 #define JS_GET_VECF(t, n)                                   \
-    auto arr = m_js_engine.newArray(n);                     \
+    auto arr = engine.newArray(n);                          \
     for ( int i = 0; i < n; ++i )                           \
         arr.setProperty(i, v.get<t>()[i]);                  \
     arguments << arr;
@@ -209,7 +217,7 @@ inline parameter_base& quarre::server::get_user_parameter_from_string(
         vec[i] = array[i];                                  \
 
 
-void quarre::js::append ( QJSValueList& arguments, const ossia::value& v)
+void quarre::js::append ( QJSValueList& arguments, const ossia::value& v, QJSEngine& engine )
 {
     switch (v.getType())
     {
@@ -231,8 +239,8 @@ ossia::value quarre::js::parse_atom( const QJSValue &jsv )
     ossia::value res;
 
     if ( jsv.isBool() ) res = jsv.toBool();
-    else if ( jsv.isNumber() ) res = jsv.toNumber();
-    else if ( jsv.isString() ) res = jsv.toString();
+    else if ( jsv.isNumber() ) res = (float) jsv.toNumber();
+    else if ( jsv.isString() ) res = jsv.toString().toStdString();
 
     else if ( jsv.isArray() )
     {
@@ -274,80 +282,48 @@ quarre::user::user  ( uint8_t index, quarre::server& server) : m_server(server)
     m_base_address             = "/user/";
     m_base_address             += std::to_string(index);
 
-    make_user_tree();
+    make_user_parameter_tree();
 }
 
-void quarre::user::make_user_tree()
+void quarre::user::make_user_parameter_tree()
 {
     for ( const auto& parameter : g_user_tree )
-    {
-        auto& node = ossia::net::create_node(m_server.get_device(), m_base_address + parameter.first);
-        node.create_parameter(parameter.second);
-        ossia::net::set_critical(node, true);
-    }
+        m_server.make_parameter(m_base_address + parameter.first, parameter.second, true);
 
     for ( const auto& gesture : g_gestures )
-    {
-        auto& node = ossia::net::create_node(
-                    m_server.get_device(),
-                    m_base_address + "/gestures/" + gesture.first);
-
-        auto available_node = node.create_child("available");
-        available_node->create_parameter(ossia::val_type::BOOL);
-        ossia::net::set_critical(*available_node, true);
-
-        auto poll_node = node.create_child("poll");
-        poll_node->create_parameter(ossia::val_type::BOOL);
-        ossia::net::set_critical(*poll_node, true);
-
-        auto trigger_node = node.create_child("trigger");
-        trigger_node->create_parameter(ossia::val_type::IMPULSE);
-        ossia::net::set_critical(*trigger_node, true);
+    {        
+        std::string gesture_addr = m_base_address + "/gestures/" + gesture.first;
+        m_server.make_parameter ( gesture_addr + "/available", ossia::val_type::BOOL, true );
+        m_server.make_parameter ( gesture_addr + "/poll", ossia::val_type::BOOL, true );
+        m_server.make_parameter ( gesture_addr + "/trigger", ossia::val_type::BOOL, true );
 
         // create gesture's subnodes
-
         for ( const auto& subgesture : gesture.second )
-        {
-            auto subnode = node.create_child(subgesture);
-            auto subtrigger = subnode->create_child("trigger");
-            subtrigger->create_parameter(ossia::val_type::IMPULSE);
-            ossia::net::set_critical(*subtrigger, true);
-        }
+            m_server.make_parameter(gesture_addr + "/" + subgesture, ossia::val_type::IMPULSE, true);
     }
 
     for ( const auto& sensor : g_sensors )
-    {
-        auto& sensor_node = ossia::net::create_node(
-                    m_server.get_device(),
-                    m_base_address + "/sensors/" + sensor.first );
-
-        auto available_node = sensor_node.create_child("available");
-        available_node->create_parameter(ossia::val_type::BOOL);
+    {        
+        std::string sensor_addr = m_base_address + "/sensors/" + sensor.first;
+        m_server.make_parameter ( sensor_addr + "/available", ossia::val_type::BOOL, true );
 
         // create sensor data nodes
         for ( const auto& axis : sensor.second )
         {
-            auto subnode    = sensor_node.create_child(axis.first);
-            auto poll_node  = subnode->create_child("poll");
-            poll_node       ->create_parameter(ossia::val_type::BOOL);
-            ossia::net::set_critical(*poll_node, true);
-
-            auto data_node  = subnode->create_child("data");
-            data_node       ->create_parameter(axis.second);
+            std::string subdata_addr = sensor_addr + "/" + axis.first;
+            m_server.make_parameter ( subdata_addr + "/poll", ossia::val_type::BOOL, true );
+            m_server.make_parameter ( subdata_addr + "/data", axis.second, false );
         }
     }
 
     for ( const auto& controller : g_controllers )
-    {
-        auto& controller_node = ossia::net::create_node(
-                    m_server.get_device(),
-                    m_base_address + "/controllers/" + std::get<0>(controller) );
+    {        
+        std::string ctrl_addr = m_base_address + "/controllers/" + std::get<0>(controller);
 
         for ( int i = 0; i < std::get<1>(controller); ++i )
         {
-            auto subnode        = controller_node.create_child(std::to_string(i));
-            auto subnode_data   = subnode->create_child("data");
-            subnode_data        ->create_parameter(std::get<2>(controller));
+            std::string data_addr = ctrl_addr + "/" + std::to_string(i) + "/data";
+            m_server.make_parameter(data_addr, std::get<2>(controller), false);
         }
     }
 }
@@ -360,7 +336,7 @@ inline void quarre::user::clear_input(QString input)
         deactivate_input ( input );
 
     sanitize_input_name ( input );
-    auto& p_expr_source = m_server.get_parameter_from_string(input);
+    auto& p_expr_source = *m_server.get_parameter_from_string(input);
     p_expr_source.callbacks_clear();
 }
 
@@ -394,12 +370,12 @@ inline parameter_base& quarre::user::get_input_parameter(QString input, QString 
     get_input_base_address      ( input );
     input.append                ( replacement );
 
-    return m_server.get_parameter_from_string(input);
+    return *m_server.get_parameter_from_string(input);
 }
 
-parameter_base& quarre::user::get_and_activate_input_parameter ( QString input )
+parameter_base* quarre::user::get_and_activate_input_parameter ( QString input )
 {
-    if ( input == "" ) return;
+    if ( input == "" ) return 0;
 
     if ( !input.contains("controllers") )
         activate_input ( input );
@@ -419,7 +395,7 @@ inline bool quarre::user::supports_input(QString input)
     {
         QStringList split = input.split("sensors/");
         input = split[0] + "sensors/" + split[1].split("/")[0] + "/available";
-        parameter = &m_server.get_parameter_from_string(input);
+        parameter = m_server.get_parameter_from_string(input);
 
     }
 
@@ -442,14 +418,14 @@ inline void quarre::user::deactivate_input(QString input)
 void quarre::user::update_net_address(const std::string &net_address)
 {
     m_net_address   = net_address;
-    auto& parameter = m_server.get_user_parameter_from_string(*this, "/address");
+    auto& parameter = *m_server.get_user_parameter_from_string(*this, "/address");
 
     parameter.push_value(net_address);
 }
 
 uint8_t quarre::user::get_active_countdown() const
 {
-    auto& parameter = m_server.get_user_parameter_from_string(*this, "/interactions/current/countdown");
+    auto& parameter = *m_server.get_user_parameter_from_string(*this, "/interactions/current/countdown");
     return parameter.value().get<int>();
 }
 
@@ -465,14 +441,14 @@ void quarre::user::set_incoming_interaction(quarre::interaction& i)
          m_status = user_status::INCOMING_ACTIVE;
     else m_status = user_status::INCOMING;
 
-    auto& parameter = m_server.get_user_parameter_from_string(*this, "/interactions/next/incoming");
+    auto& parameter = *m_server.get_user_parameter_from_string(*this, "/interactions/next/incoming");
     parameter.push_value(i.to_list());
 }
 
 #define GET_JS_RESULT_FROM_EXPRESSION(e)            \
     QJSValueList arguments;                         \
     QJSValue fun = m_js_engine.evaluate(e);         \
-    quarre::js::append(arguments, v);               \
+    quarre::js::append(arguments, v, m_js_engine);  \
     QJSValue result = fun.call(arguments);
 
 void quarre::user::set_active_interaction(
@@ -483,7 +459,7 @@ void quarre::user::set_active_interaction(
     m_active_interaction    = &i;
 
     // push interaction to remote
-    auto& p_active = m_server.get_user_parameter_from_string(*this, "/interactions/next/begin");
+    auto& p_active = *m_server.get_user_parameter_from_string(*this, "/interactions/next/begin");
     p_active.push_value(i.to_list());
 
     // set end expression to trigger timesync
@@ -491,7 +467,7 @@ void quarre::user::set_active_interaction(
     auto& end_expression_js       = i.end_expression_js();
     auto& tsync                   = i.get_ossia_tsync();
 
-    auto& end_expression_p = get_and_activate_input_parameter(end_expression_source);
+    auto& end_expression_p = *get_and_activate_input_parameter(end_expression_source);
 
     end_expression_p.add_callback([&](const ossia::value& v)
     {
@@ -504,7 +480,7 @@ void quarre::user::set_active_interaction(
     for ( const auto& mapping : i.mappings())
     {
         auto& mapping_expression    = mapping->expression_js();
-        auto& mapping_input_p       = get_and_activate_input_parameter(mapping->source());
+        auto& mapping_input_p       = *get_and_activate_input_parameter(mapping->source());
 
         mapping_input_p.add_callback([&](const ossia::value& v)
         {
@@ -512,7 +488,7 @@ void quarre::user::set_active_interaction(
             QJSValueIterator it ( result );
 
             while ( it.hasNext() )
-                quarre::js::parse(it.value(), devlist)
+                quarre::js::parse_and_push(it.value(), devlist);
         });
     }
 }
@@ -526,9 +502,9 @@ void quarre::user::end_interaction(quarre::interaction &i)
     else m_status = user_status::IDLE;
 
     // send interaction end + reset begin & incoming for qml
-    auto& p_end     = m_server.get_user_parameter_from_string(*this, "/interactions/current/end");
-    auto& p_inc     = m_server.get_user_parameter_from_string(*this, "/interactions/next/incoming");
-    auto& p_begin   = m_server.get_user_parameter_from_string(*this, "/interactions/next/begin");
+    auto& p_end     = *m_server.get_user_parameter_from_string(*this, "/interactions/current/end");
+    auto& p_inc     = *m_server.get_user_parameter_from_string(*this, "/interactions/next/incoming");
+    auto& p_begin   = *m_server.get_user_parameter_from_string(*this, "/interactions/next/begin");
 
     p_end.push_value    ( ossia::impulse{} );
     p_inc.push_value    ( ossia::value{} );
@@ -550,13 +526,13 @@ void quarre::user::end_interaction(quarre::interaction &i)
 
 void quarre::user::pause_current_interaction(quarre::interaction &i)
 {
-    auto& p_pause = m_server.get_user_parameter_from_string(*this, "/interactions/current/pause");
+    auto& p_pause = *m_server.get_user_parameter_from_string(*this, "/interactions/current/pause");
     p_pause.push_value ( ossia::impulse{} );
 }
 
 void quarre::user::resume_current_interaction(quarre::interaction &i)
 {
-    auto& p_resume = m_server.get_user_parameter_from_string(*this, "/interactions/current/resume");
+    auto& p_resume = *m_server.get_user_parameter_from_string(*this, "/interactions/current/resume");
     p_resume.push_value ( ossia::impulse{} );
 }
 
@@ -809,7 +785,7 @@ void quarre::server::on_client_connected(const std::string &ip)
 
             // update id bindings
             std::string cids = "/connections/ids";
-            auto& ids_p = get_parameter_from_string(cids);
+            auto& ids_p = *get_parameter_from_string(cids);
             auto ids_v = ids_p.value().get<std::vector<ossia::value>>();
 
             // in case address already exists ( disconnection failed )
@@ -845,7 +821,7 @@ void quarre::server::on_client_disconnected(const std::string &ip)
 
             // update id bindings
             std::string cids = "/connections/ids";
-            auto& ids_p = get_parameter_from_string(cids);
+            auto& ids_p = *get_parameter_from_string(cids);
             auto ids_v = ids_p.value().get<std::vector<ossia::value>>();
 
             ids_v.erase(std::remove(ids_v.begin(), ids_v.end(), ip_bis), ids_v.end());
@@ -878,7 +854,7 @@ void quarre::server::parse_vote_result()
     {
         if ( user->m_status != user_status::DISCONNECTED )
         {
-            auto& choice = get_user_parameter_from_string(*user, "/vote/choice");
+            auto& choice = *get_user_parameter_from_string(*user, "/vote/choice");
             if ( choice.value().get<int>() == 0 ) res_zero++;
             else if ( choice.value().get<int>() == 1 ) res_one++;
             else if ( choice.value().get<int>() == 2 ) res_two++;
@@ -899,7 +875,7 @@ void quarre::server::parse_vote_result()
         total = 1;
 
     std::string res_str = "/common/vote/result";
-    auto& res_p = get_parameter_from_string(res_str);
+    auto& res_p = *get_parameter_from_string(res_str);
     res_p.push_value(total);
 }
 
