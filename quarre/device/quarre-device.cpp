@@ -240,12 +240,16 @@ void quarre::js::append ( QJSValueList& arguments, const ossia::value& v, QJSEng
     }
 }
 
-ossia::value quarre::js::parse_atom( const QJSValue &jsv )
+ossia::value quarre::js::parse_atom( const QJSValue &jsv, ossia::val_type vt )
 {
     ossia::value res;
 
     if ( jsv.isBool() ) res = jsv.toBool();
-    else if ( jsv.isNumber() ) res = (float) jsv.toNumber();
+    else if ( jsv.isNumber() )
+    {
+        if ( vt == ossia::val_type::INT ) res = (int) jsv.toNumber();
+        else if ( vt == ossia::val_type::FLOAT ) res = (float) jsv.toNumber();
+    }
     else if ( jsv.isString() ) res = jsv.toString().toStdString();
 
     else if ( jsv.isArray() )
@@ -254,7 +258,7 @@ ossia::value quarre::js::parse_atom( const QJSValue &jsv )
         QJSValueIterator it ( jsv );
 
         while ( it.hasNext() )
-            vec.push_back(quarre::js::parse_atom(it.value()));
+            vec.push_back(quarre::js::parse_atom(it.value(), vt));
 
         res = vec;
     }
@@ -273,7 +277,8 @@ inline void quarre::js::parse_and_push ( const QJSValue& jsv, const Device::Devi
     auto state_addr     = State::Address::fromString(target_str).value_or(State::Address{});
     auto& output_p      = *Engine::score_to_ossia::address(state_addr, devlist);
 
-   output_p.push_value  ( quarre::js::parse_atom(jsv.property(value_property)) );
+   output_p.push_value  ( quarre::js::parse_atom ( jsv.property(value_property),
+                                                   output_p.get_value_type()) );
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -523,7 +528,7 @@ void quarre::user::set_active_interaction(
             mapping_input_p.add_callback([&](const ossia::value& v)
             {
                 GET_JS_RESULT_FROM_EXPRESSION ( mapping_expression );
-                auto ov = quarre::js::parse_atom ( result );
+                auto ov = quarre::js::parse_atom ( result, output_p.get_value_type() );
                 output_p.push_value(ov);
             });
         }
