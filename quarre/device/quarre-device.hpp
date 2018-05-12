@@ -22,6 +22,13 @@ class interaction;
 class user;
 class PanelDelegate;
 
+namespace js
+{
+void append                 ( QJSValueList& arguments, const ossia::value& v );
+void parse_and_send         ( const QJSValue& jsv, const Device::DeviceList& devlist );
+ossia::value parse_atom     ( const QJSValue& jsv );
+}
+
 class dispatcher
 {
     public:
@@ -104,12 +111,14 @@ class user
     bool supports_input                ( QString input );
     void activate_input                ( QString input );
     void deactivate_input              ( QString input );
+    void clear_input                   ( QString input );
 
     protected: //----------------------------------------------------------
     void replace_user_wildcard              ( QString& target );
     void get_input_base_address             ( QString& target );
     void sanitize_input_name                ( QString &input_name );
     parameter_base& get_input_parameter     ( QString input, QString replacement );
+    parameter_base& get_and_activate_input_parameter ( QString input );
 
     void make_user_tree     ( );
 

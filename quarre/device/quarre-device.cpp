@@ -7,6 +7,7 @@
 #include <utility>
 #include <Engine/OSSIA2score.hpp>
 #include <Engine/score2OSSIA.hpp>
+#include <QJSValueIterator>
 
 using namespace score::addons;
 using namespace ossia::net;
@@ -69,8 +70,7 @@ static const std::vector<pdata_t> g_user_tree =
     { "/vote/choice", ossia::val_type::INT },
 
     { "/controllers/trajectories/trigger", ossia::val_type::BOOL },
-    { "/controllers/birds/trigger", ossia::val_type::INT },
-    { "/controllers/birds/position", ossia::val_type::VEC2F },
+    { "/controllers/birds/trigger", ossia::val_type::VEC3F },
 
     { "/interactions/next/incoming", ossia::val_type::LIST },
     //! notifies user of an incoming interaction with following information:
@@ -196,6 +196,70 @@ inline parameter_base& quarre::server::get_user_parameter_from_string(
     return server::get_parameter_from_string(res);
 }
 
+#define JS_GET_VECF(t, n)                                   \
+    auto arr = m_js_engine.newArray(n);                     \
+    for ( int i = 0; i < n; ++i )                           \
+        arr.setProperty(i, v.get<t>()[i]);                  \
+    arguments << arr;
+
+#define VECF_GET_JS(t)                                      \
+    t vec;                                                  \
+    auto array = result.toVariant().toJsonArray();          \
+    for ( int i = 0; i < vec.size(); ++i )                  \
+        vec[i] = array[i];                                  \
+
+
+void quarre::js::append ( QJSValueList& arguments, const ossia::value& v)
+{
+    switch (v.getType())
+    {
+    case ossia::val_type::BOOL:     arguments << v.get<bool>(); break;
+    case ossia::val_type::INT:      arguments << v.get<int>(); break;
+    case ossia::val_type::FLOAT:    arguments << v.get<float>(); break;
+    case ossia::val_type::CHAR:     arguments << v.get<char>(); break;
+    case ossia::val_type::STRING:   arguments << QString::fromStdString(v.get<std::string>()); break;
+
+    case ossia::val_type::VEC2F:    { JS_GET_VECF(ossia::vec2f, 2); break; }
+    case ossia::val_type::VEC3F:    { JS_GET_VECF(ossia::vec3f, 3); break; }
+    case ossia::val_type::VEC4F:    { JS_GET_VECF(ossia::vec4f, 4); break; }
+    case ossia::val_type::LIST:     break;
+    }
+}
+
+ossia::value quarre::js::parse_atom( const QJSValue &jsv )
+{
+    ossia::value res;
+
+    if ( jsv.isBool() ) res = jsv.toBool();
+    else if ( jsv.isNumber() ) res = jsv.toNumber();
+    else if ( jsv.isString() ) res = jsv.toString();
+
+    else if ( jsv.isArray() )
+    {
+        std::vector<ossia::value> vec;
+        QJSValueIterator it ( jsv );
+
+        while ( it.hasNext() )
+            vec.push_back(quarre::js::parse_atom(it.value()));
+
+        res = vec;
+    }
+
+    return res;
+}
+
+inline void quarre::js::parse_and_push ( const QJSValue& jsv, const Device::DeviceList& devlist ) // we assume value is object
+{
+    QString address_property    = "address";
+    QString value_property      = "value";
+
+    auto target_str     = jsv.property(address_property).toString();
+    auto state_addr     = State::Address::fromString(target_str).value_or(State::Address{});
+    auto& output_p      = *Engine::score_to_ossia::address(state_addr, devlist);
+
+   output_p.push_value  ( quarre::js::parse_atom(jsv.property(value_property)) );
+}
+
 //---------------------------------------------------------------------------------------------------------
 // USER
 //---------------------------------------------------------------------------------------------------------
@@ -288,6 +352,18 @@ void quarre::user::make_user_tree()
     }
 }
 
+inline void quarre::user::clear_input(QString input)
+{
+    if ( input == "" ) return;
+
+    if ( !input.contains("controllers") )
+        deactivate_input ( input );
+
+    sanitize_input_name ( input );
+    auto& p_expr_source = m_server.get_parameter_from_string(input);
+    p_expr_source.callbacks_clear();
+}
+
 inline void quarre::user::replace_user_wildcard(QString& target)
 {
     target.replace("0", QString::number(m_index));
@@ -321,6 +397,18 @@ inline parameter_base& quarre::user::get_input_parameter(QString input, QString 
     return m_server.get_parameter_from_string(input);
 }
 
+parameter_base& quarre::user::get_and_activate_input_parameter ( QString input )
+{
+    if ( input == "" ) return;
+
+    if ( !input.contains("controllers") )
+        activate_input ( input );
+
+    sanitize_input_name ( input );
+    return m_server.get_parameter_from_string ( input );
+
+}
+
 inline bool quarre::user::supports_input(QString input)
 {
     sanitize_input_name ( input );
@@ -329,14 +417,13 @@ inline bool quarre::user::supports_input(QString input)
 
     if ( input.contains("sensors") )
     {
-        // /user/0/sensors/accelerometers/x/data
         QStringList split = input.split("sensors/");
         input = split[0] + "sensors/" + split[1].split("/")[0] + "/available";
         parameter = &m_server.get_parameter_from_string(input);
 
     }
-    else parameter = &get_input_parameter(input, "/available");
 
+    else parameter = &get_input_parameter(input, "/available");
     return parameter->value().get<bool>();
 }
 
@@ -382,119 +469,50 @@ void quarre::user::set_incoming_interaction(quarre::interaction& i)
     parameter.push_value(i.to_list());
 }
 
-#define JS_GET_VECF(t, n)                                   \
-    auto arr = m_js_engine.newArray(n);                     \
-    for ( int i = 0; i < n; ++i )                           \
-        arr.setProperty(i, v.get<t>()[i]);                  \
-    arguments << arr;
-
+#define GET_JS_RESULT_FROM_EXPRESSION(e)            \
+    QJSValueList arguments;                         \
+    QJSValue fun = m_js_engine.evaluate(e);         \
+    quarre::js::append(arguments, v);               \
+    QJSValue result = fun.call(arguments);
 
 void quarre::user::set_active_interaction(
         quarre::interaction& i, const Device::DeviceList &devlist)
 {
+    m_status                = user_status::ACTIVE;
     m_incoming_interaction  = 0;
     m_active_interaction    = &i;
-    m_status                = user_status::ACTIVE;
 
     // push interaction to remote
     auto& p_active = m_server.get_user_parameter_from_string(*this, "/interactions/next/begin");
     p_active.push_value(i.to_list());
 
     // set end expression to trigger timesync
-    auto expr_source    = i.end_expression_source();
-    auto& expr          = i.end_expression_js();
-    auto& tsync         = i.get_ossia_tsync();
+    auto end_expression_source    = i.end_expression_source();
+    auto& end_expression_js       = i.end_expression_js();
+    auto& tsync                   = i.get_ossia_tsync();
 
-    if ( expr_source != "" )
+    auto& end_expression_p = get_and_activate_input_parameter(end_expression_source);
+
+    end_expression_p.add_callback([&](const ossia::value& v)
     {
-        if ( !expr_source.contains("controllers") )
-            activate_input ( expr_source );
+        GET_JS_RESULT_FROM_EXPRESSION   ( end_expression_source );
+        if ( result.toBool() ) tsync.trigger_request = true;
+    });
 
-        sanitize_input_name ( expr_source );
-        auto& p_expr_source = m_server.get_parameter_from_string(expr_source);
-
-        p_expr_source.add_callback([&](const ossia::value&v) {
-
-            QJSValueList arguments;
-            QJSValue fun = m_js_engine.evaluate(expr);
-
-            switch (v.getType())
-            {
-            case ossia::val_type::BOOL: arguments << v.get<bool>(); break;
-            case ossia::val_type::INT: arguments << v.get<int>(); break;
-            case ossia::val_type::FLOAT: arguments << v.get<float>(); break;
-            case ossia::val_type::CHAR: arguments << v.get<char>(); break;
-            case ossia::val_type::STRING: arguments << QString::fromStdString(v.get<std::string>()); break;
-
-            //case ossia::val_type::LIST:  arguments << list_to_js(v.get<std::vector<ossia::value>>()); break;
-            case ossia::val_type::VEC2F: { JS_GET_VECF(ossia::vec2f, 2); break; }
-            case ossia::val_type::VEC3F: { JS_GET_VECF(ossia::vec3f, 3); break; }
-            case ossia::val_type::VEC4F: { JS_GET_VECF(ossia::vec4f, 4); break; }
-
-            }
-
-            QJSValue result = fun.call(arguments);
-
-            if ( result.toBool() )
-                tsync.trigger_request = true;
-        });
-
-    }
-
-    // parse and set javascript mappings
+    // MAPPINGS
 
     for ( const auto& mapping : i.mappings())
     {
-        auto map_dest       = mapping->destination();
-        auto& map_expr      = mapping->expression_js();
-        auto map_source     = mapping->source();
+        auto& mapping_expression    = mapping->expression_js();
+        auto& mapping_input_p       = get_and_activate_input_parameter(mapping->source());
 
-        if ( map_source == "" || map_dest == "" ) continue;
+        mapping_input_p.add_callback([&](const ossia::value& v)
+        {
+            GET_JS_RESULT_FROM_EXPRESSION ( mapping_expression );
+            QJSValueIterator it ( result );
 
-        if ( !map_source.contains("controllers") )
-            activate_input ( map_source );
-
-        sanitize_input_name ( map_source );
-        auto& p_input       = m_server.get_parameter_from_string(map_source);
-
-        auto state_addr     = State::Address::fromString(map_dest).value_or(State::Address{});
-        auto& p_output      = *Engine::score_to_ossia::address(state_addr, devlist);
-
-        p_input.add_callback([&](const ossia::value& v) {
-
-            QJSValueList arguments;
-            QJSValue fun = m_js_engine.evaluate(map_expr);
-
-            switch (v.getType())
-            {
-            case ossia::val_type::BOOL: arguments << v.get<bool>(); break;
-            case ossia::val_type::INT: arguments << v.get<int>(); break;
-            case ossia::val_type::FLOAT: arguments << v.get<float>(); break;
-            case ossia::val_type::CHAR: arguments << v.get<char>(); break;
-            case ossia::val_type::STRING: arguments << QString::fromStdString(v.get<std::string>()); break;
-
-            case ossia::val_type::LIST: /*arguments << v.get<std::vector<ossia::value>>();*/ break;
-            case ossia::val_type::VEC2F: { JS_GET_VECF(ossia::vec2f, 2); break; }
-            case ossia::val_type::VEC3F: { JS_GET_VECF(ossia::vec3f, 3); break; }
-            case ossia::val_type::VEC4F: { JS_GET_VECF(ossia::vec4f, 4); break; }
-
-            }
-
-            QJSValue result = fun.call(arguments);
-
-            switch ( p_output.get_value_type())
-            {
-            case ossia::val_type::BOOL: p_output.push_value(result.toBool()); break;
-            case ossia::val_type::INT: p_output.push_value(result.toInt()); break;
-            case ossia::val_type::FLOAT: p_output.push_value(result.toNumber()); break;
-            case ossia::val_type::STRING: p_output.push_value(result.toString().toStdString()); break;
-            case ossia::val_type::LIST: break; // non-priority for Reaper
-            case ossia::val_type::VEC2F: break;
-            case ossia::val_type::VEC3F: break;
-            case ossia::val_type::VEC4F: break;
-            case ossia::val_type::IMPULSE: p_output.push_value(ossia::impulse{}); break;
-            case ossia::val_type::CHAR: p_output.push_value(result.toString().toStdString().c_str());
-            }
+            while ( it.hasNext() )
+                quarre::js::parse(it.value(), devlist)
         });
     }
 }
@@ -507,42 +525,27 @@ void quarre::user::end_interaction(quarre::interaction &i)
          m_status = user_status::INCOMING;
     else m_status = user_status::IDLE;
 
-    auto& p_end = m_server.get_user_parameter_from_string(*this, "/interactions/current/end");
-    p_end.push_value ( ossia::impulse{} );
+    // send interaction end + reset begin & incoming for qml
+    auto& p_end     = m_server.get_user_parameter_from_string(*this, "/interactions/current/end");
+    auto& p_inc     = m_server.get_user_parameter_from_string(*this, "/interactions/next/incoming");
+    auto& p_begin   = m_server.get_user_parameter_from_string(*this, "/interactions/next/begin");
 
+    p_end.push_value    ( ossia::impulse{} );
+    p_inc.push_value    ( ossia::value{} );
+    p_begin.push_value  ( ossia::value{} );
+
+    // special ending for vote
     if ( i.module() == "Vote" )
     {
         m_server.parse_vote_result();
         return;
     }
 
-    auto expr_source = i.end_expression_source();
-
-    if ( expr_source != "" )
-    {
-        if ( !expr_source.contains("controllers") )
-             deactivate_input ( expr_source );
-
-        sanitize_input_name ( expr_source );
-        auto& p_expr_source = m_server.get_parameter_from_string(expr_source);
-        p_expr_source.callbacks_clear();
-    }
+    // clear mapping & end-expression callbacks
+    clear_input(i.end_expression_source());
 
     for ( const auto& mapping : i.mappings())
-    {
-        auto map_source = mapping->source();
-
-        if ( map_source == "" )
-            continue;
-
-        else if ( !map_source.contains("controllers"))
-             deactivate_input ( map_source );
-
-        sanitize_input_name ( map_source );
-
-        auto& p_input = m_server.get_parameter_from_string(map_source);
-        p_input.callbacks_clear();
-    }
+        clear_input(mapping->source());
 }
 
 void quarre::user::pause_current_interaction(quarre::interaction &i)
