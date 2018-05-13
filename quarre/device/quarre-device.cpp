@@ -488,7 +488,7 @@ void quarre::user::set_active_interaction(
 
         end_expression_p.add_callback([&](const ossia::value& v)
         {
-            GET_JS_RESULT_FROM_EXPRESSION   ( end_expression_source );
+            GET_JS_RESULT_FROM_EXPRESSION   ( end_expression_js );
             if ( result.toBool() ) tsync.trigger_request = true;
         });
     }
