@@ -58,7 +58,7 @@ class ProcessModel final : public Process::ProcessModel
     Scenario::TimeSyncModel&    end_tsync           ( ) const;
     Scenario::ProcessModel&     parent_scenario     ( ) const;
 
-    void set_dispatched_parameter(ossia::net::parameter_base& p);
+    void set_dispatched_parameter   ( ossia::net::parameter_base& p );
     ossia::net::parameter_base& get_dispatched_parameter ();
 
     void set_interval_component ( Engine::Execution::IntervalComponent& component );

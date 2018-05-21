@@ -4,6 +4,7 @@
 #include <score/application/ApplicationContext.hpp>
 #include <score/tools/IdentifierGeneration.hpp>
 #include <quarre/device/quarre-device.hpp>
+#include <Engine/score2OSSIA.hpp>
 
 
 using namespace score::addons;
@@ -46,9 +47,9 @@ ossia::net::parameter_base& quarre::ProcessModel::get_dispatched_parameter()
 
 ossia::time_sync& quarre::ProcessModel::get_ossia_tsync() const
 {
-    auto base = dynamic_cast<Engine::Execution::IntervalComponentBase*>(m_interval_component);
-    auto itv = base->OSSIAInterval();
-    auto& tsync = itv->get_end_event().get_time_sync();
+    auto base       = dynamic_cast<Engine::Execution::IntervalComponentBase*>(m_interval_component);
+    auto itv        = base->OSSIAInterval();
+    auto& tsync     = itv->get_end_event().get_time_sync();
 
     return tsync;
 }
@@ -87,9 +88,9 @@ Scenario::EventModel& quarre::ProcessModel::end_event() const
 
 Scenario::TimeSyncModel& quarre::ProcessModel::end_tsync() const
 {
-    auto& end_state = m_parent_scenario->state(m_interval->endState());
-    auto& end_event = m_parent_scenario->event(end_state.eventId());
-    auto& end_tsync = m_parent_scenario->timeSync(end_event.timeSync() );
+    auto& end_state = m_parent_scenario->state      ( m_interval->endState() );
+    auto& end_event = m_parent_scenario->event      ( end_state.eventId() );
+    auto& end_tsync = m_parent_scenario->timeSync   ( end_event.timeSync() );
 
     return end_tsync;
 }

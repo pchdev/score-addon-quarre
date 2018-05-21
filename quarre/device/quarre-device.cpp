@@ -46,7 +46,9 @@ static const std::vector<std::pair<std::string,std::vector<pdata_t>>> g_sensors 
           { "y", ossia::val_type::FLOAT },
           { "z", ossia::val_type::FLOAT }}},
     { "proximity", {
-          { "close", ossia::val_type::BOOL }}}
+          { "close", ossia::val_type::BOOL }}},
+    { "microphone", {
+          { "rms", ossia::val_type::FLOAT }}}
 };
 
 // ---------------------------------------------------------------------------------------------------------
@@ -71,6 +73,7 @@ static const std::vector<pdata_t> g_user_tree =
     { "/vote/choice", ossia::val_type::INT },
     { "/controllers/trajectories/trigger", ossia::val_type::BOOL },
     { "/controllers/birds/trigger", ossia::val_type::VEC3F },
+    { "/controllers/breath/trigger", ossia::val_type::BOOL },
 
     { "/interactions/next/incoming", ossia::val_type::LIST },
     //! notifies user of an incoming interaction with following information:
@@ -549,8 +552,8 @@ void quarre::user::end_interaction(quarre::interaction &i)
     auto& p_begin   = GET_USER_PARAMETER    ( "/interactions/next/begin" );
 
     p_end.push_value    ( ossia::impulse{} );
-    p_inc.push_value    ( std::vector<ossia::value> { ossia::value {} } );
-    p_begin.push_value  ( std::vector<ossia::value> { ossia::value {} } );
+    p_inc.push_value    ( std::vector<ossia::value> { ossia::value {""} } );
+    p_begin.push_value  ( std::vector<ossia::value> { ossia::value {""} } );
 
     // special ending for vote
     if ( i.module() == "Vote" )

@@ -26,6 +26,8 @@ class ProcessExecutor final : public ossia::time_process
 
     virtual ossia::state_element state ( ossia::time_value date, double pos ) override;
 
+    bool dispatchable ( ) const;
+
     private: // --------------------------
     const Device::DeviceList& m_devices;
     Engine::Execution::IntervalComponentBase& m_interval;
