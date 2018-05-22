@@ -42,6 +42,7 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/gestures/hammer/trigger", ossia::val_type::BOOL, true },
     { "/modules/gestures/palm/trigger", ossia::val_type::BOOL, true },
     { "/modules/gestures/shake/trigger", ossia::val_type::BOOL, true },
+    { "/modules/gestures/blow/trigger", ossia::val_type::BOOL, true },
     { "/modules/sensors/rotation/x/angle", ossia::val_type::FLOAT, true },
     { "/modules/sensors/rotation/y/angle", ossia::val_type::FLOAT, true },
     { "/modules/sensors/rotation/z/angle", ossia::val_type::FLOAT, true },
@@ -71,13 +72,13 @@ user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(in
 void user::sanitize_input_name(QString &input_name)
 {
     input_name.replace ( "wildcard", QString::number(m_index));
-    input_name.replace ( "quarre-server:/", "" );
+    input_name.replace ( "quarre-server:", "" );
 }
 
 inline parameter_base& user::get_input_parameter(QString path)
 {
     sanitize_input_name( path );
-    return *m_server.get_user_parameter(*this, path.toStdString());
+    return *m_server.get_common_parameter(path);
 }
 
 inline parameter_base& user::get_parameter(std::string path)
