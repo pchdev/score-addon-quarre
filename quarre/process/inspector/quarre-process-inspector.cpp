@@ -14,6 +14,7 @@
 #include <Scenario/Document/Event/EventModel.hpp>
 #include <Scenario/Document/TimeSync/TimeSyncModel.hpp>
 #include <Scenario/Process/ScenarioModel.hpp>
+#include <quarre/user/quarre-modules.hpp>
 
 #include <score/tools/Todo.hpp>
 
@@ -161,21 +162,8 @@ quarre::InspectorWidget::InspectorWidget(const quarre::ProcessModel& object,
     setObjectName           ( "quarrè-process-inspector" );
     setParent               ( parent );
 
-    m_module->addItem   ( "Default"  );
-    m_module->addItem   ( "Tutorial" );
-    m_module->addItem   ( "Vote" );
-    m_module->addItem   ( "Transition" );
-    m_module->addItem   ( "Gesture" );
-    m_module->addItem   ( "Pads" );
-    m_module->addItem   ( "Sliders" );
-    m_module->addItem   ( "Strings" );
-    m_module->addItem   ( "TouchSpatialization" );
-    m_module->addItem   ( "SensorSpatialization" );
-    m_module->addItem   ( "TouchTrajectories" );
-    m_module->addItem   ( "TouchBirds" );
-    m_module->addItem   ( "BreathControl" );
-    m_module->addItem   ( "XRotation" );
-    m_module->addItem   ( "YRotation" );
+    for ( const auto& module : g_modules )
+        m_module->addItem(module.name);
 
     m_module->setCurrentText    ( m_interaction->module() );
     m_dispatch_all->setChecked  ( m_interaction->dispatch_all() );

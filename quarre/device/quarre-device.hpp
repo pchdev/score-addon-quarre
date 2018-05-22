@@ -3,49 +3,26 @@
 #include <ossia/network/oscquery/oscquery_server.hpp>
 #include <ossia/ossia.hpp>
 #include <Engine/Protocols/OSSIADevice.hpp>
+#include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <quarre/interaction/quarre-interaction.hpp>
 #include <quarre/panel/quarre-panel-delegate.hpp>
-#include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
-
-#include <QJSEngine>
+#include <quarre/user/quarre-user.hpp>
 
 using namespace ossia::net;
 
-using pdata_t   = std::pair<std::string,ossia::val_type>;
-using parptr_t  = std::shared_ptr<parameter_base>;
+struct pdata_t
+{
+    std::string address;
+    ossia::val_type type;
+    bool critical;
+};
 
 namespace score     {
 namespace addons    {
 namespace quarre    {
 
 class interaction;
-class user;
 class PanelDelegate;
-
-namespace js
-{
-void append                 ( QJSValueList& arguments, const ossia::value& v , QJSEngine& engine );
-void parse_and_push         ( const QJSValue& jsv, const Device::DeviceList& devlist );
-ossia::value parse_atom     ( const QJSValue& jsv , ossia::val_type vt );
-}
-
-class dispatcher
-{
-    public:
-    static bool dispatch_incoming_interaction   ( quarre::interaction& i );
-    static void dispatch_active_interaction     ( quarre::interaction& i , const Device::DeviceList &devlist );
-    static void dispatch_ending_interaction     ( quarre::interaction& i );
-    static void dispatch_paused_interaction     ( quarre::interaction& i );
-    static void dispatch_resumed_interaction    ( quarre::interaction& i );
-
-    private:
-    struct candidate
-    {
-        quarre::user* target;
-        uint8_t priority;
-    };
-
-};
 
 class server : public Engine::Network::OwningOSSIADevice
 {
@@ -61,15 +38,15 @@ class server : public Engine::Network::OwningOSSIADevice
     virtual bool reconnect ( ) override;
     virtual void recreate ( const Device::Node& ) override;
 
-    parameter_base& make_parameter (std::string name, ossia::val_type type, bool critical );
-    parameter_base* get_parameter_from_string       ( std::string& address );
-    parameter_base* get_parameter_from_string       ( QString& address );
-    parameter_base* get_user_parameter_from_string  ( const quarre::user& usr, std::string address );
-
-    void parse_vote_result ( );
+    parameter_base& make_parameter          ( std::string name, ossia::val_type type, bool critical );
+    parameter_base& make_user_parameter     ( uint8_t index, std::string addr, ossia::val_type type, bool critical );
+    parameter_base* get_common_parameter    ( std::string address );
+    parameter_base* get_common_parameter    ( QString& address );
+    parameter_base* get_user_parameter      ( const quarre::user& usr, std::string address );
 
     void on_client_connected        ( std::string const& ip_address );
     void on_client_disconnected     ( std::string const& ip_address );
+    void parse_vote_result          ( );
     generic_device& get_device      ( );
 
     private: //--------------------------------------------------------------------------------------
@@ -81,60 +58,6 @@ class server : public Engine::Network::OwningOSSIADevice
     std::vector<quarre::user*> m_users;
     uint8_t m_n_max_users;
 };
-
-enum class user_status
-{
-    DISCONNECTED        = 0,
-    IDLE                = 1,
-    INCOMING            = 2,
-    ACTIVE              = 3,
-    INCOMING_ACTIVE     = 4
-};
-
-class user
-{
-    friend class quarre::PanelDelegate;
-    friend class quarre::dispatcher;
-    friend class quarre::server;
-
-    public: //-------------------------------------------------------------
-    user (uint8_t index, quarre::server& server);
-
-    void update_net_address             ( const std::string& net_address );
-    uint8_t get_active_countdown        ( ) const;
-
-    void set_incoming_interaction      ( quarre::interaction& i );
-    void set_active_interaction        ( quarre::interaction& i, const Device::DeviceList& devlist );
-    void end_interaction               ( quarre::interaction& i );
-    void pause_current_interaction     ( quarre::interaction& i );
-    void resume_current_interaction    ( quarre::interaction& i );
-
-    bool supports_input                ( QString input );
-    void activate_input                ( QString input );
-    void deactivate_input              ( QString input );
-    void clear_input                   ( QString input );
-
-    protected: //----------------------------------------------------------
-    void replace_user_wildcard              ( QString& target );
-    void get_input_base_address             ( QString& target );
-    void sanitize_input_name                ( QString &input_name );
-    parameter_base& get_input_parameter     ( QString input, QString replacement );
-    parameter_base *get_and_activate_input_parameter( QString input );
-
-    void make_user_parameter_tree ( );
-
-    uint8_t                 m_index;
-    uint8_t                 m_interaction_count;
-    bool                    m_connected;
-    user_status             m_status;
-    std::string             m_base_address;
-    std::string             m_net_address;
-    quarre::interaction*    m_incoming_interaction;
-    quarre::interaction*    m_active_interaction;
-    quarre::server&         m_server;
-    QJSEngine               m_js_engine;
-};
-
 }
 }
 }

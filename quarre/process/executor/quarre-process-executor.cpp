@@ -1,6 +1,7 @@
 #include <quarre/process/executor/quarre-process-executor.hpp>
 #include <quarre/process/quarre-process-model.hpp>
 #include <quarre/device/quarre-device.hpp>
+#include <quarre/dispatch/quarre-dispatch.hpp>
 
 #include <Explorer/DocumentPlugin/DeviceDocumentPlugin.hpp>
 #include <Engine/score2OSSIA.hpp>
