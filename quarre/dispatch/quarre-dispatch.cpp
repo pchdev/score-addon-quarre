@@ -119,7 +119,7 @@ void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
     }
 
     else for ( const auto& user : srv.m_users )
-        if ( user->m_incoming_interaction == &i )
+        if ( user->m_active_interaction == &i )
             user->end_interaction(i);
 }
 

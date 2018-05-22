@@ -21,7 +21,6 @@ static const std::vector<pdata_t> g_common_tree =
     //! binding user id by ipv4 address
 
     { "/common/num_users", ossia::val_type::INT, true },
-    { "/common/sensors/rotation/offset", ossia::val_type::FLOAT, true },
 
     { "/common/interactions/next/incoming", ossia::val_type::LIST, true },
     { "/common/interactions/next/cancel", ossia::val_type::IMPULSE, true },
@@ -72,7 +71,9 @@ parameter_base& quarre::server::make_parameter ( std::string name, ossia::val_ty
 parameter_base& quarre::server::make_user_parameter(uint8_t index, std::string addr, ossia::val_type type, bool critical)
 {
     std::string target = "/user/";
-    target += std::to_string(index);
+
+    if ( index == 0 ) target += "wildcard";
+    else target += std::to_string(index);
     target += addr;
 
     return make_parameter(target, type, critical);

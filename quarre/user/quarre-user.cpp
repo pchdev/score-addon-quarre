@@ -6,6 +6,10 @@ using namespace score::addons::quarre;
 
 static const std::vector<pdata_t> g_user_tree =
 {
+    // NETWORK ---------------------------------------------------------------------
+
+    { "/address", ossia::val_type::STRING, true },
+
     // INTERACTIONS ----------------------------------------------------------------
 
     { "/interactions/next/incoming", ossia::val_type::LIST, true },
@@ -14,7 +18,7 @@ static const std::vector<pdata_t> g_user_tree =
     { "/interactions/next/countdown", ossia::val_type::INT, true },
     { "/interactions/current/countdown", ossia::val_type::INT, true },
     { "/interactions/current/end", ossia::val_type::IMPULSE, true },
-    { "/interactions/current/force", ossia::val_type::LIST, true },
+    { "/interactions/current/force", ossia::val_type::STRING, true },
 
     // GESTURES --------------------------------------------------------------------
 
@@ -23,26 +27,11 @@ static const std::vector<pdata_t> g_user_tree =
     { "/gestures/shake/available", ossia::val_type::BOOL, true },
     { "/gestures/turnover/available", ossia::val_type::BOOL, true },
 
-    { "/gestures/whip/trigger", ossia::val_type::BOOL, true },
-    { "/gestures/cover/trigger", ossia::val_type::BOOL, true },
-    { "/gestures/shake/trigger", ossia::val_type::BOOL, true },
-    { "/gestures/turnover/trigger", ossia::val_type::BOOL, true },
-    { "/gestures/blow/trigger", ossia::val_type::BOOL, true },
-
     // SENSORS ---------------------------------------------------------------------
 
     { "/sensors/rotation/available", ossia::val_type::BOOL, true },
-    { "/sensors/rotation/x/angle", ossia::val_type::FLOAT, false },
-    { "/sensors/rotation/y/angle", ossia::val_type::FLOAT, false },
-    { "/sensors/rotation/z/angle", ossia::val_type::FLOAT, false },
-
     { "/sensors/accelerometers/available", ossia::val_type::BOOL, true },
-    { "/sensors/accelerometers/x/data", ossia::val_type::FLOAT, false },
-    { "/sensors/accelerometers/y/data", ossia::val_type::FLOAT, false },
-    { "/sensors/accelerometers/z/data", ossia::val_type::FLOAT, false },
-
     { "/sensors/proximity/available", ossia::val_type::BOOL, true },
-    { "/sensors/proximity/data", ossia::val_type::FLOAT, true },
 
     // OTHERS ---------------------------------------------------------------------
     { "/modules/vote/choice", ossia::val_type::INT, true },
@@ -50,6 +39,17 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/birds/trigger", ossia::val_type::VEC3F, true },
     { "/modules/trajectories/trigger", ossia::val_type::BOOL, true },
     { "/modules/trajectories/position", ossia::val_type::VEC2F, false},
+    { "/modules/gestures/hammer/trigger", ossia::val_type::BOOL, true },
+    { "/modules/gestures/palm/trigger", ossia::val_type::BOOL, true },
+    { "/modules/gestures/shake/trigger", ossia::val_type::BOOL, true },
+    { "/modules/sensors/rotation/x/angle", ossia::val_type::FLOAT, true },
+    { "/modules/sensors/rotation/y/angle", ossia::val_type::FLOAT, true },
+    { "/modules/sensors/rotation/z/angle", ossia::val_type::FLOAT, true },
+    { "/modules/sensors/rotation/xyz/data", ossia::val_type::VEC3F, true },
+    { "/modules/sensors/accelerometers/x/data", ossia::val_type::FLOAT, true },
+    { "/modules/sensors/accelerometers/y/data", ossia::val_type::FLOAT, true },
+    { "/modules/sensors/accelerometers/z/data", ossia::val_type::FLOAT, true },
+    { "/modules/sensors/accelerometers/xyz/data", ossia::val_type::VEC3F, true }
 };
 
 user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(index)
@@ -61,7 +61,7 @@ user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(in
     m_connected = false;
 
     m_base_address = "/user/";
-    if ( index == 0 ) m_base_address += "?";
+    if ( index == 0 ) m_base_address += "wildcard";
     else m_base_address += std::to_string(index);
 
     for ( const auto& parameter : g_user_tree )
@@ -70,7 +70,7 @@ user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(in
 
 void user::sanitize_input_name(QString &input_name)
 {
-    input_name.replace ( "?", QString::number(m_index));
+    input_name.replace ( "wildcard", QString::number(m_index));
     input_name.replace ( "quarre-server:/", "" );
 }
 
@@ -87,6 +87,7 @@ inline parameter_base& user::get_parameter(std::string path)
 
 inline void user::clear_input(QString path)
 {
+    if ( path == "" ) return;
     get_input_parameter(path).callbacks_clear();
 }
 
