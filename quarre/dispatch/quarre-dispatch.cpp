@@ -116,11 +116,24 @@ void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
     {
         auto p = srv.get_common_parameter("/interactions/current/end");
         p->push_value(i.to_list());
+        return;
     }
 
-    else for ( const auto& user : srv.m_users )
+    // case: individual interaction
+    for ( const auto& user : srv.m_users )
         if ( user->m_active_interaction == &i )
+        {
             user->end_interaction(i);
+            return;
+        }
+
+    // case: incoming interaction has not been activated (loop case)
+    for ( const auto& user : srv.m_users )
+        if ( user->m_incoming_interaction == &i )
+        {
+            user->cancel_incoming_interaction(i);
+            return;
+        }
 }
 
 void quarre::dispatcher::dispatch_paused_interaction(quarre::interaction &i)

@@ -33,7 +33,12 @@ static const std::vector<score::addons::quarre::module> g_modules =
     { "GesturePalm", "/gestures/cover"  },
     { "GestureShake", "/gestures/shake" },
     { "GestureTurnover", "/gestures/turnover" },
-    { "GestureBlow" }
+    { "GestureBlow" },
+    { "Insects" }, // todo: requirements for this module
+    { "VareResonator" },
+    { "VareBody" },
+    { "VareGranular" },
+    { "VareRainbells" }
 };
 
 }

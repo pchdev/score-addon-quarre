@@ -41,6 +41,7 @@ class user
     void set_incoming_interaction      ( quarre::interaction& i );
     void set_active_interaction        ( quarre::interaction& i, const Device::DeviceList& devlist );
     void end_interaction               ( quarre::interaction& i );
+    void cancel_incoming_interaction   ( quarre::interaction& i );
     void pause_current_interaction     ( quarre::interaction& i );
     void resume_current_interaction    ( quarre::interaction& i );
     bool supports_interaction          ( quarre::interaction& i );

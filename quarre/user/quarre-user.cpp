@@ -43,14 +43,26 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/gestures/palm/trigger", ossia::val_type::BOOL, true },
     { "/modules/gestures/shake/trigger", ossia::val_type::BOOL, true },
     { "/modules/gestures/blow/trigger", ossia::val_type::BOOL, true },
-    { "/modules/sensors/rotation/x/angle", ossia::val_type::FLOAT, true },
-    { "/modules/sensors/rotation/y/angle", ossia::val_type::FLOAT, true },
-    { "/modules/sensors/rotation/z/angle", ossia::val_type::FLOAT, true },
-    { "/modules/sensors/rotation/xyz/data", ossia::val_type::VEC3F, true },
-    { "/modules/sensors/accelerometers/x/data", ossia::val_type::FLOAT, true },
-    { "/modules/sensors/accelerometers/y/data", ossia::val_type::FLOAT, true },
-    { "/modules/sensors/accelerometers/z/data", ossia::val_type::FLOAT, true },
-    { "/modules/sensors/accelerometers/xyz/data", ossia::val_type::VEC3F, true }
+    { "/modules/sensors/rotation/x/angle", ossia::val_type::FLOAT, false },
+    { "/modules/sensors/rotation/y/angle", ossia::val_type::FLOAT, false },
+    { "/modules/sensors/rotation/z/angle", ossia::val_type::FLOAT, false },
+    { "/modules/sensors/rotation/xyz/data", ossia::val_type::VEC3F, false },
+    { "/modules/sensors/accelerometers/x/data", ossia::val_type::FLOAT, false },
+    { "/modules/sensors/accelerometers/y/data", ossia::val_type::FLOAT, false },
+    { "/modules/sensors/accelerometers/z/data", ossia::val_type::FLOAT, false},
+    { "/modules/sensors/accelerometers/xyz/data", ossia::val_type::VEC3F, false },
+    { "/modules/sensors/proximity/close", ossia::val_type::BOOL, true },
+
+    { "/modules/vare/resonator/brightness", ossia::val_type::FLOAT, false },
+    { "/modules/vare/resonator/inpos", ossia::val_type::FLOAT, false },
+    { "/modules/vare/resonator/pitch", ossia::val_type::FLOAT, false },
+    { "/modules/vare/body/tone", ossia::val_type::FLOAT, false },
+    { "/modules/vare/body/pitch", ossia::val_type::FLOAT, false },
+    { "/modules/vare/body/xy", ossia::val_type::VEC2F, false },
+    { "/modules/vare/granular/pitch_env", ossia::val_type::FLOAT, false },
+    { "/modules/vare/granular/overlap", ossia::val_type::FLOAT, false },
+    { "/modules/vare/granular/pitch", ossia::val_type::FLOAT, false },
+    { "/modules/vare/granular/sample", ossia::val_type::INT, true }
 };
 
 user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(index)
@@ -193,7 +205,7 @@ void user::set_active_interaction(
 
 void user::end_interaction(quarre::interaction &i)
 {
-    m_active_interaction = 0;
+    m_active_interaction = 0;   
 
     if ( m_status == user_status::INCOMING_ACTIVE )
          m_status = user_status::INCOMING;
@@ -222,16 +234,26 @@ void user::end_interaction(quarre::interaction &i)
         clear_input(mapping->source());
 }
 
-void user::pause_current_interaction(quarre::interaction &i)
+void user::pause_current_interaction(quarre::interaction& i)
 {
     auto& p_pause = get_parameter("/interactions/current/pause");
     p_pause.push_value ( ossia::impulse{} );
 }
 
-void user::resume_current_interaction(quarre::interaction &i)
+void user::resume_current_interaction(quarre::interaction& i)
 {
     auto& p_resume = get_parameter("/interactions/current/resume");
     p_resume.push_value ( ossia::impulse{} );
+}
+
+void user::cancel_incoming_interaction(quarre::interaction& i)
+{
+    m_incoming_interaction = 0;
+    if ( m_status  == user_status::INCOMING ) m_status = user_status::IDLE;
+    else if ( m_status == user_status::INCOMING_ACTIVE ) m_status = user_status::ACTIVE;
+
+    auto& p_cancel = get_parameter("/interactions/next/cancel");
+    p_cancel.push_value(ossia::impulse{});
 }
 
 void user::update_net_address(const std::string &net_address)
