@@ -62,7 +62,9 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/vare/granular/pitch_env", ossia::val_type::FLOAT, false },
     { "/modules/vare/granular/overlap", ossia::val_type::FLOAT, false },
     { "/modules/vare/granular/pitch", ossia::val_type::FLOAT, false },
-    { "/modules/vare/granular/sample", ossia::val_type::INT, true }
+    { "/modules/vare/granular/sample", ossia::val_type::INT, true },
+    { "/modules/vare/percussions/handdrum", ossia::val_type::BOOL, true },
+    { "/modules/vare/percussions/shake", ossia::val_type::BOOL, true }
 };
 
 user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(index)
