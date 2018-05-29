@@ -46,6 +46,8 @@ class ProcessModel final : public Process::ProcessModel
             QObject* parent) :
         Process::ProcessModel (other, id, Metadata<ObjectKey_k,ProcessModel>::get(), parent )
     {
+        initialize_parent_pointers();
+        //m_interactions.push_back(new quarre::interaction(getStrongId(m_interactions), this));
         metadata().setInstanceName<quarre::ProcessModel>(*this);
     }
 

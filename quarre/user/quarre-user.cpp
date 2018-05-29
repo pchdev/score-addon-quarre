@@ -64,7 +64,18 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/vare/granular/pitch", ossia::val_type::FLOAT, false },
     { "/modules/vare/granular/sample", ossia::val_type::INT, true },
     { "/modules/vare/percussions/handdrum", ossia::val_type::BOOL, true },
-    { "/modules/vare/percussions/shake", ossia::val_type::BOOL, true }
+    { "/modules/vare/percussions/shake", ossia::val_type::BOOL, true },
+    { "/modules/markhor/resonator/brightness", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/resonator/inpos", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/resonator/pitch_p", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/resonator/sustain", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/body/tone", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/body/pitch", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/body/xy", ossia::val_type::VEC2F, false },
+    { "/modules/markhor/granular/pitch_env", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/granular/pitch", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/granular/overlap", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/granular/sample", ossia::val_type::FLOAT, false }
 };
 
 user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(index)

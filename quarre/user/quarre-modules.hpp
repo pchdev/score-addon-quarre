@@ -39,7 +39,12 @@ static const std::vector<score::addons::quarre::module> g_modules =
     { "VareBody" },
     { "VareGranular" },
     { "VareRainbells" },
-    { "VarePercs" }
+    { "VarePercs" },
+    { "Transitions" },
+    { "MarkhorPads" },
+    { "MarkhorResonator" },
+    { "MarkhorBody" },
+    { "MarkhorGranular" }
 };
 
 }
