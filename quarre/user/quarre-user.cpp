@@ -75,7 +75,8 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/markhor/granular/pitch_env", ossia::val_type::FLOAT, false },
     { "/modules/markhor/granular/pitch", ossia::val_type::FLOAT, false },
     { "/modules/markhor/granular/overlap", ossia::val_type::FLOAT, false },
-    { "/modules/markhor/granular/sample", ossia::val_type::FLOAT, false }
+    { "/modules/markhor/granular/sample", ossia::val_type::FLOAT, false },
+    { "/modules/markhor/pads/index", ossia::val_type::INT, true }
 };
 
 user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(index)

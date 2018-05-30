@@ -21,6 +21,8 @@ static const std::vector<pdata_t> g_common_tree =
     //! binding user id by ipv4 address
 
     { "/common/num_users", ossia::val_type::INT, true },
+    { "/common/modules/strings/new", ossia::val_type::INT, true },
+    { "/common/modules/strings/trigger", ossia::val_type::IMPULSE, true },
 
     { "/common/interactions/next/incoming", ossia::val_type::LIST, true },
     { "/common/interactions/next/cancel", ossia::val_type::IMPULSE, true },
