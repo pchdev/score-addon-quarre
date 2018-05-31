@@ -23,6 +23,8 @@ static const std::vector<pdata_t> g_common_tree =
     { "/common/num_users", ossia::val_type::INT, true },
     { "/common/modules/strings/new", ossia::val_type::INT, true },
     { "/common/modules/strings/trigger", ossia::val_type::IMPULSE, true },
+    { "/common/modules/strings/new2", ossia::val_type::INT, true },
+    { "/common/modules/strings/trigger2", ossia::val_type::IMPULSE, true },
 
     { "/common/interactions/next/incoming", ossia::val_type::LIST, true },
     { "/common/interactions/next/cancel", ossia::val_type::IMPULSE, true },
