@@ -29,7 +29,19 @@ void quarre::js::append ( QJSValueList& arguments, const ossia::value& v, QJSEng
     case ossia::val_type::VEC2F:    { JS_GET_VECF(ossia::vec2f, 2); break; }
     case ossia::val_type::VEC3F:    { JS_GET_VECF(ossia::vec3f, 3); break; }
     case ossia::val_type::VEC4F:    { JS_GET_VECF(ossia::vec4f, 4); break; }
-    case ossia::val_type::LIST:     break;
+
+    case ossia::val_type::LIST:
+    {
+        auto list = v.get<std::vector<ossia::value>>();
+        QJSValueList jsvlist;
+        int i = 0;
+
+        for ( const auto& value : list )
+            quarre::js::append(jsvlist, value, engine);
+
+        arguments << jsvlist;
+        break;
+    }
     }
 }
 
