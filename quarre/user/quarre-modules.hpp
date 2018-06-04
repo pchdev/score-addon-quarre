@@ -47,7 +47,11 @@ static const std::vector<score::addons::quarre::module> g_modules =
     { "MarkhorGranular" },
     { "Strings" },
     { "Strings2" },
-    { "AmmonReverb" }
+    { "AmmonReverb" },
+    { "JomonArpeggiator"},
+    { "JomonRhythm" },
+    { "JomonReverb" },
+    { "JomonPalm" }
 };
 
 }

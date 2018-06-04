@@ -39,14 +39,17 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/birds/trigger", ossia::val_type::VEC3F, true },
     { "/modules/trajectories/trigger", ossia::val_type::BOOL, true },
     { "/modules/trajectories/position", ossia::val_type::VEC2F, false},
+
     { "/modules/gestures/hammer/trigger", ossia::val_type::BOOL, true },
     { "/modules/gestures/palm/trigger", ossia::val_type::BOOL, true },
     { "/modules/gestures/shake/trigger", ossia::val_type::BOOL, true },
     { "/modules/gestures/blow/trigger", ossia::val_type::BOOL, true },
+
     { "/modules/sensors/rotation/x/angle", ossia::val_type::FLOAT, false },
     { "/modules/sensors/rotation/y/angle", ossia::val_type::FLOAT, false },
     { "/modules/sensors/rotation/z/angle", ossia::val_type::FLOAT, false },
     { "/modules/sensors/rotation/xyz/data", ossia::val_type::VEC3F, false },
+
     { "/modules/sensors/accelerometers/x/data", ossia::val_type::FLOAT, false },
     { "/modules/sensors/accelerometers/y/data", ossia::val_type::FLOAT, false },
     { "/modules/sensors/accelerometers/z/data", ossia::val_type::FLOAT, false},
@@ -65,6 +68,7 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/vare/granular/sample", ossia::val_type::INT, true },
     { "/modules/vare/percussions/handdrum", ossia::val_type::BOOL, true },
     { "/modules/vare/percussions/shake", ossia::val_type::BOOL, true },
+
     { "/modules/markhor/resonator/brightness", ossia::val_type::FLOAT, false },
     { "/modules/markhor/resonator/inpos", ossia::val_type::FLOAT, false },
     { "/modules/markhor/resonator/pitch_p", ossia::val_type::FLOAT, false },
@@ -77,8 +81,21 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/markhor/granular/overlap", ossia::val_type::FLOAT, false },
     { "/modules/markhor/granular/sample", ossia::val_type::FLOAT, false },
     { "/modules/markhor/pads/index", ossia::val_type::INT, true },
+
     { "/modules/ammon/reverb/model", ossia::val_type::INT, true },
-    { "/modules/ammon/reverb/level", ossia::val_type::FLOAT, false }
+    { "/modules/ammon/reverb/level", ossia::val_type::FLOAT, false },
+
+    { "/modules/jomon/reverb/level", ossia::val_type::FLOAT, false },
+    { "/modules/jomon/lpf/frequency", ossia::val_type::FLOAT, false },
+    { "/modules/jomon/arp/mode", ossia::val_type::STRING, true },
+    { "/modules/jomon/arp/bend", ossia::val_type::INT, false },
+    { "/modules/jomon/arp/tempo", ossia::val_type::FLOAT, false },
+    { "/modules/jomon/arp/notes/list", ossia::val_type::LIST, true },
+    { "/modules/jomon/arp/notes/add", ossia::val_type::INT, true },
+    { "/modules/jomon/arp/notes/remove", ossia::val_type::INT, true },
+    { "/modules/jomon/arp/gate", ossia::val_type::INT, false },
+    { "/modules/jomon/arp/velocity", ossia::val_type::INT, false },
+    { "/modules/jomon/palm/state", ossia::val_type::BOOL, true }
 };
 
 user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(index)
