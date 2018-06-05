@@ -213,9 +213,9 @@ void quarre::server::on_client_disconnected(const std::string &ip)
 
         if ( user->m_net_address == ip )
         {
-            user->m_connected     = false;
-            user->m_net_address   = "";
+            user->m_connected     = false;            
             user->m_status        = quarre::user_status::DISCONNECTED;
+            user->update_net_address("");
 
             if ( auto panel = quarre::PanelDelegate::instance() )
                 quarre::PanelDelegate::instance()->on_user_changed(*user);
@@ -259,7 +259,7 @@ void quarre::server::parse_vote_result()
     {
         if ( user->m_status != user_status::DISCONNECTED )
         {
-            auto& choice = *get_user_parameter(*user, "/vote/choice");
+            auto& choice = *get_user_parameter(*user, "/modules/vote/choice");
             if ( choice.value().get<int>() == 0 ) res_zero++;
             else if ( choice.value().get<int>() == 1 ) res_one++;
             else if ( choice.value().get<int>() == 2 ) res_two++;
