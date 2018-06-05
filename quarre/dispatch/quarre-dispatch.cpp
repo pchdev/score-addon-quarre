@@ -12,7 +12,7 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
 
     if ( i.dispatch_all() )
     {
-        auto p = srv.get_common_parameter("/interactions/next/incoming");
+        auto p = srv.get_common_parameter("/common/interactions/next/incoming");
         p->push_value(i.to_list());
         return true;
     }
@@ -37,7 +37,7 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
 
         case user_status::ACTIVE:
         {
-            auto acd = user->get_active_countdown();
+            auto acd = user->get_active_countdown(); // << bug, if another interaction comes at the same time it is activated
             if ( i.countdown() < acd+5) goto next;
 
             candidate.priority = 1;
@@ -100,7 +100,7 @@ void quarre::dispatcher::dispatch_active_interaction(
     auto& srv = quarre::server::instance();
     if ( i.dispatch_all() )
     {
-        auto p = srv.get_common_parameter("/interactions/next/begin");
+        auto p = srv.get_common_parameter("/common/interactions/next/begin");
         p->push_value(i.to_list());
     }
 
@@ -114,7 +114,7 @@ void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
     auto& srv = quarre::server::instance();
     if ( i.dispatch_all() )
     {
-        auto p = srv.get_common_parameter("/interactions/current/end");
+        auto p = srv.get_common_parameter("/common/interactions/current/end");
         p->push_value(i.to_list());
         return;
     }
