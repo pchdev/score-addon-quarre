@@ -1,6 +1,9 @@
 #include "quarre-dispatch.hpp"
+#include <QMutexLocker>
 
 using namespace score::addons;
+
+QMutex g_mtx;
 
 bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
 {
@@ -8,6 +11,7 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
     // eliminate non-connected clients
     // eliminate clients that cannot support the requested inputs
     // eliminate clients that already have an incoming interaction
+
     auto& srv = quarre::server::instance();
 
     if ( i.dispatch_all() )
@@ -16,6 +20,8 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
         p->push_value(i.to_list());
         return true;
     }
+
+    QMutexLocker locker(&g_mtx);
 
     std::vector<dispatcher::candidate> candidates;
 
