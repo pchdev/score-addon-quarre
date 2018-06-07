@@ -34,6 +34,7 @@ class server : public Engine::Network::OwningOSSIADevice
     public: //---------------------------------------------------------------------------------------
 
     server (::Device::DeviceSettings const& settings );
+    ~server();
     static quarre::server& instance();
     virtual bool reconnect ( ) override;
     virtual void recreate ( const Device::Node& ) override;
@@ -53,6 +54,7 @@ class server : public Engine::Network::OwningOSSIADevice
 
     static quarre::server* m_singleton;
     void make_common_tree ( );
+    std::string get_ip_without_port(const std::string& ip);
 
     quarre::user* m_user_zero;
     std::vector<quarre::user*> m_users;

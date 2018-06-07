@@ -12,6 +12,8 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
     // eliminate clients that cannot support the requested inputs
     // eliminate clients that already have an incoming interaction
 
+    QMutexLocker locker(&g_mtx);
+
     auto& srv = quarre::server::instance();
 
     if ( i.dispatch_all() )
@@ -20,8 +22,6 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
         p->push_value(i.to_list());
         return true;
     }
-
-    QMutexLocker locker(&g_mtx);
 
     std::vector<dispatcher::candidate> candidates;
 
@@ -103,6 +103,7 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
 void quarre::dispatcher::dispatch_active_interaction(
         quarre::interaction& i, const Device::DeviceList& devlist )
 {
+    QMutexLocker locker(&g_mtx);
     auto& srv = quarre::server::instance();
     if ( i.dispatch_all() )
     {
@@ -117,11 +118,16 @@ void quarre::dispatcher::dispatch_active_interaction(
 
 void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
 {
+    QMutexLocker locker(&g_mtx);
     auto& srv = quarre::server::instance();
     if ( i.dispatch_all() )
     {
         auto p = srv.get_common_parameter("/common/interactions/current/end");
         p->push_value(i.to_list());
+
+        if ( i.module() == "Vote" )
+            srv.parse_vote_result();
+
         return;
     }
 

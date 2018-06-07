@@ -125,6 +125,11 @@ quarre::server::server(const Device::DeviceSettings &settings) :
     reconnect();
 }
 
+quarre::server::~server()
+{
+    m_dev.reset();
+}
+
 bool quarre::server::reconnect()
 {
     disconnect();
@@ -141,9 +146,9 @@ bool quarre::server::reconnect()
             quarre::server,
             &quarre::server::on_client_connected>(this);
 
-    server->onClientDisconnected.connect<
+   /*server->onClientDisconnected.connect<
             quarre::server,
-            &quarre::server::on_client_disconnected>(this);
+            &quarre::server::on_client_disconnected>(this);*/
 
     m_dev = std::make_unique<generic_device>( std::move(server), m_settings.name.toStdString());
 
@@ -169,38 +174,43 @@ void quarre::server::recreate(const Device::Node &n)
         addNode(child);
 }
 
-void quarre::server::on_client_connected(const std::string &ip)
+inline std::string quarre::server::get_ip_without_port(const std::string& ip)
 {
+    return QString::fromStdString(ip).split(':')[0].toStdString();
+}
+
+void quarre::server::on_client_connected(const std::string &ip)
+{    
+    auto ip_solo = get_ip_without_port(ip);
+
+    qDebug() << "device connected:" << ip_solo;
+
+    parameter_base& ids_p = *get_common_parameter("/connections/ids");
+    auto ids_v = ids_p.value().get<std::vector<ossia::value>>();
+
+    // in case address already exists ( disconnection failed, nothing to do... )
+    if ( auto it = std::find(ids_v.begin(), ids_v.end(), ip_solo) != ids_v.end())
+    {
+        qDebug() << "ghosting user:" << ip_solo;
+        return;
+    }
+
     for ( const auto& user : m_users )
     {
         if ( !user->m_connected )
         {
             user->m_connected = true;
-            user->update_net_address ( ip );
+            user->update_net_address ( ip_solo );
             user->m_status = quarre::user_status::IDLE;
 
             // update panel
             if ( auto panel = quarre::PanelDelegate::instance() )
                 quarre::PanelDelegate::instance()->on_user_changed(*user);
 
-            auto qstring_ip     = QString::fromStdString(ip);
-            auto splitted_ip    = qstring_ip.split(':');
-            auto ip_bis         = splitted_ip[0].toStdString();
-
-            // update id bindings
-
-            std::string cids    = "/connections/ids";
-            auto& ids_p         = *get_common_parameter(cids);
-            auto ids_v          = ids_p.value().get<std::vector<ossia::value>>();
-
-            // in case address already exists ( disconnection failed )
-            if ( auto it = std::find(ids_v.begin(), ids_v.end(), ip_bis) != ids_v.end())
-                on_client_disconnected ( ip );
-
-            ids_v.push_back(ip_bis);
+            ids_v.push_back(ip_solo);
             ids_v.push_back(user->m_index);
 
-            ids_p.set_value(ids_v);
+            ids_p.push_value(ids_v);
 
             return;
         }
@@ -209,30 +219,29 @@ void quarre::server::on_client_connected(const std::string &ip)
 
 void quarre::server::on_client_disconnected(const std::string &ip)
 {
-    for ( const auto& user : m_users )
+    auto ip_solo = get_ip_without_port(ip);
 
-        if ( user->m_net_address == ip )
+    qDebug() << "disconnected:" << ip_solo;
+
+    for ( const auto& user : m_users )
+        if ( user->m_net_address == ip_solo)
         {
             user->m_connected     = false;            
             user->m_status        = quarre::user_status::DISCONNECTED;
-            user->update_net_address("");
+            user->update_net_address ("disconnected");
 
             if ( auto panel = quarre::PanelDelegate::instance() )
                 quarre::PanelDelegate::instance()->on_user_changed(*user);
-
-            auto qstring_ip = QString::fromStdString(ip);
-            auto splitted_ip = qstring_ip.split(':');
-            auto ip_bis = splitted_ip[0].toStdString();
 
             // update id bindings
             std::string cids = "/connections/ids";
             auto& ids_p = *get_common_parameter(cids);
             auto ids_v = ids_p.value().get<std::vector<ossia::value>>();
 
-            ids_v.erase(std::remove(ids_v.begin(), ids_v.end(), ip_bis), ids_v.end());
+            ids_v.erase(std::remove(ids_v.begin(), ids_v.end(), ip_solo), ids_v.end());
             ids_v.erase(std::remove(ids_v.begin(), ids_v.end(), user->m_index), ids_v.end());
 
-            ids_p.set_value(ids_v);
+            ids_p.push_value(ids_v);
 
             return;
         }

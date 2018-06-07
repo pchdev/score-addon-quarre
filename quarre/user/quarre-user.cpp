@@ -1,6 +1,7 @@
 #include "quarre-user.hpp"
 #include <quarre/js/quarre-js.hpp>
 #include <QJSValueIterator>
+#include <QMutexLocker>
 
 using namespace score::addons::quarre;
 
@@ -92,7 +93,7 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/jomon/reverb/level", ossia::val_type::FLOAT, false },
     { "/modules/jomon/lpf/frequency", ossia::val_type::FLOAT, false },
     { "/modules/jomon/arp/mode", ossia::val_type::STRING, true },
-    { "/modules/jomon/arp/bend", ossia::val_type::INT, false },
+    { "/modules/jomon/arp/bend", ossia::val_type::FLOAT, false },
     { "/modules/jomon/arp/tempo", ossia::val_type::FLOAT, false },
     { "/modules/jomon/arp/notes/list", ossia::val_type::LIST, true },
     { "/modules/jomon/arp/notes/add", ossia::val_type::INT, true },
@@ -155,6 +156,7 @@ bool user::supports_interaction(quarre::interaction& i)
 
 void user::set_incoming_interaction(quarre::interaction& i)
 {
+    QMutexLocker lock(&m_mtx);
     m_incoming_interaction = &i;
 
     if ( m_status == user_status::ACTIVE )
@@ -174,6 +176,8 @@ void user::set_incoming_interaction(quarre::interaction& i)
 void user::set_active_interaction(
         quarre::interaction& i, const Device::DeviceList &devlist)
 {
+    QMutexLocker lock       ( &m_mtx );
+
     m_status                = user_status::ACTIVE;
     m_incoming_interaction  = 0;
     m_active_interaction    = &i;
@@ -242,6 +246,7 @@ void user::set_active_interaction(
 
 void user::end_interaction(quarre::interaction &i)
 {
+    QMutexLocker lock(&m_mtx);
     m_active_interaction = 0;   
 
     if ( m_status == user_status::INCOMING_ACTIVE )
@@ -273,18 +278,21 @@ void user::end_interaction(quarre::interaction &i)
 
 void user::pause_current_interaction(quarre::interaction& i)
 {
+    QMutexLocker lock(&m_mtx);
     auto& p_pause = get_parameter("/interactions/current/pause");
     p_pause.push_value ( ossia::impulse{} );
 }
 
 void user::resume_current_interaction(quarre::interaction& i)
 {
+    QMutexLocker lock(&m_mtx);
     auto& p_resume = get_parameter("/interactions/current/resume");
     p_resume.push_value ( ossia::impulse{} );
 }
 
 void user::cancel_incoming_interaction(quarre::interaction& i)
 {
+    QMutexLocker lock(&m_mtx);
     m_incoming_interaction = 0;
     if ( m_status  == user_status::INCOMING ) m_status = user_status::IDLE;
     else if ( m_status == user_status::INCOMING_ACTIVE ) m_status = user_status::ACTIVE;
@@ -295,11 +303,12 @@ void user::cancel_incoming_interaction(quarre::interaction& i)
 
 void user::update_net_address(const std::string &net_address)
 {
+    QMutexLocker lock(&m_mtx);
     m_net_address = net_address;
     get_parameter("/address").push_value(net_address);
 }
 
-uint8_t user::get_active_countdown()
+uint16_t user::get_active_countdown()
 {
     return get_parameter("/interactions/current/countdown").value().get<int>();
 }

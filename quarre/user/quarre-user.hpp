@@ -4,6 +4,7 @@
 #include <quarre/user/quarre-modules.hpp>
 
 #include <QJSEngine>
+#include <QMutex>
 
 using namespace ossia::net;
 
@@ -36,7 +37,7 @@ class user
     user (uint8_t index, quarre::server& server);
 
     void update_net_address            ( const std::string& net_address );
-    uint8_t get_active_countdown       ( );
+    uint16_t get_active_countdown      ( );
 
     void set_incoming_interaction      ( quarre::interaction& i );
     void set_active_interaction        ( quarre::interaction& i, const Device::DeviceList& devlist );
@@ -62,6 +63,7 @@ class user
     quarre::interaction*    m_active_interaction;
     quarre::server&         m_server;
     QJSEngine               m_js_engine;
+    QMutex                  m_mtx;
 };
 }
 }
