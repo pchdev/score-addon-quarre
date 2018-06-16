@@ -55,7 +55,9 @@ static const std::vector<score::addons::quarre::module> g_modules =
     { "Tutorial" },
     { "WPN214" },
     { "AmmonBells" },
-    { "JomonPalmZ" }
+    { "JomonPalmZ" },
+    { "JomonMangler"},
+    { "JomonMangler2"},
 };
 
 }

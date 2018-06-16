@@ -99,7 +99,14 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/jomon/arp/notes/add", ossia::val_type::INT, true },
     { "/modules/jomon/arp/notes/remove", ossia::val_type::INT, true },
     { "/modules/jomon/arp/trigger", ossia::val_type::BOOL, true },
-    { "/modules/jomon/palm/state", ossia::val_type::BOOL, true }
+    { "/modules/jomon/palm/state", ossia::val_type::BOOL, true },
+    { "/modules/jomon/mangler/resample", ossia::val_type::FLOAT, false},
+    { "/modules/jomon/mangler/thermonuclear", ossia::val_type::FLOAT, false},
+    { "/modules/jomon/mangler/bitdepth", ossia::val_type::INT, false},
+    { "/modules/jomon/mangler/love", ossia::val_type::FLOAT, false},
+    { "/modules/jomon/mangler/jive", ossia::val_type::FLOAT, false},
+    { "/modules/jomon/mangler/attitude", ossia::val_type::INT, false},
+
 };
 
 user::user(uint8_t index, quarre::server& server) : m_server(server), m_index(index)
