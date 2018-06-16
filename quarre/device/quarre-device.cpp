@@ -165,6 +165,13 @@ bool quarre::server::reconnect()
     auto panel = quarre::PanelDelegate::instance();
     panel->on_server_instantiated(*this);
 
+    // reinitialize interactions count for each user
+    parameter_base& reset_p = *get_common_parameter("/common/scenario/reset");
+    reset_p.add_callback([this](const ossia::value& v) {
+       for ( const auto& user : m_users )
+           user->m_interaction_count = 0;
+    });
+
     return connected();
 }
 
