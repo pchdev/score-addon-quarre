@@ -212,6 +212,10 @@ void quarre::server::on_client_connected(const std::string &ip)
 
             ids_p.push_value(ids_v);
 
+            parameter_base& n_users_p = *get_common_parameter("/common/num_users");
+            uint8_t n_users = n_users_p.value().get<int>();
+            n_users_p.push_value(n_users+1);
+
             return;
         }
     }
