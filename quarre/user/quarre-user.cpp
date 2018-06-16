@@ -73,6 +73,7 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/vare/noise/rate", ossia::val_type::FLOAT, false },
     { "/modules/vare/sequencer/width", ossia::val_type::FLOAT, false },
     { "/modules/vare/env/decay", ossia::val_type::FLOAT, false },
+    { "/modules/vare/seq/rate", ossia::val_type::FLOAT, false },
 
     { "/modules/markhor/resonator/brightness", ossia::val_type::FLOAT, false },
     { "/modules/markhor/resonator/inpos", ossia::val_type::FLOAT, false },
@@ -93,13 +94,11 @@ static const std::vector<pdata_t> g_user_tree =
     { "/modules/jomon/reverb/level", ossia::val_type::FLOAT, false },
     { "/modules/jomon/lpf/frequency", ossia::val_type::FLOAT, false },
     { "/modules/jomon/arp/mode", ossia::val_type::STRING, true },
-    { "/modules/jomon/arp/bend", ossia::val_type::FLOAT, false },
-    { "/modules/jomon/arp/tempo", ossia::val_type::FLOAT, false },
+    { "/modules/jomon/arp/bend", ossia::val_type::FLOAT , false },
     { "/modules/jomon/arp/notes/list", ossia::val_type::LIST, true },
     { "/modules/jomon/arp/notes/add", ossia::val_type::INT, true },
     { "/modules/jomon/arp/notes/remove", ossia::val_type::INT, true },
-    { "/modules/jomon/arp/gate", ossia::val_type::INT, false },
-    { "/modules/jomon/arp/velocity", ossia::val_type::INT, false },
+    { "/modules/jomon/arp/trigger", ossia::val_type::BOOL, true },
     { "/modules/jomon/palm/state", ossia::val_type::BOOL, true }
 };
 

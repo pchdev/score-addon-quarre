@@ -51,7 +51,11 @@ static const std::vector<score::addons::quarre::module> g_modules =
     { "JomonArpeggiator"},
     { "JomonRhythm" },
     { "JomonReverb" },
-    { "JomonPalm" }
+    { "JomonPalm" },
+    { "Tutorial" },
+    { "WPN214" },
+    { "AmmonBells" },
+    { "JomonPalmZ" }
 };
 
 }
