@@ -189,8 +189,10 @@ void user::set_active_interaction(
     m_active_interaction    = &i;
 
     // push interaction to remote
-    auto& p_active =  get_parameter("/interactions/next/begin" );
+    parameter_base& p_active =  get_parameter("/interactions/next/begin" );
     p_active.push_value(i.to_list());
+
+    qDebug() << "user" << QString::number(m_index) << "pushed interaction:" << i.title();
 
     // set end expression to trigger timesync
 

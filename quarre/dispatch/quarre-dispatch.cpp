@@ -94,6 +94,7 @@ bool quarre::dispatcher::dispatch_incoming_interaction(quarre::interaction &i)
     if ( winner->target )
     {
         winner->target->set_incoming_interaction(i);
+        qDebug() << "Dispatching:" << i.title() << "to user:" << QString::number(winner->target->m_index);
         return true;
     }
 
@@ -113,10 +114,13 @@ void quarre::dispatcher::dispatch_active_interaction(
 
     else for ( const auto& user : srv.m_users )
         if ( user->m_incoming_interaction == &i )
+        {
+            qDebug() << "Activating:" << i.title() << "to user:" << QString::number(user->m_index);
             user->set_active_interaction(i, devlist);
+        }
 }
 
-void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
+void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction& i)
 {
     QMutexLocker locker(&g_mtx);
     auto& srv = quarre::server::instance();
@@ -135,7 +139,8 @@ void quarre::dispatcher::dispatch_ending_interaction(quarre::interaction &i)
     for ( const auto& user : srv.m_users )
         if ( user->m_active_interaction == &i )
         {
-            user->end_interaction(i);
+            qDebug() << "Ending:" << i.title() << "to user:" << QString::number(user->m_index);
+            user->end_interaction(i);            
             return;
         }
 

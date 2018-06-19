@@ -55,11 +55,8 @@ ossia::state_element quarre::ProcessExecutor::state(ossia::time_value date, doub
     auto cd = m_model.interaction()->countdown();
     cd*=1000000;
 
-    if ( date >= cd && date < cd+50000 )
-    {
-        qDebug() << "dispatching: " << m_model.interaction()->title();
+    if ( date >= cd && date < cd+100000 )
         quarre::dispatcher::dispatch_active_interaction(*m_model.interaction(), m_devices);
-    }
 
     return {};
 }
